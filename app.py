@@ -901,30 +901,33 @@ def approve_order(order_id):
 # -------------------------------- FINAL PAYMENT LOGIC -------------------------------- #
 @app.route("/payments")
 def payments():
-    user_id = session.get("user_id")
-    if not user_id:
+    if "user_id" not in session:
         return redirect("/login")
 
+    user_id = session["user_id"]
     db = get_db()
     
-    # Admin ka mobile number
+    # 1. Admin ka mobile number nikalo (WhatsApp verify ke liye)
     admin_data = db.execute("SELECT mobile FROM users WHERE role='admin' LIMIT 1").fetchone()
-    admin_mobile = admin_data['mobile'] if admin_data else "9999999999"
+    admin_mobile = admin_data['mobile'] if admin_data else "919999999999"
 
-    # Pending aur History orders fetch karna
+    # 2. Pending orders uthao (Jo abhi pay karne baaki hain)
     pending_orders = db.execute("SELECT * FROM orders WHERE user_id=? AND status='Pending'", (user_id,)).fetchall()
+    
+    # 3. Purane orders (History)
     history_orders = db.execute("SELECT * FROM orders WHERE user_id=? AND status != 'Pending' ORDER BY id DESC", (user_id,)).fetchall()
 
-    # Total calculate karna
-    total = round(float(item["price"]) * int(item["quantity"]), 2)
-    # FIX: variable ka naam 'total_amt' rakhein jo HTML mein use hua hai
+    # 4. TOTAL Amount Calculate karein (Loop chala kar)
+    total_amt = 0
+    for order in pending_orders:
+        total_amt += float(order['total'])
+
     return render_template("Payments.html", 
-                       orders=pending_orders, 
-                       history=history_orders, 
-                       total_amt=total,
-                       admin_mobile=admin_mobile,
-                       upi_id="yourname@upi")
-@app.route("/place_order", methods=["POST"])
+                           orders=pending_orders, 
+                           history=history_orders, 
+                           total_amt=round(total_amt, 2),
+                           admin_mobile=admin_mobile,
+                           upi_id="8448170818@naviaxis") 
 def place_order_action():
     if "user_id" not in session:
         return jsonify({"status": "error", "message": "Session expired! Please login again."}), 401
