@@ -1,0 +1,380 @@
+:root {
+    --primary: #10b981;
+    --primary-glow: rgba(16, 185, 129, 0.2);
+    --bg-dark: #0f172a;
+    --sidebar-bg: rgba(30, 41, 59, 0.7);
+    --glass-bg: rgba(255, 255, 255, 0.03);
+    --text-main: #f8fafc;
+    --text-dim: #94a3b8;
+    --border: rgba(255, 255, 255, 0.08);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
+
+body {
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+    display: flex;
+}
+
+/* --- SIDEBAR --- */
+.sidebar {
+    width: 260px;
+    background: var(--sidebar-bg);
+    backdrop-filter: blur(20px);
+    border-right: 1px solid var(--border);
+    position: fixed;
+    height: 100vh;
+    padding: 30px 15px;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 40px;
+    padding-left: 10px;
+}
+
+.logo-icon { color: var(--primary); width: 28px; }
+.sidebar h2 { font-size: 1.4rem; font-weight: 800; }
+
+.nav-item {
+    text-decoration: none;
+    color: var(--text-dim);
+    padding: 12px 15px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 600;
+    transition: 0.3s;
+    margin-bottom: 5px;
+}
+
+.nav-item:hover, .nav-item.active {
+    background: var(--primary-glow);
+    color: var(--primary);
+}
+
+.nav-item.active {
+    background: linear-gradient(135deg, var(--primary), #059669);
+    color: white;
+}
+
+.logout { margin-top: auto; color: #f87171; }
+
+/* --- MAIN CONTENT --- */
+.main {
+    margin-left: 260px;
+    flex: 1;
+    padding: 40px;
+    background: radial-gradient(circle at top right, #1e293b, #0f172a);
+}
+
+.content-header { margin-bottom: 30px; }
+.content-header h1 { font-size: 1.8rem; font-weight: 800; }
+
+/* --- THE GLASS PANEL (Where blocks load) --- */
+.glass-panel {
+    background: var(--glass-bg);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 30px;
+    backdrop-filter: blur(10px);
+}
+
+/* --- AUTOMATIC TABLE STYLING --- */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+th {
+    text-align: left;
+    padding: 15px;
+    color: var(--text-dim);
+    border-bottom: 1px solid var(--border);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+}
+
+td {
+    padding: 15px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    font-size: 0.95rem;
+}
+
+tr:hover { background: rgba(255,255,255,0.02); }
+
+/* --- FORM STYLING --- */
+.form-card form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    max-width: 500px;
+}
+
+input, select, textarea {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border);
+    padding: 12px;
+    border-radius: 10px;
+    color: white;
+    outline: none;
+}
+
+button {
+    background: var(--primary);
+    color: white;
+    padding: 12px;
+    border: none;
+    border-radius: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+button:hover { background: #059669; transform: scale(1.02); }
+/* --- 1. TABLES (Orders, Customers, Feedbacks) --- */
+.table-container, table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 8px; /* Rows ke beech gap ke liye */
+    margin-top: 20px;
+}
+
+th {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 15px 20px;
+    color: var(--primary);
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border: none;
+}
+
+th:first-child { border-radius: 12px 0 0 12px; }
+th:last-child { border-radius: 0 12px 12px 0; }
+
+td {
+    padding: 15px 20px;
+    background: rgba(255, 255, 255, 0.02);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    font-size: 0.95rem;
+    color: var(--text-main);
+}
+
+td:first-child { 
+    border-left: 1px solid var(--border); 
+    border-radius: 12px 0 0 12px; 
+    font-weight: 800; 
+    color: var(--primary);
+}
+
+td:last-child { 
+    border-right: 1px solid var(--border); 
+    border-radius: 0 12px 12px 0; 
+}
+
+tr:hover td {
+    background: rgba(16, 185, 129, 0.05);
+    border-color: var(--primary);
+    transition: 0.3s;
+}
+
+/* --- 2. ORDER STATUS STYLING (Dropdowns & Buttons) --- */
+select {
+    background: #1e293b;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    outline: none;
+}
+
+button[type="submit"] {
+    background: var(--primary);
+    color: white;
+    padding: 8px 15px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-left: 5px;
+    transition: 0.3s;
+}
+
+button:hover {
+    background: var(--primary-dark);
+    box-shadow: 0 0 15px var(--primary-glow);
+}
+
+/* --- 3. ADD PRODUCT FORM DESIGN --- */
+.form-card {
+    max-width: 600px;
+    background: var(--glass-bg);
+    padding: 30px;
+    border-radius: 24px;
+    border: 1px solid var(--border);
+}
+
+.form-card h1 {
+    margin-bottom: 25px;
+    color: var(--primary);
+}
+
+form label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: var(--text-dim);
+    font-size: 0.9rem;
+}
+
+form input, form select, form textarea {
+    width: 100%;
+    margin-bottom: 20px;
+    padding: 12px 15px;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    color: white;
+    font-size: 1rem;
+}
+
+form input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 10px var(--primary-glow);
+}
+
+/* --- 4. FEEDBACK & REPORTS TEXT --- */
+td:nth-child(4) { /* Feedback column usually */
+    color: var(--text-dim);
+    font-style: italic;
+    max-width: 300px;
+}
+/* --- Child Pages Table Styling --- */
+/* Ye CSS aapke admin_orders.html aur admin_feedbacks.html ko style karegi */
+
+.main h2 {
+    font-size: 1.8rem;
+    font-weight: 800;
+    margin-bottom: 25px;
+    color: var(--primary);
+}
+
+/* Glass Table Design */
+.admin-orders-table, .feedback-table, table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 10px;
+    margin-top: 10px;
+}
+
+table th {
+    padding: 15px 20px;
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-align: left;
+    border-bottom: 1px solid var(--glass-border);
+}
+
+table td {
+    padding: 15px 20px;
+    background: rgba(255, 255, 255, 0.02);
+    border-top: 1px solid var(--glass-border);
+    border-bottom: 1px solid var(--glass-border);
+    color: var(--text-main);
+    font-size: 0.95rem;
+}
+
+table td:first-child {
+    border-left: 1px solid var(--glass-border);
+    border-radius: 15px 0 0 15px;
+}
+
+table td:last-child {
+    border-right: 1px solid var(--glass-border);
+    border-radius: 0 15px 15px 0;
+}
+
+/* Table Hover Effect */
+table tr:hover td {
+    background: rgba(16, 185, 129, 0.05);
+    border-color: var(--primary);
+    transition: 0.3s ease;
+}
+
+/* Form & Input Styling (Add Product Page) */
+.form-card {
+    background: var(--card-bg);
+    border: 1px solid var(--glass-border);
+    padding: 30px;
+    border-radius: 24px;
+    max-width: 600px;
+}
+
+form label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--text-dim);
+    font-weight: 600;
+}
+
+form input, form select, form textarea {
+    width: 100%;
+    padding: 12px 15px;
+    margin-bottom: 20px;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    color: white;
+    outline: none;
+    transition: 0.3s;
+}
+
+form input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
+}
+
+form button {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+    padding: 12px 25px;
+    border: none;
+    border-radius: 12px;
+    font-weight: 800;
+    cursor: pointer;
+    width: 100%;
+    transition: 0.3s;
+}
+
+form button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3);
+}
+
+/* Status Update Dropdown in Orders */
+.admin-orders-table select {
+    background: #1e293b;
+    border: 1px solid var(--glass-border);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 8px;
+}
+
+.admin-orders-table button {
+    padding: 5px 12px;
+    font-size: 0.8rem;
+    width: auto;
+    margin-left: 5px;
+}

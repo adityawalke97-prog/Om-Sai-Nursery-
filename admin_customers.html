@@ -1,0 +1,33 @@
+{% extends "admin_layout.html" %}
+
+{% block header_title %}Customer Directory{% endblock %}
+
+{% block content %}
+<div class="header" style="margin-bottom: 25px;">
+    <h1><i data-lucide="users"></i> Registered Customers</h1>
+    <p>Manage your nursery's customer base.</p>
+</div>
+
+<div class="table-container" style="overflow-x: auto;">
+    <table style="width: 100%; border-collapse: collapse; background: rgba(255,255,255,0.02); border-radius: 15px; overflow: hidden;">
+        <thead>
+            <tr style="background: rgba(255,255,255,0.05); text-align: left;">
+                <th style="padding: 15px;">ID</th>
+                <th style="padding: 15px;">Name</th>
+                <th style="padding: 15px;">Email</th>
+                <th style="padding: 15px;">Mobile</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for c in customers %}
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); transition: 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.03)'" onmouseout="this.style.background='transparent'">
+                <td style="padding: 15px; color: #94a3b8;">#{{ c[0] }}</td>
+                <td style="padding: 15px; font-weight: 600;">{{ c[1] }}</td>
+                <td style="padding: 15px; color: #3b82f6;">{{ c[2] }}</td>
+                <td style="padding: 15px;">{{ c[3] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
