@@ -1,0 +1,106 @@
+/* 1. UNIVERSAL COLOR SYSTEM */
+:root {
+    /* LIGHT MODE (Default) */
+    --bg-body: #f4f7f6;
+    --glass-bg: rgba(255, 255, 255, 0.9); /* Solid white glass */
+    --glass-border: rgba(0, 0, 0, 0.1);
+    --text-main: #1a202c; /* Deep Black/Gray */
+    --text-muted: #4a5568;
+    --table-header: #edf2f7;
+    --primary: #27ae60;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        /* DARK MODE */
+        --bg-body: #0f172a;
+        --glass-bg: rgba(30, 41, 59, 0.8); /* Deep Navy glass */
+        --glass-border: rgba(255, 255, 255, 0.1);
+        --text-main: #f8fafc; /* Pure White/Off-white */
+        --text-muted: #94a3b8;
+        --table-header: #1e293b;
+        --primary: #2ecc71;
+    }
+}
+
+/* 2. GLOBAL STYLES */
+body {
+    background-color: var(--bg-body) !important;
+    color: var(--text-main) !important;
+    font-family: 'Poppins', sans-serif;
+    transition: background 0.3s, color 0.3s;
+}
+
+.container { max-width: 1100px; margin: auto; padding: 20px; }
+
+/* 3. THE SMART GLASS CARD */
+.glass-card {
+    background: var(--glass-bg) !important;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--glass-border) !important;
+    border-radius: 20px;
+    padding: 25px;
+    margin-bottom: 25px;
+    color: var(--text-main) !important;
+    box-shadow: 0 10px 15px rgba(0,0,0,0.05);
+}
+
+/* 4. TEXT VISIBILITY FIX */
+h1, h2, h3, h4, p, span, td, th, strong, label {
+    color: var(--text-main) !important; /* Force visibility */
+}
+
+/* 5. ADAPTIVE TABLE */
+.table-container { border-radius: 12px; overflow: hidden; }
+table { width: 100%; border-collapse: collapse; }
+
+th {
+    background-color: var(--table-header) !important;
+    padding: 15px;
+    font-size: 13px;
+    text-transform: uppercase;
+}
+
+td {
+    padding: 15px;
+    border-bottom: 1px solid var(--glass-border);
+    text-align: center;
+}
+
+/* 6. BUTTONS & INPUTS */
+.btn-pay {
+    background: var(--primary) !important;
+    color: white !important; /* Button text hamesha white */
+    padding: 12px 25px;
+    border-radius: 10px;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+select {
+    background: var(--glass-bg);
+    color: var(--text-main);
+    border: 1px solid var(--glass-border);
+    padding: 10px;
+    border-radius: 8px;
+}
+
+/* 7. QR MODAL FIX */
+#qrModal { background: rgba(0,0,0,0.85); }
+.qr-box {
+    background: var(--glass-bg) !important;
+    color: var(--text-main) !important;
+    padding: 30px;
+    border-radius: 25px;
+    text-align: center;
+}
+
+#qrImg {
+    background: white !important; /* QR scan hone ke liye hamesha white background pe hona chahiye */
+    padding: 10px;
+    border-radius: 10px;
+    margin: 15px 0;
+}

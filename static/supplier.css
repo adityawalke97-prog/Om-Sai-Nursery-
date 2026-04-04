@@ -1,0 +1,178 @@
+
+    :root {
+        --primary: #27ae60;
+        --primary-light: #2ecc71;
+        --dark: #1a1a1a;
+        --sidebar-bg: #121212;
+        --text-muted: #888;
+        --glass: rgba(255, 255, 255, 0.95);
+        --shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+    }
+
+    body { 
+        font-family: 'Poppins', sans-serif; 
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        margin: 0; 
+        min-height: 100vh;
+        color: #333;
+    }
+
+    /* Sidebar Styling */
+    .sidebar { 
+        width: 260px; 
+        background: var(--sidebar-bg); 
+        color: white; 
+        height: 100vh; 
+        position: fixed; 
+        padding: 30px 15px;
+        box-shadow: 4px 0 15px rgba(0,0,0,0.2);
+        z-index: 100;
+    }
+
+    .sidebar h2 { 
+        color: var(--primary); 
+        font-size: 1.6rem; 
+        margin-bottom: 40px; 
+        text-align: center;
+        letter-spacing: 1px;
+    }
+
+    .sidebar a { 
+        display: flex; 
+        align-items: center; 
+        color: #b0b0b0; 
+        padding: 14px 20px; 
+        text-decoration: none; 
+        border-radius: 12px;
+        margin-bottom: 8px; 
+        transition: all 0.3s ease;
+    }
+
+    .sidebar a:hover, .sidebar a.active { 
+        background: var(--primary); 
+        color: white; 
+        transform: translateX(8px);
+        box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
+    }
+
+    .sidebar a i { margin-right: 15px; width: 20px; text-align: center; }
+
+    /* Main Content Area */
+    .main { 
+        margin-left: 290px; 
+        padding: 40px; 
+        max-width: 1200px;
+    }
+
+    /* Header & Clock */
+    .header-flex { 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+        margin-bottom: 40px; 
+    }
+
+    .welcome-text h1 { margin: 0; font-size: 28px; font-weight: 600; }
+    .welcome-text p { margin: 5px 0 0; color: #666; }
+
+    /* Cards & Stats */
+    .glass-card {
+        background: var(--glass);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 24px;
+        padding: 25px;
+        box-shadow: var(--shadow);
+        transition: transform 0.3s ease;
+    }
+
+    .stats-container {
+        display: grid; 
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+        gap: 25px; 
+        margin-bottom: 40px;
+    }
+
+    /* Table Styling */
+    .table-container {
+        overflow-x: auto;
+        padding-bottom: 20px;
+    }
+
+    table { 
+        width: 100%; 
+        border-collapse: separate; 
+        border-spacing: 0 12px; 
+    }
+
+    th { 
+        padding: 15px 20px; 
+        color: var(--text-muted); 
+        font-weight: 500; 
+        text-align: left;
+        text-transform: uppercase;
+        font-size: 13px;
+        letter-spacing: 0.5px;
+    }
+
+    td { 
+        background: white; 
+        padding: 20px; 
+        vertical-align: middle;
+        transition: all 0.3s ease;
+    }
+
+    td:first-child { border-radius: 18px 0 0 18px; }
+    td:last-child { border-radius: 0 18px 18px 0; }
+
+    tr:hover td { 
+        transform: translateY(-3px); 
+        box-shadow: 0 10px 20px rgba(0,0,0,0.05); 
+        background: #f9f9f9;
+    }
+
+    /* Badges & Buttons */
+    .badge { 
+        padding: 6px 14px; 
+        border-radius: 10px; 
+        font-size: 12px; 
+        font-weight: 600; 
+        display: inline-block;
+    }
+
+    .bg-pending { background: #fff4e5; color: #ff9800; }
+    .bg-accepted { background: #e8f5e9; color: #2e7d32; }
+    .bg-delivery { background: #e3f2fd; color: #1565c0; }
+
+    .btn-action {
+        text-decoration: none;
+        padding: 8px 16px;
+        border-radius: 10px;
+        font-size: 13px;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border: none;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+
+    .btn-map { background: #f0f0f0; color: #444; }
+    .btn-map:hover { background: #e0e0e0; }
+
+    .btn-accept { background: var(--primary); color: white; }
+    .btn-accept:hover { background: var(--primary-light); }
+
+    .btn-start { background: #f39c12; color: white; }
+    .btn-start:hover { background: #e67e22; }
+
+    /* Forms in Table */
+    form { display: inline; }
+
+    /* Responsive */
+    @media (max-width: 992px) {
+        .sidebar { width: 80px; padding: 20px 10px; }
+        .sidebar h2, .sidebar a span { display: none; }
+        .main { margin-left: 100px; padding: 20px; }
+    }
