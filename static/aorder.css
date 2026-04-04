@@ -1,0 +1,61 @@
+.table-container {
+    overflow-x: auto;
+    margin: 20px 0;
+}
+
+.admin-orders-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'Segoe UI', sans-serif;
+    background: #fff;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.admin-orders-table th, .admin-orders-table td {
+    padding: 12px 15px;
+    text-align: center;
+    border-bottom: 1px solid #ddd;
+}
+
+.admin-orders-table th {
+    background-color: #2e7d32; /* dark green */
+    color: white;
+    font-weight: 600;
+}
+
+.admin-orders-table tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.admin-orders-table tr:hover {
+    background-color: #e0f2f1;
+}
+
+.admin-orders-table select {
+    padding: 5px 8px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+.admin-orders-table button {
+    padding: 5px 10px;
+    border: none;
+    background-color: #2e7d32;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-left: 5px;
+}
+
+.admin-orders-table button:hover {
+    background-color: #1b5e20;
+}
+
+h2 {
+    color: #2e7d32;
+    text-align: center;
+    margin-top: 20px;
+    font-family: 'Segoe UI', sans-serif;
+}
