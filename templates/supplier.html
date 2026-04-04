@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supplier Dashboard | Om Sai Nursery</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #27ae60;
+            --dark: #1a1a1a;
+            --glass: rgba(255, 255, 255, 0.9);
+            --danger: #ff4757;
+            --warning: #f39c12;
+            --info: #3498db;
+        }
+
+        body { 
+            font-family: 'Poppins', sans-serif; 
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            margin: 0; min-height: 100vh;
+            color: #333;
+        }
+
+        /* Sidebar */
+        .sidebar { 
+            width: 260px; background: var(--dark); color: white; 
+            height: 100vh; position: fixed; padding: 30px 15px;
+            box-shadow: 4px 0 15px rgba(0,0,0,0.1);
+        }
+        .sidebar h2 { color: var(--primary); font-size: 1.5rem; margin-bottom: 40px; text-align: center; }
+        .sidebar a { 
+            display: flex; align-items: center; color: #a0a0a0; 
+            padding: 12px 20px; text-decoration: none; border-radius: 12px;
+            margin-bottom: 10px; transition: 0.3s;
+        }
+        .sidebar a:hover, .sidebar a.active { background: var(--primary); color: white; transform: translateX(10px); }
+        .sidebar a i { margin-right: 15px; width: 20px; }
+
+        /* Main Content */
+        .main { margin-left: 290px; padding: 40px; }
+
+        /* Header */
+        .header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .welcome-text h1 { margin: 0; font-size: 26px; color: #2d3436; }
+        
+        /* Glassmorphism Cards */
+        .glass-card {
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.08);
+            margin-bottom: 20px;
+        }
+
+        /* Table Design */
+        table { width: 100%; border-collapse: separate; border-spacing: 0 12px; }
+        th { padding: 15px; color: #7f8c8d; font-weight: 500; text-align: left; text-transform: uppercase; font-size: 12px; }
+        td { background: white; padding: 20px; transition: 0.3s; vertical-align: middle; }
+        td:first-child { border-radius: 15px 0 0 15px; }
+        td:last-child { border-radius: 0 15px 15px 0; }
+        tr:hover td { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+
+        /* Status Badges */
+        .badge { padding: 6px 12px; border-radius: 8px; font-size: 11px; font-weight: 600; display: inline-block; text-transform: uppercase; }
+        .status-pending { background: #fff4e5; color: #ff9800; }
+        .status-accepted { background: #e8f5e9; color: #2e7d32; }
+        .status-delivered { background: #e3f2fd; color: #1565c0; }
+        .status-rejected { background: #ffebee; color: #c62828; }
+
+        /* Action Buttons */
+        .btn-action {
+            border: none; padding: 8px 15px; border-radius: 8px; 
+            cursor: pointer; font-weight: 600; font-size: 12px;
+            transition: 0.2s; display: flex; align-items: center; gap: 5px;
+            text-decoration: none; justify-content: center;
+        }
+        .btn-accept { background: var(--primary); color: white; }
+        .btn-deliver { background: var(--info); color: white; }
+        .btn-reject { background: #eee; color: #666; }
+        .btn-action:hover { opacity: 0.9; transform: scale(1.05); }
+
+        .location-link { color: var(--info); text-decoration: none; font-size: 13px; font-weight: 600; }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <h2><i class="fas fa-leaf"></i> Om Sai</h2>
+    <a href="/supplier" class="active"><i class="fas fa-th-large"></i> Dashboard</a>
+    <a href="/supplier/add_product_page"><i class="fas fa-plus-circle"></i> Add Product</a>
+    <a href="/logout" style="margin-top: 150px; color: var(--danger);"><i class="fas fa-sign-out-alt"></i> Logout</a>
+</div>
+
+<div class="main">
+    <div class="header-flex">
+        <div class="welcome-text">
+            <h1> Welcome {{ supplier_name }}! 👋</h1>
+            <p>Your nursery is currently active and receiving orders.</p>
+        </div>
+        <div class="glass-card" style="padding: 10px 20px; margin: 0;">
+            <i class="fas fa-clock" style="color: var(--primary);"></i> <span id="clock" style="font-weight: 600;"></span>
+        </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px;">
+        <div class="glass-card">
+            <small style="color: #888;">Total Orders</small>
+            <h2 style="margin: 5px 0 0;">{{ orders|length }}</h2>
+        </div>
+        <div class="glass-card">
+            <small style="color: #888;">Live Status</small>
+            <h2 style="margin: 5px 0 0; color: var(--primary);">Online 📡</h2>
+        </div>
+    </div>
+
+    <div class="glass-card" style="padding: 0; background: transparent; box-shadow: none; border: none;">
+        <h3 style="margin-bottom: 15px;"><i class="fas fa-clipboard-list"></i> Recent Orders</h3>
+        <div style="overflow-x: auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Customer</th>
+                        <th>Product & Qty</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                    <tr>
+                        <td><span style="font-weight: 600; color: #555;">#{{ order.id }}</span></td>
+                        <td>
+                            <div style="line-height: 1.4;">
+                                <strong>{{ order.user_name }}</strong><br>
+                                <small style="color: #777;"><i class="fas fa-phone-alt"></i> {{ order.user_mobile }}</small><br>
+                                <a href="https://www.google.com/maps?q={{ order.location }}" target="_blank" class="location-link">
+                                    <i class="fas fa-map-marker-alt"></i> Track Location
+                                </a>
+                            </div>
+                        </td>
+                        <td>
+                            <strong>{{ order.product_name }}</strong><br>
+                            <span class="badge" style="background: #f1f2f6; color: #2f3542;">Qty: {{ order.quantity }}</span>
+                        </td>
+                        <td>
+                            <strong style="color: var(--primary); font-size: 1.1rem;">₹{{ order.total }}</strong>
+                        </td>
+                        <td>
+                            {% if order.status == 'Pending' %}
+                                <span class="badge status-pending">Pending</span>
+                            {% elif order.status == 'Accepted' %}
+                                <span class="badge status-accepted">Accepted</span>
+                            {% elif order.status == 'Delivered' %}
+                                <span class="badge status-delivered">Delivered</span>
+                            {% else %}
+                                <span class="badge status-rejected">{{ order.status }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+    {% if order.payment_method == 'UPI' and order.payment_settled == 1 %}
+        <span class="badge" style="background:#d1fae5; color:#065f46;">
+            Paid Online ✅
+        </span>
+
+    {% elif order.payment_method == 'COD' %}
+        <span class="badge" style="background:#fef3c7; color:#92400e;">
+            Cash on Delivery 💰
+        </span>
+
+    {% else %}
+        <span class="badge" style="background:#fee2e2; color:#991b1b;">
+            Not Paid ❌
+        </span>
+    {% endif %}
+</td>
+                        <td>
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+        
+        {% if order.status == 'Placed' %}
+            <div style="display: flex; gap: 5px;">
+                <form action="/supplier_action/{{ order.id }}" method="POST" style="flex: 1;">
+                    <button name="action" value="accept" class="btn-action" style="background:#27ae60; color:white; width:100%; border:none; padding:8px; border-radius:5px;">
+                        Accept
+                    </button>
+                </form>
+                <form action="/supplier_action/{{ order.id }}" method="POST" style="flex: 1;">
+                    <button name="action" value="reject" class="btn-action" style="background:#e74c3c; color:white; width:100%; border:none; padding:8px; border-radius:5px;">
+                        Reject
+                    </button>
+                </form>
+            </div>
+
+        {% elif order.status == 'Accepted' %}
+            <form action="/supplier_action/{{ order.id }}" method="POST">
+                <button name="action" value="out_for_delivery" class="btn-action" style="background:#f39c12; color:white; width:100%; padding:10px; border-radius:8px; border:none;">
+                    <i class="fas fa-motorcycle"></i> Out for Delivery
+                </button>
+            </form>
+            
+        {% elif order.status == 'On the Way' %}
+            <form action="/supplier_action/{{ order.id }}" method="POST">
+                <button name="action" value="deliver" class="btn-action" style="background:#2980b9; color:white; width:100%; padding:10px; border-radius:8px; border:none;">
+                    Mark Delivered
+                </button>
+            </form>
+        {% endif %}
+    </div>
+</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 60px; background: white; border-radius: 20px;">
+                            <img src="https://cdn-icons-png.flaticon.com/512/4076/4076432.png" width="80" style="opacity: 0.5;"><br>
+                            <p style="color: #888; margin-top: 15px;">Abhi tak koi order nahi aaya hai. Apne products check karein!</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Live Clock Update
+    function updateClock() {
+        const now = new Date();
+        document.getElementById('clock').innerText = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,80 @@
+{% extends "Home.html" %}
+{% block content %}
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<div class="pay-container" style="max-width: 500px; margin: 40px auto; font-family: sans-serif;">
+    <div class="glass-card" style="background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center;">
+        
+        <h2 style="color: #16a34a; margin-bottom: 5px;">Om Sai Nursery</h2>
+        <p style="color: #64748b; margin-bottom: 20px;">Fast & Secure Payment</p>
+
+        <div style="background: #f0fdf4; padding: 15px; border-radius: 15px; margin-bottom: 25px;">
+            <span style="font-size: 14px; color: #166534; display: block;">Total Amount</span>
+            <span style="font-size: 32px; font-weight: 800; color: #15803d;">₹{{ t }}</span>
+        </div>
+
+        <div id="qr-area">
+            <img src="https://api.qrserver.com/v1/create-qr-code/?data=upi://pay?pa=8446170818@naviaxis%26pn=Om%20Sai%20Nursery%26am={{ total_amt }}%26cu=INR" 
+                 style="width: 220px; border: 8px solid #f8fafc; border-radius: 15px;">
+            
+            <p style="margin-top: 15px; font-weight: 600; color: #1e293b;">UPI ID: 8446170818@naviaxis</p>
+        </div>
+
+        <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 25px 0;">
+
+        <p style="font-size: 13px; color: #64748b; margin-bottom: 15px;">
+            <b>Step 1:</b> Scan and Pay via any UPI App.<br>
+            <b>Step 2:</b> Click the button below to send confirmation.
+        </p>
+
+        <button onclick="placeOrderAndWhatsapp()" style="width: 100%; padding: 18px; background: #25d366; color: white; border: none; border-radius: 12px; font-weight: 800; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;">
+            <i class="fa-brands fa-whatsapp"></i> PAY & CONFIRM ORDER
+        </button>
+        
+        <p style="margin-top: 15px; font-size: 12px; color: #94a3b8;">*No need to enter Ref Number</p>
+    </div>
+</div>
+
+<script>
+function placeOrderAndWhatsapp() {
+    const total = "{{ total_amt }}";
+    const admin_phone = "918446170818"; // Aapka WhatsApp Number (Country code ke sath)
+
+    Swal.fire({
+        title: 'Order Processing...',
+        text: 'Sending your order details to nursery.',
+        allowOutsideClick: false,
+        didOpen: () => { Swal.showLoading() }
+    });
+
+    // 1. Backend mein order save karna
+    fetch('/place_order', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ 
+            method: 'UPI', 
+            utr: 'SENT_ON_WHATSAPP' // Reference number ki jagah ye jayega
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if(data.status === 'success') {
+            // 2. WhatsApp par redirect karna details ke sath
+            const msg = `Namaste Om Sai Nursery,\n\nMaine payment kar di hai.\nOrder Total: ₹${total}\n\nKripya mera order approve karein.`;
+            const whatsappUrl = `https://wa.me/${admin_phone}?text=${encodeURIComponent(msg)}`;
+            
+            Swal.fire({
+                icon: 'success',
+                title: 'Order Placed!',
+                text: 'Now just send the payment screenshot on WhatsApp.',
+                confirmButtonText: 'Open WhatsApp'
+            }).then(() => {
+                window.location.href = whatsappUrl;
+            });
+        }
+    });
+}
+</script>
+
+{% endblock %}

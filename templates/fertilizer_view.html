@@ -1,0 +1,46 @@
+{% extends "Home.html" %}
+
+{% block content %}
+
+<h2>🧪 Recommended Fertilizer</h2>
+
+<div class="plant-card">
+
+    <h3>{{ fertilizer['name'] }}</h3>
+
+    <img src="{{ url_for('static', filename='images/' + fertilizer['image']) }}" width="150">
+
+    <p><b>Price:</b> ₹{{ fertilizer['price'] }}</p>
+
+    <p><b>Stock:</b> {{ fertilizer['stock'] }}</p>
+
+    <input type="number" id="qty" value="1">
+
+    <button onclick='addToCart({{ fertilizer["id"] }}, "{{ fertilizer["name"] }}", {{ fertilizer["price"] }})'>
+        Buy Now
+    </button>
+
+</div>
+
+<script>
+function addToCart(id, name, price){
+
+    let qty = parseInt(document.getElementById("qty").value) || 1;
+
+    let cart = JSON.parse(localStorage.getItem("cart")) || [];
+
+    cart.push({
+        id: id,
+        name: name,
+        price: price,
+        quantity: qty
+    });
+
+    localStorage.setItem("cart", JSON.stringify(cart));
+
+    alert("Added to cart!");
+    window.location.href = "/orders";
+}
+</script>
+
+{% endblock %}
