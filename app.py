@@ -14,8 +14,13 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATABASE = os.path.join(BASE_DIR, "database.db")
 UPLOAD_FOLDER = os.path.join(BASE_DIR, 'static/images')
 
+# --- Ye aapke app.py ke upar ke hisse mein hoga ---
 app = Flask(__name__)
 app.secret_key = "supersecretkey"
+
+# ✅ YE WALI LINES ADD KAREIN:
+
+# -----------------------------------------------app.secret_key = "supersecretkey"
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 bcrypt = Bcrypt(app)
 app.permanent_session_lifetime = timedelta(days=7)
@@ -143,6 +148,9 @@ def init_db():
     conn.commit()
     conn.close()
     print("✅ Database Synchronized!")
+with app.app_context():
+    init_db()
+    print("✅ Database initialized!")
 # Root route
 # 1. ROOT ROUTE (Redirects based on session)
 @app.route("/")
