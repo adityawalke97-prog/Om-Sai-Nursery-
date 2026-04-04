@@ -919,9 +919,12 @@ def payments():
 @app.route("/place_order", methods=["POST"])
 def place_order_action():
     if "user_id" not in session:
-        return jsonify({"status": "error", "message": "Session expired!"}), 401
+        return jsonify({"status": "error", "message": "Session expired! Please login again."}), 401
 
     data = request.get_json()
+    if not data:
+        return jsonify({"status": "error", "message": "No data received!"}), 400
+
     method = data.get("method")
     utr = data.get("utr")
     user_id = session["user_id"]
@@ -930,38 +933,48 @@ def place_order_action():
     db = get_db()
     
     try:
+        # 1. Cart se items uthao
         cart_items = db.execute("SELECT * FROM cart WHERE user_id = ?", (user_id,)).fetchall()
         
         if not cart_items:
-            return jsonify({"status": "error", "message": "Cart is empty!"})
+            return jsonify({"status": "error", "message": "Cart is empty!"}), 400
 
         for item in cart_items:
-            # Status logic
+            # Status logic (UPI ke liye alag, COD ke liye alag)
             status = "Pending Approval" if method == "UPI" else "Pending"
             
-            # Product table se supplier_id nikalna (Zaroori hai)
+            # 2. Product table se supplier_id nikalna (Taki supplier ko uska order dikhe)
             prod = db.execute("SELECT supplier_id FROM products WHERE name=?", (item['product_name'],)).fetchone()
+            
+            # Agar product ka koi supplier nahi hai, toh Admin (ID: 1) ko assign kar do
             s_id = prod['supplier_id'] if (prod and prod['supplier_id']) else 1
 
+            # 3. Total Price Calculation (Float/Int conversion zaroori hai)
+            item_price = float(item['price'])
+            item_qty = int(item['quantity'])
+            total_amt = round(item_price * item_qty, 2)
+
+            # 4. Order Table mein Insert karein
             db.execute("""
                 INSERT INTO orders (
                     user_id, user_name, product_name, price, quantity, total, 
                     status, payment_method, payment_id, supplier_id
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
-                user_id, user_name, item['product_name'], item['price'], item['quantity'], 
-                (item['price'] * item['quantity']), status, method, utr, s_id
+                user_id, user_name, item['product_name'], item_price, item_qty, 
+                total_amt, status, method, utr, s_id
             ))
 
-        # Order ke baad cart khali karein
+        # 5. Order ke baad cart khali karein
         db.execute("DELETE FROM cart WHERE user_id = ?", (user_id,))
         db.commit()
-        return jsonify({"status": "success"})
+        
+        return jsonify({"status": "success", "message": "Order placed successfully! ✅"})
 
     except Exception as e:
+        db.rollback() # Error aane par changes cancel karein
         print(f"❌ Order Error: {e}")
-        return jsonify({"status": "error", "message": str(e)}), 500
-
+        return jsonify({"status": "error", "message": "Something went wrong while placing order."}), 500
 @app.route('/get_supplier_location/<int:order_id>')
 def get_supplier_location(order_id):
     # Maan lijiye aapka database order status check karta hai
@@ -1060,5 +1073,7 @@ def supplier_profile():
 
     return render_template("supplier_profile.html")
 if __name__ == "__main__":
-    init_db() # Direct call kara
-    app.run(debug=True, port=8000)
+    init_db() 
+    # Render ke liye port environment variable se lena behtar hai
+    port = int(os.environ.get("PORT", 5000))
+    app.run(debug=True, host="0.0.0.0", port=port)
