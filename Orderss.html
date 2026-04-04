@@ -1,0 +1,188 @@
+{% extends "Home.html" %}
+{% block content %}
+
+<h2>🛒 My Orders</h2>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='order.css') }}">
+
+<!-- Leaflet (Modern Free Map) -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css"/>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+
+<style>
+#map {
+    width: 100%;
+    height: 400px;
+    border-radius: 10px;
+    border: 2px solid #ccc;
+}
+button {
+    padding: 8px 15px;
+    background: green;
+    color: white;
+    border: none;
+    border-radius: 5px;
+}
+</style>
+
+<!-- CART -->
+<table border="1" width="100%">
+<thead>
+<tr>
+<th>#</th>
+<th>Product</th>
+<th>Qty</th>
+<th>Price</th>
+<th>Total</th>
+<th>Action</th>
+</tr>
+</thead>
+
+<tbody id="cart-table"></tbody>
+
+<tfoot>
+<tr>
+<td colspan="4">Grand Total</td>
+<td colspan="2" id="grand-total">₹0</td>
+</tr>
+</tfoot>
+</table>
+
+<h3>📍 Select Location</h3>
+<input type="text" id="location" readonly style="width:100%;padding:10px;">
+
+<div id="map"></div>
+
+<button onclick="buyNow()">Buy Now</button>
+
+<script>
+
+// ================= MAP =================
+
+// Pune center
+// ================= MAP FIXED =================
+
+// Pune default
+let map = L.map('map').setView([18.5204, 73.8567], 12);
+
+// Layers
+let normal = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+let satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}');
+
+// Switch control
+L.control.layers({
+    "🌍 Normal": normal,
+    "🛰️ Satellite": satellite
+}).addTo(map);
+
+// Marker
+let marker;
+
+// 🔥 CLICK EVENT (FIXED)
+map.on('click', function(e){
+
+    let lat = e.latlng.lat;
+    let lon = e.latlng.lng;
+
+    console.log("Clicked:", lat, lon); // debug
+
+    // Remove old marker
+    if(marker){
+        map.removeLayer(marker);
+    }
+
+    // Add new marker
+    marker = L.marker([lat, lon]).addTo(map);
+
+    // 🔥 DIRECT VALUE SET (IMPORTANT FIX)
+    document.getElementById("location").value = lat + ", " + lon;
+
+    // 🔥 Try address fetch (optional)
+    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`)
+    .then(res => res.json())
+    .then(data => {
+        if(data && data.display_name){
+            document.getElementById("location").value = data.display_name;
+        }
+    })
+    .catch(err => {
+        console.log("Address fetch failed");
+    });
+
+});
+
+// ================= CART =================
+function loadCart(){
+    let cart = JSON.parse(localStorage.getItem("cart")) || [];
+    let tbody = document.getElementById("cart-table");
+    tbody.innerHTML = "";
+
+    let total = 0;
+
+    cart.forEach((item, i) => {
+        let t = item.price * item.quantity;
+        total += t;
+
+        tbody.innerHTML += `
+        <tr>
+            <td>${i+1}</td>
+            <td>${item.name}</td>
+            <td>${item.quantity}</td>
+            <td>₹${item.price}</td>
+            <td>₹${t}</td>
+            <td><button onclick="removeItem(${i})">Remove</button></td>
+        </tr>`;
+    });
+
+    document.getElementById("grand-total").innerText = "₹" + total;
+}
+
+function removeItem(i){
+    let cart = JSON.parse(localStorage.getItem("cart")) || [];
+    cart.splice(i,1);
+    localStorage.setItem("cart", JSON.stringify(cart));
+    loadCart();
+}
+
+
+// ================= BUY =================
+function buyNow(){
+
+    let cart = JSON.parse(localStorage.getItem("cart")) || [];
+    let location = document.getElementById("location").value;
+
+    if(cart.length === 0){
+        alert("Cart empty");
+        return;
+    }
+
+    if(!location){
+        alert("Select location");
+        return;
+    }
+
+    fetch("/confirm_order", {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({cart, location})
+    })
+    .then(res => res.json())
+    .then(data => {
+        if(data.success){
+            alert("Order Confirmed!");
+            localStorage.removeItem("cart");
+            window.location.href="/payments";
+        }
+    });
+
+}
+
+loadCart();
+
+</script>
+
+{% endblock %}

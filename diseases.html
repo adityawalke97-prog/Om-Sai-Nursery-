@@ -1,0 +1,29 @@
+{% extends "Home.html" %}
+
+{% block content %}
+
+<h2>🦠 Plant Diseases</h2>
+
+<div id="products">
+
+{% for d in diseases %}
+
+<div class="plant-card">
+
+    <h3>{{ d['name'] }}</h3>
+
+    <img src="{{ url_for('static', filename='images/' + d['image']) }}" width="150">
+
+    <br><br>
+
+    <a href="{{ url_for('fertilizer_by_disease', id=d['id']) }}">
+        <button>View Treatment</button>
+    </a>
+
+</div>
+
+{% endfor %}
+
+</div>
+
+{% endblock %}

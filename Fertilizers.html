@@ -1,0 +1,81 @@
+{% extends "Home.html" %}
+
+{% block content %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='plants.css') }}">
+
+<h2>Fertilizers</h2>
+
+<div id="products">
+
+{% for fert in fertilizers %}
+
+<div class="plant-card">
+
+    <h3>{{ fert['name'] }}</h3>
+
+    <img src="{{ url_for('static', filename='images/' + fert['image']) }}" width="150">
+
+    <p><b>Price:</b> ₹{{ fert['price'] }}</p>
+
+    <p><b>Stock:</b> {{ fert['stock'] }}</p>
+
+    <input 
+        type="number" 
+        id="qty_{{ fert['id'] }}" 
+        value="1" 
+        min="1"
+    >
+
+    <button onclick='addToCartSafe({{ fert["id"] }}, "{{ fert["name"].replace("\"","\\\"") }}", {{ fert["price"] }})'>
+        Add to Cart
+    </button>
+
+</div>
+
+{% else %}
+    <p>No fertilizers available</p>
+{% endfor %}
+
+</div>
+
+<br>
+
+<a href="{{ url_for('orders_page') }}">Go To Cart</a>
+
+<script>
+
+function addToCartSafe(id, name, price){
+
+    let qtyInput = document.getElementById("qty_" + id);
+
+    let qty = 1;
+
+    if(qtyInput){
+        qty = parseInt(qtyInput.value) || 1;
+    }
+
+    let cart = JSON.parse(localStorage.getItem("cart")) || [];
+
+    let existing = cart.find(item => item.id === id);
+
+    if(existing){
+        existing.quantity += qty;
+    } 
+    else{
+        cart.push({
+            id: id,
+            name: name,
+            price: Number(price),
+            quantity: qty
+        });
+    }
+
+    localStorage.setItem("cart", JSON.stringify(cart));
+
+    alert(name + " added to cart!");
+}
+
+</script>
+
+{% endblock %}

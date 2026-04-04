@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login / Sign Up - Om Sai Plant Nursery</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='signup.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+</head>
+
+<body>
+
+<div class="container" id="container">
+
+    <!-- SIGN IN -->
+    <div class="form-container sign-in-container">
+
+<form action="/login" method="POST">
+                <h1>Sign In</h1>
+
+    <input type="email" name="email" placeholder="Enter your email" required>
+    <input type="password" name="password" placeholder="Enter Password" required>
+
+    <select name="role" required>
+        <option value="customer">Customer</option>
+        <option value="admin">Admin</option>
+        <option value="supplier">Supplier</option>
+    </select>
+
+    <button type="submit">Login</button>
+</form>
+
+    </div>
+
+    <!-- SIGN UP -->
+    <!-- SIGN UP -->
+<div class="form-container sign-up-container">
+    <form id="signupForm" method="POST" action="/signup">
+        <h1>Create Account</h1>
+
+        <input type="text" name="name" placeholder="Enter your name" required>
+
+        <input type="email" name="email" placeholder="Enter your email" required>
+
+        <input type="text"
+               name="mobile"
+               placeholder="Enter 10 Digit Mobile Number"
+               required
+               pattern="[0-9]{10}"
+               maxlength="10">
+
+        <input type="password" name="password" placeholder="Password" required>
+
+        <!-- CATEGORY / ROLE -->
+        <select name="role" required>
+            <option value="">Select Category</option>
+            <option value="customer">Customer</option>
+            <option value="supplier">Supplier</option>
+            <option value="admin">Admin</option>
+        </select>
+
+        <button type="submit">Sign Up</button>
+    </form>
+</div>
+
+    <!-- OVERLAY -->
+    <div class="overlay-container">
+        <div class="overlay">
+
+            <div class="overlay-panel overlay-left">
+                <h1>Welcome Back!</h1>
+                <button class="ghost" id="signIn">Sign In</button>
+            </div>
+
+            <div class="overlay-panel overlay-right">
+                <h1>Hello, Friend!</h1>
+                <button class="ghost" id="signUp">Sign Up</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+
+const signUpBtn = document.getElementById("signUp");
+const signInBtn = document.getElementById("signIn");
+const container = document.getElementById("container");
+
+signUpBtn.onclick = () => container.classList.add("right-panel-active");
+signInBtn.onclick = () => container.classList.remove("right-panel-active");
+
+/* ---------- SIGN UP ---------- */
+document.getElementById("signupForm").addEventListener("submit", function(e) {
+    e.preventDefault();
+
+    const formData = new FormData(this);
+
+    fetch("/signup", {
+        method: "POST",
+        body: formData
+    })
+    .then(res => res.text())
+    .then(data => {
+        alert("Signup Successful! Please Login");
+        container.classList.remove("right-panel-active");
+        this.reset();
+    })
+    .catch(err => {
+        alert("Signup Failed!");
+        console.log(err);
+    });
+});
+
+</script>
+
+</body>
+</html>
