@@ -1,0 +1,47 @@
+{% extends "admin_layout.html" %}
+
+{% block header_title %}Inventory Update{% endblock %}
+
+{% block content %}
+<div style="max-width: 700px; margin: 0 auto;">
+    <div class="header" style="margin-bottom: 25px;">
+        <h1><i data-lucide="plus-circle"></i> Add New Product</h1>
+    </div>
+
+    <form action="/admin/add_product" method="POST" enctype="multipart/form-data" style="display: grid; gap: 20px;">
+        <div class="form-group">
+            <label style="display: block; margin-bottom: 8px; color: #94a3b8;">Product Name</label>
+            <input type="text" name="name" required style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--border); background: rgba(255,255,255,0.05); color: white;">
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div class="form-group">
+                <label style="display: block; margin-bottom: 8px; color: #94a3b8;">Price (₹)</label>
+                <input type="number" name="price" required style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--border); background: rgba(255,255,255,0.05); color: white;">
+            </div>
+            <div class="form-group">
+                <label style="display: block; margin-bottom: 8px; color: #94a3b8;">Stock Quantity</label>
+                <input type="number" name="stock" required style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--border); background: rgba(255,255,255,0.05); color: white;">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label style="display: block; margin-bottom: 8px; color: #94a3b8;">Category</label>
+            <select name="category" style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--border); background: #1e293b; color: white;">
+                <option value="plant">Indoor Plants</option>
+                <option value="seed">Flower Seeds</option>
+                <option value="fertilizer">Organic Fertilizer</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label style="display: block; margin-bottom: 8px; color: #94a3b8;">Product Image</label>
+            <input type="file" name="image" accept="image/*" required style="color: #94a3b8;">
+        </div>
+
+        <button type="submit" style="background: var(--primary); color: white; border: none; padding: 15px; border-radius: 12px; font-weight: 800; cursor: pointer; transition: 0.3s; margin-top: 10px;">
+            🚀 Publish to Store
+        </button>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,96 @@
+{% extends "Home.html" %}
+{% block content %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='plant.css') }}">
+
+<h2>🌾 High-Quality Seeds</h2>
+
+<div id="products">
+{% for seed in seeds %}
+    {# Seeds ko bhi supplier check ke saath dikhayenge #}
+    <div class="plant-card product-item">
+        <h3 class="product-name">{{ seed['name'] }}</h3>
+
+        <img src="{{ url_for('static', filename='images/' + seed['image']) }}" width="150" alt="{{ seed['name'] }}">
+
+        <div class="price-section">
+            <span class="current-price">₹{{ seed['price'] }}</span>
+            <span class="original-price">₹{{ (seed['price'] * 1.2)|round|int }}</span>
+            <span class="discount-tag">20% OFF</span>
+        </div>
+
+        <div class="stock-wrapper">
+            <small>Availability: {{ seed['stock'] }} packets left</small>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: {{ (seed['stock']/100)*100 }}%; background: {{ 'red' if seed['stock'] < 10 else '#059669' }}"></div>
+            </div>
+        </div>
+
+        <div class="action-area">
+            <input 
+                type="number" 
+                id="qty_{{ seed['id'] }}" 
+                value="1" 
+                min="1"
+                style="width: 60px; padding: 8px; border-radius: 8px; border: 1px solid #ddd;"
+            >
+
+            <button class="btn-pay" onclick='addToCartSafe({{ seed["id"] }}, "{{ seed["name"] }}", {{ seed["price"] }}, {{ seed["supplier_id"] or 0 }})'>
+                <span>🛒</span> Add to Cart
+            </button>
+        </div>
+    </div>
+{% else %}
+    <div class="no-products" style="text-align: center; width: 100%; padding: 50px;">
+        <p>Filhal koi seeds available nahi hain.</p>
+    </div>
+{% endfor %}
+</div>
+
+<div style="text-align: center; margin-top: 30px;">
+    <a href="{{ url_for('orders_page') }}" class="btn-cart" style="text-decoration: none; background: var(--secondary); color: white; padding: 15px 30px; border-radius: 12px; display: inline-block;">
+        🛒 View My Cart
+    </a>
+</div>
+
+<script>
+function addToCartSafe(id, name, price, supplier_id) {
+    let qtyInput = document.getElementById("qty_" + id);
+    let qty = parseInt(qtyInput.value) || 1;
+
+    // Seeds ke liye unique prefix (S_) taaki plants se mix na ho
+    let uniqueId = "S_" + id; 
+
+    let cart = JSON.parse(localStorage.getItem("cart")) || [];
+    let existing = cart.find(item => item.id === uniqueId);
+
+    if (existing) {
+        existing.quantity += qty;
+    } else {
+        cart.push({
+            id: uniqueId,
+            name: name,
+            price: Number(price),
+            quantity: qty,
+            supplier_id: supplier_id
+        });
+    }
+
+    localStorage.setItem("cart", JSON.stringify(cart));
+    
+    // SweetAlert use karo agar link hai toh, warna simple alert
+    if(typeof Swal !== 'undefined') {
+        Swal.fire({
+            icon: 'success',
+            title: 'Added!',
+            text: name + ' has been added to your cart.',
+            timer: 1500,
+            showConfirmButton: false
+        });
+    } else {
+        alert(name + " added to cart!");
+    }
+}
+</script>
+
+{% endblock %}

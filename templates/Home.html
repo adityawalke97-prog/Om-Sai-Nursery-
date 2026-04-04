@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Om Sai Nursery{% endblock %}</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="area">
+        <ul class="circles">
+            <li><i class="fa-solid fa-leaf"></i></li>
+            <li><i class="fa-solid fa-seedling"></i></li>
+            <li><i class="fa-solid fa-tree"></i></li>
+            <li><i class="fa-solid fa-spa"></i></li>
+            <li><i class="fa-solid fa-leaf"></i></li>
+            <li><i class="fa-solid fa-seedling"></i></li>
+            <li><i class="fa-solid fa-tree"></i></li>
+            <li><i class="fa-solid fa-spa"></i></li>
+            <li><i class="fa-solid fa-leaf"></i></li>
+            <li><i class="fa-solid fa-seedling"></i></li>
+        </ul>
+    </div>
+
+    <nav class="top-nav">
+        <div class="logo">
+            <i class="fa-solid fa-seedling"></i> Om Sai Nursery
+        </div>
+
+        <div class="search-bar">
+            <form action="{{ url_for('search') }}" method="GET" style="width: 100%; display: flex;">
+                <input type="text" name="q" placeholder="Search plants, seeds...">
+                <button type="submit"><i class="fa-solid fa-magnifying-glass"></i></button>
+            </form>
+        </div>
+
+        <div class="user-actions">
+            <div class="weather-widget">
+                <i class="fa-solid fa-cloud-sun"></i> <span>28°C</span>
+            </div>
+
+            <button class="theme-toggle" onclick="toggleDarkMode()">
+                <i class="fa-solid fa-moon"></i>
+            </button>
+
+            <div class="lang-switch">
+                <a href="{{ url_for('set_language', lang_code='en') }}">EN</a> |
+                <a href="{{ url_for('set_language', lang_code='hi') }}">HI</a>
+            </div>
+            
+            <div class="profile-container" onclick="toggleProfile()">
+                <i class="fa-solid fa-circle-user fa-2xl" style="color: #059669;"></i>
+                <div class="profile-box" id="profileBox">
+                    <p><strong>{{ session['username'] if session['username'] else 'Guest' }}</strong></p>
+                    <p style="font-size: 0.8rem; color: gray;">{{ session['role'] }}</p>
+                    <hr>
+                    <a href="/logout" class="logout-btn"><i class="fa-solid fa-power-off"></i> Logout</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-wrapper">
+        <aside class="sidebar">
+            <h3>Dashboard</h3>
+            <ul class="nav-links">
+                <li><a href="/home" class="{{ 'active' if request.path == '/home' else '' }}"><i class="fa-solid fa-house"></i> {{ texts['home'] }}</a></li>
+                <li><a href="/plants" class="{{ 'active' if request.path == '/plants' else '' }}"><i class="fa-solid fa-leaf"></i> {{ texts['plants'] }}</a></li>
+                <li><a href="/seeds" class="{{ 'active' if request.path == '/seeds' else '' }}"><i class="fa-solid fa-spa"></i> {{ texts['seeds'] }}</a></li>
+                <li><a href="/diseases" class="{{ 'active' if request.path == '/diseases' else '' }}"><i class="fa-solid fa-bug"></i> {{ texts['diseases'] }}</a></li>
+                <li>
+                    <a href="/orders" class="{{ 'active' if request.path == '/orders' else '' }}">
+                        <i class="fa-solid fa-cart-shopping"></i> {{ texts['orders'] }}
+                        <span class="nav-badge"></span>
+                    </a>
+                </li>
+                <li><a href="/payments" class="{{ 'active' if request.path == '/payments' else '' }}"><i class="fa-solid fa-wallet"></i> {{ texts['payments'] }}</a></li>
+                <li><a href="/feedback" class="{{ 'active' if request.path == '/feedback' else '' }}"><i class="fa-solid fa-comment-dots"></i> {{ texts['feedback'] }}</a></li>
+                <li><a href="/contact" class="{{ 'active' if request.path == '/contact' else '' }}"><i class="fa-solid fa-phone"></i> {{ texts['contact'] }}</a></li>
+            </ul>
+        </aside>
+
+        <main class="content-area">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <a href="/orders" class="floating-cart">
+        <i class="fa-solid fa-basket-shopping"></i>
+        <span class="cart-count">0</span>
+    </a>
+
+    <script>
+        function toggleProfile() {
+            const box = document.getElementById("profileBox");
+            box.style.display = box.style.display === "block" ? "none" : "block";
+        }
+
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            const icon = document.querySelector('.theme-toggle i');
+            if(document.body.classList.contains('dark-mode')) {
+                icon.className = 'fa-solid fa-sun';
+                localStorage.setItem('theme', 'dark');
+            } else {
+                icon.className = 'fa-solid fa-moon';
+                localStorage.setItem('theme', 'light');
+            }
+        }
+
+        // Initialize theme and cart count
+        window.onload = () => {
+            if(localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-mode');
+            let cart = JSON.parse(localStorage.getItem("cart")) || [];
+            document.querySelector('.cart-count').innerText = cart.length;
+        };
+    </script>
+    <a href="https://wa.me/919999999999" class="whatsapp-float" target="_blank">
+    <i class="fa-brands fa-whatsapp"></i>
+</a>
+</body>
+</html>
