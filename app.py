@@ -193,60 +193,58 @@ def login():
         password = request.form.get("password", "") 
         
         db = get_db()
-        # Sirf wahi user dhoondo jiska email match kare
+        # Row factory ensures we can access data by column name like user['role']
+        db.row_factory = sqlite3.Row 
         user = db.execute("SELECT * FROM users WHERE email=?", (email,)).fetchone()
 
-        if user:
-            # Bcrypt se password verify karo
-            if bcrypt.check_password_hash(user['password'], password):
-                session.permanent = True
-                session["user_id"] = user['id']
-                session["role"] = user['role']
-                session["username"] = user['name']
-                
-                # Role ke hisaab se sahi jagah bhejo
-                if user['role'] == "admin": return redirect("/admin")
-                elif user['role'] == "supplier": return redirect("/supplier")
-                else: return redirect("/home")
+        if user and bcrypt.check_password_hash(user['password'], password):
+            session.permanent = True
+            session["user_id"] = user['id']
+            session["role"] = user['role']
+            session["username"] = user['name']
+            
+            # Role Wise Redirection
+            role = user['role'].lower() # Case-insensitive check
+            if role == "admin":
+                return redirect("/admin")
+            elif role == "supplier":
+                return redirect("/supplier")
             else:
-                return "Invalid Password! ❌", 401
-        else:
-            return "Account not found! Please Sign Up first. ❌", 404
+                return redirect("/home")
+        
+        return "Invalid Email or Password! ❌", 401
 
     return render_template("Sign_Up.html")
 
 @app.route("/signup", methods=["POST"])
 def signup():
-
     name = request.form.get("name")
-    email = request.form.get("email")
+    email = request.form.get("email", "").strip().lower()
     password = request.form.get("password")
     mobile = request.form.get("mobile")
-    role = request.form.get("role")
+    role = request.form.get("role", "customer") # Default customer
 
-    # password hash
+    db = get_db()
+    
+    # CHECK: Kya ye email pehle se hai?
+    existing_user = db.execute("SELECT id FROM users WHERE email=?", (email,)).fetchone()
+    if existing_user:
+        return "Email already exists! ❌ Please Login.", 400
+
+    # Password hashing
     hashed_password = bcrypt.generate_password_hash(password).decode("utf-8")
     
-    conn = get_db()
-    cur = conn.cursor()
-
     try:
-        cur.execute("""
-        INSERT INTO users (name, email, password, role, mobile)
-        VALUES (?, ?, ?, ?, ?)
+        db.execute("""
+            INSERT INTO users (name, email, password, role, mobile)
+            VALUES (?, ?, ?, ?, ?)
         """, (name, email, hashed_password, role, mobile))
-
-        conn.commit()
-
-        return "Signup Successful"
-
-    except sqlite3.IntegrityError:
-        return "Email already exists ❌"
-
-    finally:
-        conn.close()
-
-# Customer dashboard
+        db.commit()
+        return "Signup Successful! ✅ Now please Login."
+    except Exception as e:
+        print(f"Signup Error: {e}")
+        return "Something went wrong! ❌", 500
+        # Customer dashboard
 @app.route("/home")
 def home():
     if "user_id" not in session:
