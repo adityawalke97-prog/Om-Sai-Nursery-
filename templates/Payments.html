@@ -1,246 +1,147 @@
-{% extends "Home.html" %}
-{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Premium Inventory | Om Sai Nursery</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        :root { --primary: #2ecc71; --accent: #00d2ff; --bg: #0f172a; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
+        
+        body { 
+            background: radial-gradient(circle at top right, #1e293b, #0f172a); 
+            color: white; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px;
+        }
 
-<!-- SweetAlert & FontAwesome -->
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+        .main-card {
+            background: rgba(30, 41, 59, 0.5);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            display: flex;
+            width: 100%;
+            max-width: 900px;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+        }
 
-<style>
-    :root {
-        --primary-green: #16a34a;
-        --dark-slate: #1e293b;
-        --light-bg: #f8fafc;
-    }
+        /* Left Side: Form */
+        .form-side { flex: 1.2; padding: 40px; border-right: 1px solid rgba(255,255,255,0.05); }
+        
+        /* Right Side: Preview */
+        .preview-side { 
+            flex: 0.8; background: rgba(255,255,255,0.02); 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px;
+        }
 
-    .checkout-wrapper {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 20px;
-        max-width: 1000px;
-        margin: 40px auto;
-        padding: 0 20px;
-        font-family: 'Inter', sans-serif;
-    }
+        h2 { font-size: 24px; margin-bottom: 8px; background: linear-gradient(to right, #fff, #94a3b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        p.subtitle { color: #64748b; font-size: 14px; margin-bottom: 30px; }
 
-    /* Left Side: Payment Methods */
-    .payment-section {
-        flex: 1.5;
-        background: white;
-        padding: 30px;
-        border-radius: 16px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-    }
+        .input-box { margin-bottom: 20px; position: relative; }
+        .input-box label { display: block; font-size: 12px; color: #94a3b8; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
+        
+        input, select {
+            width: 100%; background: rgba(15, 23, 42, 0.6); border: 1px solid #334155;
+            padding: 12px 16px; border-radius: 12px; color: white; font-size: 15px; transition: 0.3s;
+        }
 
-    /* Right Side: Order Summary */
-    .summary-section {
-        flex: 1;
-        background: var(--light-bg);
-        padding: 25px;
-        border-radius: 16px;
-        border: 1px solid #e2e8f0;
-        height: fit-content;
-    }
+        input:focus { border-color: var(--primary); box-shadow: 0 0 15px rgba(46, 204, 113, 0.2); outline: none; }
 
-    .step-indicator {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 30px;
-    }
+        .btn-publish {
+            width: 100%; padding: 16px; background: var(--primary); color: #052e16;
+            border: none; border-radius: 12px; font-weight: 700; font-size: 16px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.3s;
+            margin-top: 10px;
+        }
+        .btn-publish:hover { background: #27ae60; transform: translateY(-2px); box-shadow: 0 10px 20px rgba(46, 204, 113, 0.3); }
 
-    .step {
-        font-size: 12px;
-        font-weight: 600;
-        color: #94a3b8;
-        text-align: center;
-    }
+        /* Preview Card UI */
+        .live-preview {
+            width: 100%; max-width: 260px; background: #1e293b; border-radius: 20px; overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.1); transition: 0.5s;
+        }
+        .preview-img { width: 100%; height: 200px; background: #334155; object-fit: cover; }
+        .preview-content { padding: 15px; }
+        .preview-name { font-weight: 600; font-size: 18px; margin-bottom: 5px; }
+        .preview-price { color: var(--primary); font-weight: 700; font-size: 20px; }
+    </style>
+</head>
+<body>
 
-    .step.active { color: var(--primary-green); }
+<div class="main-card">
+    <div class="form-side">
+        <h2>Add Premium Item</h2>
+        <p class="subtitle">Enter details to showcase your product in the gallery.</p>
 
-    .payment-option {
-        border: 2px solid #e2e8f0;
-        padding: 15px;
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        gap: 15px;
-        margin-bottom: 15px;
-        cursor: pointer;
-        transition: 0.3s;
-    }
-
-    .payment-option.selected {
-        border-color: var(--primary-green);
-        background: #f0fdf4;
-    }
-
-    .qr-box {
-        background: white;
-        padding: 20px;
-        border-radius: 12px;
-        border: 1px dashed #cbd5e1;
-        text-align: center;
-        margin-top: 20px;
-        display: none; /* Default hidden */
-    }
-
-    .price-row {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 10px;
-        color: #64748b;
-    }
-
-    .total-row {
-        display: flex;
-        justify-content: space-between;
-        margin-top: 15px;
-        padding-top: 15px;
-        border-top: 2px solid #e2e8f0;
-        font-size: 18px;
-        font-weight: 800;
-        color: var(--dark-slate);
-    }
-
-    .btn-pay {
-        width: 100%;
-        padding: 16px;
-        background: var(--primary-green);
-        color: white;
-        border: none;
-        border-radius: 12px;
-        font-weight: 700;
-        font-size: 16px;
-        cursor: pointer;
-        margin-top: 20px;
-        transition: 0.3s;
-    }
-
-    .btn-pay:hover { background: #15803d; transform: translateY(-2px); }
-
-    .secure-badge {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 8px;
-        margin-top: 20px;
-        color: #94a3b8;
-        font-size: 12px;
-    }
-</style>
-
-<div class="checkout-wrapper">
-    
-    <!-- LEFT: Payment Section -->
-    <div class="payment-section">
-        <div class="step-indicator">
-            <div class="step active"><i class="fa-solid fa-circle-check"></i><br>Address</div>
-            <div class="step active"><i class="fa-solid fa-circle-dot"></i><br>Payment</div>
-            <div class="step"><i class="fa-solid fa-circle"></i><br>Confirm</div>
-        </div>
-
-        <h3 style="color: var(--dark-slate); margin-bottom: 20px;">Select Payment Method</h3>
-
-        <!-- UPI Option -->
-        <div class="payment-option selected" onclick="toggleQR(true)">
-            <input type="radio" checked name="method">
-            <i class="fa-solid fa-qrcode" style="font-size: 20px; color: var(--primary-green);"></i>
-            <div>
-                <b style="display: block;">UPI / QR Code</b>
-                <span style="font-size: 12px; color: #64748b;">Pay via PhonePe, Google Pay, Paytm</span>
+        <form action="/supplier/add_product" method="POST" enctype="multipart/form-data">
+            <div class="input-box">
+                <label>Product Name</label>
+                <input type="text" name="name" id="nameInput" placeholder="e.g. Majestic Bonsai" required onkeyup="updatePreview()">
             </div>
-        </div>
 
-        <!-- QR Display Area -->
-        <div id="qr-display" class="qr-box" style="display: block;">
-            <img src="https://api.qrserver.com/v1/create-qr-code/?data=upi://pay?pa=8446170818@naviaxis%26pn=Om%20Sai%20Nursery%26am={{ total_amt }}%26cu=INR" 
-                 alt="Payment QR" style="width: 180px;">
-            <p style="margin-top: 10px; font-weight: 700;">Scan with any UPI App</p>
-            <span style="color: #64748b; font-size: 13px;">UPI ID: 8446170818@naviaxis</span>
-        </div>
-
-        <!-- Cash on Delivery -->
-        <div class="payment-option" onclick="toggleQR(false)">
-            <input type="radio" name="method">
-            <i class="fa-solid fa-truck" style="font-size: 20px; color: #64748b;"></i>
-            <div>
-                <b style="display: block;">Cash on Delivery (COD)</b>
-                <span style="font-size: 12px; color: #64748b;">Pay when you receive the plants</span>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div class="input-box">
+                    <label>Price (₹)</label>
+                    <input type="number" name="price" id="priceInput" placeholder="499" required onkeyup="updatePreview()">
+                </div>
+                <div class="input-box">
+                    <label>Category</label>
+                    <select name="category">
+                        <option value="plant">Plant</option>
+                        <option value="seed">Seeds</option>
+                        <option value="pot">Pots</option>
+                    </select>
+                </div>
             </div>
-        </div>
+
+            <div class="input-box">
+                <label>Stock Quantity</label>
+                <input type="number" name="stock" placeholder="50" required>
+            </div>
+
+            <div class="input-box">
+                <label>Upload Image</label>
+                <input type="file" name="image" id="imgInput" accept="image/*" required onchange="previewImage(event)">
+            </div>
+
+            <button type="submit" class="btn-publish">
+                <i class="fas fa-paper-plane"></i> Publish to Marketplace
+            </button>
+        </form>
+        <a href="/supplier" style="display: block; text-align: center; margin-top: 20px; color: #64748b; text-decoration: none; font-size: 13px;">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
     </div>
 
-    <!-- RIGHT: Summary Section -->
-    <div class="summary-section">
-        <h4 style="margin-bottom: 20px;">Order Summary</h4>
-        
-        <div class="price-row">
-            <span>Items Subtotal</span>
-            <span>₹{{ total_amt }}</span>
-        </div>
-        <div class="price-row">
-            <span>Delivery Fee</span>
-            <span style="color: var(--primary-green);">FREE</span>
-        </div>
-        <div class="price-row">
-            <span>Platform Fee</span>
-            <span>₹0</span>
-        </div>
-
-        <div class="total-row">
-            <span>Order Total</span>
-            <span>₹{{ total_amt }}</span>
-        </div>
-
-        <button onclick="processFinalPayment()" class="btn-pay">
-            PLACE ORDER & PAY <i class="fa-solid fa-arrow-right"></i>
-        </button>
-
-        <div class="secure-badge">
-            <i class="fa-solid fa-shield-halved"></i> 100% SSL Secure Payment
+    <div class="preview-side">
+        <p style="font-size: 12px; color: #64748b; margin-bottom: 15px; font-weight: 600; text-transform: uppercase;">Live Marketplace Preview</p>
+        <div class="live-preview" id="cardPreview">
+            <img id="itemImg" src="https://via.placeholder.com/300x200?text=Upload+Image" class="preview-img">
+            <div class="preview-content">
+                <div class="preview-name" id="prevName">Product Name</div>
+                <div class="preview-price" id="prevPrice">₹0</div>
+                <div style="font-size: 12px; color: #64748b; margin-top: 5px;"><i class="fas fa-star" style="color: #f1c40f;"></i> 4.8 (New)</div>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
-function toggleQR(show) {
-    document.getElementById('qr-display').style.display = show ? 'block' : 'none';
-    // Logic to update selection UI can be added here
-}
+    function updatePreview() {
+        document.getElementById('prevName').innerText = document.getElementById('nameInput').value || "Product Name";
+        document.getElementById('prevPrice').innerText = "₹" + (document.getElementById('priceInput').value || "0");
+    }
 
-function processFinalPayment() {
-    const total = "{{ total_amt }}";
-    const admin_phone = "918446170818";
-
-    Swal.fire({
-        title: 'Verifying Transaction...',
-        html: 'Please wait while we connect to secure servers.',
-        timer: 2000,
-        timerProgressBar: true,
-        didOpen: () => { Swal.showLoading() }
-    }).then(() => {
-        // Backend order placement
-        fetch('/place_order', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ method: 'UPI_Advanced', utr: 'WA_CONFIRMED' })
-        })
-        .then(res => res.json())
-        .then(data => {
-            if(data.status === 'success') {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Payment Initiated!',
-                    text: 'Opening WhatsApp for final confirmation...',
-                    showConfirmButton: false,
-                    timer: 2000
-                }).then(() => {
-                    const msg = `🚀 *New Order Alert!* \n\n*Customer:* {{ session.username }}\n*Amount:* ₹${total}\n*Status:* Payment Done\n\n_Please confirm this order from your dashboard._`;
-                    window.location.href = `https://wa.me/${admin_phone}?text=${encodeURIComponent(msg)}`;
-                });
-            }
-        });
-    });
-}
+    function previewImage(event) {
+        const reader = new FileReader();
+        reader.onload = function() {
+            const output = document.getElementById('itemImg');
+            output.src = reader.result;
+        }
+        reader.readAsDataURL(event.target.files[0]);
+    }
 </script>
 
-{% endblock %}
+</body>
+</html>
