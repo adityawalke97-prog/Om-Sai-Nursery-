@@ -133,13 +133,21 @@ def login():
         if user and bcrypt.check_password_hash(user['password'], password):
             session.permanent = True
             session["user_id"] = user['id']
-            session["role"] = user['role']
             session["username"] = user['name']
             
-            role = user['role'].lower()
-            if role == "admin": return redirect("/admin")
-            elif role == "supplier": return redirect("/supplier")
-            else: return redirect("/home")
+            # Database se role uthao aur lowercase karo comparison ke liye
+            role = user['role'].lower().strip()
+            session["role"] = role # Session mein bhi save karo
+
+            print(f"DEBUG: User {email} logged in with role: {role}") # Terminal check karein
+
+            # Sahi Redirection logic
+            if role == "admin":
+                return redirect("/admin")
+            elif role == "supplier":
+                return redirect("/supplier")
+            else:
+                return redirect("/home") # Default customer ke liye
         
         return "Invalid Email or Password! ❌", 401
 
