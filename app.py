@@ -133,21 +133,13 @@ def login():
         if user and bcrypt.check_password_hash(user['password'], password):
             session.permanent = True
             session["user_id"] = user['id']
+            session["role"] = user['role']
             session["username"] = user['name']
             
-            # Database se role uthao aur lowercase karo comparison ke liye
-            role = user['role'].lower().strip()
-            session["role"] = role # Session mein bhi save karo
-
-            print(f"DEBUG: User {email} logged in with role: {role}") # Terminal check karein
-
-            # Sahi Redirection logic
-            if role == "admin":
-                return redirect("/admin")
-            elif role == "supplier":
-                return redirect("/supplier")
-            else:
-                return redirect("/home") # Default customer ke liye
+            role = user['role'].lower()
+            if role == "admin": return redirect("/admin")
+            elif role == "supplier": return redirect("/supplier")
+            else: return redirect("/home")
         
         return "Invalid Email or Password! ❌", 401
 
@@ -450,7 +442,7 @@ def admin_feedbacks():
 # --------------------------------ADMIN-------------------------------------#
 @app.route("/admin")
 def admin_dashboard():
-    # 1. Session Check
+    # 1. Session Check (Zaroori hai)
     if "user_id" not in session or session.get("role") != "admin":
         return redirect(url_for("login_page"))
         
@@ -462,17 +454,16 @@ def admin_dashboard():
     total_customers = db.execute("SELECT COUNT(*) FROM users WHERE role='customer'").fetchone()[0] or 0
     total_products = db.execute("SELECT COUNT(*) FROM products").fetchone()[0] or 0
 
-    # --- NAYA PART: Saare Customers ki list fetch karein ---
-    raw_customers = db.execute("SELECT id, name, email, mobile FROM users WHERE role='customer'").fetchall()
-    customers_list = [dict(row) for row in raw_customers] # Dictionary mein badla
-
-    # 3. Recent Orders
+    # 3. Recent Orders (Added 'mobile', 'location', and 'payment_method' for Modal)
+    # Note: Hum 'user_name' direct orders table se le rahe hain ya join se, dono check karein
     raw_recent = db.execute("""
-        SELECT o.*, u.name as customer_name, u.mobile
+        SELECT o.*, u.name as customer_name, u.mobile, u.role
         FROM orders o
         LEFT JOIN users u ON o.user_id = u.id
         ORDER BY o.id DESC LIMIT 10
     """).fetchall()
+    
+    # CRITICAL FIX: Row object ko Dictionary mein badlo
     recent_orders = [dict(row) for row in raw_recent]
 
     # 4. Unsettled Orders
@@ -482,17 +473,16 @@ def admin_dashboard():
         LEFT JOIN users s ON o.supplier_id = s.id
         WHERE o.status = 'Delivered' AND (o.payment_settled = 0 OR o.payment_settled IS NULL)
     """).fetchall()
+    
+    # CRITICAL FIX: Isse bhi Dictionary mein badlo
     unsettled_orders = [dict(row) for row in raw_unsettled]
 
-    # 5. Return Template (customers_list ko bhi bhej rahe hain)
-    return render_template("admin_index.html", 
+    return render_template("admin_index.html", # <--- Iska naam sahi karein
         total_products=total_products, 
         total_orders=total_orders, 
         total_customers=total_customers, 
         total_revenue=total_revenue, 
         orders=recent_orders,
-        customers=customers_list, # <--- YE ZAROORI HAI
-        unsettled=unsettled_orders,
         active='dashboard')
 # --- NAYA: Payment Settle karne ka Route ---
 @app.route("/payment/<int:order_id>")
@@ -575,18 +565,16 @@ def supplier_action(order_id):
     
     print(f"DEBUG: Order {order_id} status updated to {new_status}")
     return redirect("/supplier")
-# 1. Supplier Page Open Karne Ke Liye (GET)
+# Route 1: Sirf form dikhane ke liye (Supplier Dashboard se link isi par aayegi)
 @app.route("/supplier/add_product_page")
-def supplier_add_product_display(): # Naam badal diya taaki conflict na ho
+def supplier_add_product_page():
     if "user_id" not in session or session.get("role") != "supplier":
         return redirect("/login")
-    
-    # Ensure karein ki templates folder mein 'add_product.html' isi naam se hai
     return render_template("add_product.html")
 
-# 2. Data Save Karne Ke Liye (POST)
+# Route 2: Data save karne ke liye (Form submit hone par ye chalega)
 @app.route("/supplier/add_product", methods=["POST"])
-def supplier_add_product_save():
+def supplier_add_product_post():
     if "user_id" not in session or session.get("role") != "supplier":
         return redirect("/login")
 
@@ -594,21 +582,19 @@ def supplier_add_product_save():
     price = request.form.get("price")
     stock = request.form.get("stock")
     category = request.form.get("category")
-    
+    supplier_id = session.get("user_id")
+
     image = request.files.get("image")
-    image_name = "default_plant.png"
-    
+    filename = "default_plant.png"
     if image and image.filename != '':
-        from werkzeug.utils import secure_filename
-        image_name = secure_filename(image.filename)
-        # Ensure 'static/uploads' folder exists
-        image.save(os.path.join(app.config['UPLOAD_FOLDER'], image_name))
+        filename = secure_filename(image.filename)
+        image.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
 
     db = get_db()
     db.execute("""
-        INSERT INTO products (name, price, stock, image, category, supplier_id) 
+        INSERT INTO products (name, price, stock, category, image, supplier_id) 
         VALUES (?, ?, ?, ?, ?, ?)
-    """, (name, price, stock, image_name, category, session['user_id']))
+    """, (name, price, stock, category, filename, supplier_id))
     db.commit()
     
     return redirect("/supplier")
@@ -846,25 +832,35 @@ def approve_order(order_id):
 # -------------------------------- FINAL PAYMENT LOGIC -------------------------------- #
 @app.route("/payments")
 def payments():
-    if "user_id" not in session:
-        return redirect(url_for("login"))
+    user_id = session.get("user_id")
+    if not user_id:
+        return redirect("/login")
 
     db = get_db()
-    user_id = session["user_id"]
     
-    # Cart se items nikalein
-    cart_items = db.execute("SELECT * FROM cart WHERE user_id = ?", (user_id,)).fetchall()
+    # Admin ka mobile number fetch karna
+    admin_data = db.execute("SELECT mobile FROM users WHERE role='admin' LIMIT 1").fetchone()
+    admin_mobile = admin_data['mobile'] if admin_data else "9999999999"
+
+    # Pending aur History orders fetch karna
+    pending_orders = db.execute("SELECT * FROM orders WHERE user_id=? AND status='Pending'", (user_id,)).fetchall()
+    history_orders = db.execute("SELECT * FROM orders WHERE user_id=? AND status != 'Pending' ORDER BY id DESC", (user_id,)).fetchall()
+
+    # --- FIX START: Total Calculate karne ka sahi tarika ---
+    total_amt = 0
+    for order in pending_orders:
+        # 'price' aur 'quantity' columns ke naam check kar lena DB mein sahi hain ya nahi
+        total_amt += float(order["price"]) * int(order["quantity"])
     
-    total_amount = 0
-    # YAHAN GALTI THI: Check karein ki loop 'for item in cart_items' hi ho
-    for item in cart_items: 
-        price = float(item["price"])
-        quantity = int(item["quantity"])
-        total_amount += price * quantity
-    
-    total_amount = round(total_amount, 2)
-    
-    return render_template("payments.html", total=total_amount, items=cart_items)
+    total_amt = round(total_amt, 2)
+    # --- FIX END ---
+
+    return render_template("Payments.html", 
+                       orders=pending_orders, 
+                       history=history_orders, 
+                       total_amt=total_amt,
+                       admin_mobile=admin_mobile,
+                       upi_id="yourname@upi")
 @app.route("/place_order", methods=["POST"])
 def place_order_action():
     if "user_id" not in session:
