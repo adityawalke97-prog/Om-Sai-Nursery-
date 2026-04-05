@@ -450,7 +450,7 @@ def admin_feedbacks():
 # --------------------------------ADMIN-------------------------------------#
 @app.route("/admin")
 def admin_dashboard():
-    # 1. Session Check (Zaroori hai)
+    # 1. Session Check
     if "user_id" not in session or session.get("role") != "admin":
         return redirect(url_for("login_page"))
         
@@ -462,16 +462,17 @@ def admin_dashboard():
     total_customers = db.execute("SELECT COUNT(*) FROM users WHERE role='customer'").fetchone()[0] or 0
     total_products = db.execute("SELECT COUNT(*) FROM products").fetchone()[0] or 0
 
-    # 3. Recent Orders (Added 'mobile', 'location', and 'payment_method' for Modal)
-    # Note: Hum 'user_name' direct orders table se le rahe hain ya join se, dono check karein
+    # --- NAYA PART: Saare Customers ki list fetch karein ---
+    raw_customers = db.execute("SELECT id, name, email, mobile FROM users WHERE role='customer'").fetchall()
+    customers_list = [dict(row) for row in raw_customers] # Dictionary mein badla
+
+    # 3. Recent Orders
     raw_recent = db.execute("""
-        SELECT o.*, u.name as customer_name, u.mobile, u.role
+        SELECT o.*, u.name as customer_name, u.mobile
         FROM orders o
         LEFT JOIN users u ON o.user_id = u.id
         ORDER BY o.id DESC LIMIT 10
     """).fetchall()
-    
-    # CRITICAL FIX: Row object ko Dictionary mein badlo
     recent_orders = [dict(row) for row in raw_recent]
 
     # 4. Unsettled Orders
@@ -481,16 +482,17 @@ def admin_dashboard():
         LEFT JOIN users s ON o.supplier_id = s.id
         WHERE o.status = 'Delivered' AND (o.payment_settled = 0 OR o.payment_settled IS NULL)
     """).fetchall()
-    
-    # CRITICAL FIX: Isse bhi Dictionary mein badlo
     unsettled_orders = [dict(row) for row in raw_unsettled]
 
-    return render_template("admin_index.html", # <--- Iska naam sahi karein
+    # 5. Return Template (customers_list ko bhi bhej rahe hain)
+    return render_template("admin_index.html", 
         total_products=total_products, 
         total_orders=total_orders, 
         total_customers=total_customers, 
         total_revenue=total_revenue, 
         orders=recent_orders,
+        customers=customers_list, # <--- YE ZAROORI HAI
+        unsettled=unsettled_orders,
         active='dashboard')
 # --- NAYA: Payment Settle karne ka Route ---
 @app.route("/payment/<int:order_id>")
