@@ -126,20 +126,32 @@ def login():
     if request.method == "POST":
         email = request.form.get("email", "").strip().lower()
         password = request.form.get("password", "") 
+        selected_role = request.form.get("role", "").lower() # Dropdown se role uthao
         
         db = get_db()
         user = db.execute("SELECT * FROM users WHERE email=?", (email,)).fetchone()
 
         if user and bcrypt.check_password_hash(user['password'], password):
+            # --- YE HAI MAIN FIX ---
+            actual_role = user['role'].lower()
+            
+            # Check karo ki kya selected role database wale role se match karta hai
+            if selected_role != actual_role:
+                return f"Access Denied! You are registered as a {actual_role.capitalize()}, not a {selected_role.capitalize()}. ❌", 403
+
+            # Agar sab sahi hai toh session set karo
             session.permanent = True
             session["user_id"] = user['id']
-            session["role"] = user['role']
+            session["role"] = actual_role
             session["username"] = user['name']
             
-            role = user['role'].lower()
-            if role == "admin": return redirect("/admin")
-            elif role == "supplier": return redirect("/supplier")
-            else: return redirect("/home")
+            # Sahi page par redirect karo
+            if actual_role == "admin": 
+                return redirect("/admin")
+            elif actual_role == "supplier": 
+                return redirect("/supplier")
+            else: 
+                return redirect("/home") # Customer ke liye home
         
         return "Invalid Email or Password! ❌", 401
 
