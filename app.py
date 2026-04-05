@@ -831,29 +831,25 @@ def approve_order(order_id):
 # -------------------------------- FINAL PAYMENT LOGIC -------------------------------- #
 @app.route("/payments")
 def payments():
-    user_id = session.get("user_id")
-    if not user_id:
-        return redirect("/login")
+    if "user_id" not in session:
+        return redirect(url_for("login"))
 
     db = get_db()
+    user_id = session["user_id"]
     
-    # Admin ka mobile number
-    admin_data = db.execute("SELECT mobile FROM users WHERE role='admin' LIMIT 1").fetchone()
-    admin_mobile = admin_data['mobile'] if admin_data else "9999999999"
-
-    # Pending aur History orders fetch karna
-    pending_orders = db.execute("SELECT * FROM orders WHERE user_id=? AND status='Pending'", (user_id,)).fetchall()
-    history_orders = db.execute("SELECT * FROM orders WHERE user_id=? AND status != 'Pending' ORDER BY id DESC", (user_id,)).fetchall()
-
-    # Total calculate karna
-    total = round(float(item["price"]) * int(item["quantity"]), 2)
-    # FIX: variable ka naam 'total_amt' rakhein jo HTML mein use hua hai
-    return render_template("Payments.html", 
-                       orders=pending_orders, 
-                       history=history_orders, 
-                       total_amt=total,
-                       admin_mobile=admin_mobile,
-                       upi_id="yourname@upi")
+    # Cart se items nikalein
+    cart_items = db.execute("SELECT * FROM cart WHERE user_id = ?", (user_id,)).fetchall()
+    
+    total_amount = 0
+    # YAHAN GALTI THI: Check karein ki loop 'for item in cart_items' hi ho
+    for item in cart_items: 
+        price = float(item["price"])
+        quantity = int(item["quantity"])
+        total_amount += price * quantity
+    
+    total_amount = round(total_amount, 2)
+    
+    return render_template("payments.html", total=total_amount, items=cart_items)
 @app.route("/place_order", methods=["POST"])
 def place_order_action():
     if "user_id" not in session:
