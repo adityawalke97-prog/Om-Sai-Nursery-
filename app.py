@@ -575,16 +575,19 @@ def supplier_action(order_id):
     
     print(f"DEBUG: Order {order_id} status updated to {new_status}")
     return redirect("/supplier")
+# 1. Supplier Page Open Karne Ke Liye (GET)
 @app.route("/supplier/add_product_page")
-def add_product_page():
+def supplier_add_product_display(): # Naam badal diya taaki conflict na ho
     if "user_id" not in session or session.get("role") != "supplier":
         return redirect("/login")
+    
+    # Ensure karein ki templates folder mein 'add_product.html' isi naam se hai
     return render_template("add_product.html")
 
 # 2. Data Save Karne Ke Liye (POST)
 @app.route("/supplier/add_product", methods=["POST"])
-def supplier_add_product():
-    if "user_id" not in session:
+def supplier_add_product_save():
+    if "user_id" not in session or session.get("role") != "supplier":
         return redirect("/login")
 
     name = request.form.get("name")
@@ -592,11 +595,13 @@ def supplier_add_product():
     stock = request.form.get("stock")
     category = request.form.get("category")
     
-    # Image Handling
     image = request.files.get("image")
     image_name = "default_plant.png"
-    if image:
+    
+    if image and image.filename != '':
+        from werkzeug.utils import secure_filename
         image_name = secure_filename(image.filename)
+        # Ensure 'static/uploads' folder exists
         image.save(os.path.join(app.config['UPLOAD_FOLDER'], image_name))
 
     db = get_db()
@@ -606,7 +611,7 @@ def supplier_add_product():
     """, (name, price, stock, image_name, category, session['user_id']))
     db.commit()
     
-    return redirect("/supplier") # Wapas dashboard par bhej dega
+    return redirect("/supplier")
 # --------------------------------ASSIGN_SUPPLIER -------------------------------------#
 @app.route("/update_order/<int:id>/<status>")
 def update_order(id, status):
