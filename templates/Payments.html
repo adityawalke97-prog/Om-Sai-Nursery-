@@ -1,197 +1,191 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Checkout | Om Sai Nursery</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    <style>
-        :root { --primary: #2ecc71; --dark: #0f172a; --card-bg: #1e293b; --text-muted: #94a3b8; }
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
-        body { background: var(--dark); color: white; padding: 40px 20px; display: flex; flex-direction: column; align-items: center; }
+{% extends "Home.html" %}
+{% block content %}
 
-        .checkout-grid { width: 100%; max-width: 1100px; display: grid; grid-template-columns: 1.5fr 1fr; gap: 30px; }
+<div class="pay-container">
+    <div class="pay-header">
+        <h2><i class="fas fa-wallet"></i> Secure Payment Gateway</h2>
+        <p>Select an order to complete your payment</p>
+    </div>
 
-        /* Payment Box */
-        .payment-box, .history-box { background: var(--card-bg); border-radius: 24px; padding: 30px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
-        
-        .method-tabs { display: flex; gap: 10px; margin-bottom: 25px; background: rgba(15, 23, 42, 0.5); padding: 5px; border-radius: 12px; }
-        .tab { flex: 1; text-align: center; padding: 12px; cursor: pointer; border-radius: 10px; font-size: 14px; color: var(--text-muted); transition: 0.3s; }
-        .tab.active { background: var(--primary); color: #052e16; font-weight: bold; }
-
-        .input-group { margin-bottom: 15px; }
-        input { width: 100%; padding: 14px; background: #0f172a; border: 1px solid #334155; border-radius: 12px; color: white; margin-top: 5px; }
-
-        .btn-pay { width: 100%; padding: 18px; background: var(--primary); border: none; border-radius: 12px; color: #052e16; font-weight: 800; cursor: pointer; font-size: 16px; transition: 0.3s; margin-top: 10px; }
-        .btn-pay:disabled { background: #334155; color: #64748b; cursor: not-allowed; }
-
-        /* Order Summary */
-        .summary-box { background: linear-gradient(145deg, #1e293b, #111827); border-radius: 24px; padding: 30px; border: 1px solid rgba(255,255,255,0.1); height: fit-content; }
-        .price-row { display: flex; justify-content: space-between; margin-bottom: 12px; color: var(--text-muted); }
-        .total-row { display: flex; justify-content: space-between; margin-top: 20px; padding-top: 20px; border-top: 1px dashed #334155; font-size: 22px; font-weight: bold; color: var(--primary); }
-
-        /* History Table */
-        .history-container { width: 100%; max-width: 1100px; margin-top: 40px; }
-        .history-box { width: 100%; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th { text-align: left; color: var(--text-muted); font-size: 12px; text-transform: uppercase; padding: 15px; border-bottom: 1px solid #334155; }
-        td { padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 14px; }
-        .status-badge { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; background: rgba(46, 204, 113, 0.2); color: var(--primary); }
-
-        /* Loading Animation */
-        .spinner { display: none; width: 20px; height: 20px; border: 3px solid rgba(0,0,0,0.1); border-top: 3px solid #052e16; border-radius: 50%; animation: spin 1s linear infinite; margin-right: 10px; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    </style>
-</head>
-<body>
-
-<div class="checkout-grid">
-    <div class="payment-box">
-        <h2 style="margin-bottom: 25px;"><i class="fas fa-shield-check" style="color:var(--primary)"></i> Secure Checkout</h2>
-        
-        <div class="method-tabs">
-            <div class="tab active" onclick="switchTab(this, 'upi')">UPI</div>
-            <div class="tab" onclick="switchTab(this, 'card')">Card</div>
-            <div class="tab" onclick="switchTab(this, 'cod')">COD</div>
+    <div class="pay-grid">
+        <div class="pending-orders">
+            <h3><i class="fas fa-clock"></i> Pending Payments</h3>
+            <div id="pending-list">
+                <p style="color:#64748b; padding:20px;">Fetching your orders...</p>
+            </div>
         </div>
 
-        <div id="payment-form">
-            <div class="input-group">
-                <label>Billing Name</label>
-                <input type="text" id="custName" placeholder="Enter your full name">
+        <div class="payment-methods" id="payment-box" style="display: none;">
+            <h3><i class="fas fa-credit-card"></i> Choose Payment Method</h3>
+            <div class="selected-summary">
+                <span>Selected Order Total:</span>
+                <strong id="pay-amount">₹0</strong>
             </div>
-            <div class="input-group" id="method-input">
-                <label>UPI ID</label>
-                <input type="text" id="upiId" placeholder="example@apl">
+
+            <div class="method-options">
+                <label class="method-item">
+                    <input type="radio" name="pay-type" value="UPI" checked>
+                    <div class="method-detail">
+                        <i class="fas fa-mobile-alt"></i>
+                        <span>UPI (GPay/PhonePe/Paytm)</span>
+                    </div>
+                </label>
+                <label class="method-item">
+                    <input type="radio" name="pay-type" value="CARD">
+                    <div class="method-detail">
+                        <i class="far fa-credit-card"></i>
+                        <span>Debit/Credit Card</span>
+                    </div>
+                </label>
+                <label class="method-item">
+                    <input type="radio" name="pay-type" value="COD">
+                    <div class="method-detail">
+                        <i class="fas fa-truck"></i>
+                        <span>Cash on Delivery</span>
+                    </div>
+                </label>
             </div>
-            
-            <button class="btn-pay" id="payBtn" onclick="startPayment()">
-                <span class="spinner" id="loader"></span>
-                <span id="btnText">Confirm & Pay ₹2,449</span>
+
+            <button class="pay-now-btn" id="finalPayBtn" onclick="processPayment()">
+                <span id="btnText">Confirm & Pay Now</span>
             </button>
         </div>
     </div>
 
-    <div class="summary-box">
-        <h3 style="margin-bottom: 20px;">Your Cart</h3>
-        <div class="price-row"><span>Majestic Bonsai</span><span>₹1,999</span></div>
-        <div class="price-row"><span>Organic Fertilizer</span><span>₹450</span></div>
-        <div class="price-row"><span>Tax (GST)</span><span>₹0.00</span></div>
-        <div class="total-row"><span>To Pay</span><span>₹2,449</span></div>
-        <p style="font-size: 11px; color: var(--text-muted); margin-top: 15px; text-align: center;">
-            <i class="fas fa-info-circle"></i> By clicking, you agree to our terms.
-        </p>
-    </div>
-</div>
-
-<div class="history-container">
-    <div class="history-box">
-        <h3><i class="fas fa-history" style="color:var(--primary)"></i> Order History</h3>
-        <table id="orderTable">
+    <div class="payment-history">
+        <h3><i class="fas fa-history"></i> Payment History</h3>
+        <table class="history-table">
             <thead>
                 <tr>
                     <th>Order ID</th>
                     <th>Date</th>
-                    <th>Customer</th>
                     <th>Amount</th>
+                    <th>Method</th>
                     <th>Status</th>
                 </tr>
             </thead>
-            <tbody id="historyBody">
+            <tbody id="history-body">
                 </tbody>
         </table>
     </div>
 </div>
 
+<style>
+    :root { --primary: #2ecc71; --dark: #0f172a; --card-bg: #1e293b; }
+    .pay-container { max-width: 1100px; margin: 30px auto; padding: 20px; color: white; }
+    .pay-header { margin-bottom: 30px; text-align: center; }
+    .pay-header h2 { font-size: 28px; color: var(--primary); }
+
+    .pay-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-bottom: 40px; }
+
+    /* Pending Orders Styling */
+    .pending-orders, .payment-methods, .payment-history { 
+        background: var(--card-bg); border-radius: 20px; padding: 25px; border: 1px solid rgba(255,255,255,0.1); 
+    }
+    
+    .order-card { 
+        background: rgba(15, 23, 42, 0.6); padding: 15px; border-radius: 12px; margin-bottom: 12px;
+        border: 1px solid #334155; cursor: pointer; transition: 0.3s;
+    }
+    .order-card:hover { border-color: var(--primary); }
+    .order-card.selected { border-color: var(--primary); background: rgba(46, 204, 113, 0.1); }
+
+    /* Payment Methods Styling */
+    .selected-summary { background: #0f172a; padding: 15px; border-radius: 12px; margin: 15px 0; display: flex; justify-content: space-between; align-items: center; }
+    .selected-summary strong { font-size: 20px; color: var(--primary); }
+
+    .method-options { margin-top: 15px; }
+    .method-item { display: block; margin-bottom: 10px; cursor: pointer; }
+    .method-item input { display: none; }
+    .method-detail { 
+        display: flex; align-items: center; gap: 15px; padding: 15px; background: #0f172a; 
+        border: 1px solid #334155; border-radius: 12px; transition: 0.3s;
+    }
+    .method-item input:checked + .method-detail { border-color: var(--primary); background: rgba(46, 204, 113, 0.05); }
+
+    .pay-now-btn { 
+        width: 100%; padding: 15px; background: var(--primary); border: none; border-radius: 12px;
+        color: #052e16; font-weight: bold; font-size: 16px; cursor: pointer; margin-top: 20px; 
+    }
+
+    /* History Table */
+    .history-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    .history-table th, .history-table td { text-align: left; padding: 15px; border-bottom: 1px solid #334155; }
+    .status-success { color: var(--primary); font-weight: bold; font-size: 12px; }
+
+    @media (max-width: 768px) { .pay-grid { grid-template-columns: 1fr; } }
+</style>
+
 <script>
-    let currentMethod = 'UPI';
+    let activeOrderId = null;
+    let activeOrderAmount = 0;
 
-    function switchTab(el, method) {
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        el.classList.add('active');
-        currentMethod = method.toUpperCase();
+    // Simulation of Orders coming from Backend (Aap ise Fetch se bhi replace kar sakte hain)
+    const mockOrders = [
+        {id: "ORD9921", total: 2449, items: "Majestic Bonsai, Pot", date: "2024-05-20"},
+        {id: "ORD8830", total: 850, items: "Organic Fertilizer", date: "2024-05-19"}
+    ];
+
+    function loadPendingOrders() {
+        const list = document.getElementById('pending-list');
+        list.innerHTML = "";
         
-        const inputArea = document.getElementById('method-input');
-        if(method === 'card') {
-            inputArea.innerHTML = `<label>Card Number</label><input type="text" placeholder="xxxx xxxx xxxx xxxx">`;
-        } else if(method === 'upi') {
-            inputArea.innerHTML = `<label>UPI ID</label><input type="text" id="upiId" placeholder="example@apl">`;
-        } else {
-            inputArea.innerHTML = `<p style="color:var(--text-muted); font-size:13px; padding:10px;">Cash on delivery selected.</p>`;
-        }
-    }
-
-    function startPayment() {
-        const name = document.getElementById('custName').value;
-        if(!name) { alert("Please enter your name!"); return; }
-
-        const btn = document.getElementById('payBtn');
-        const loader = document.getElementById('loader');
-        const btnText = document.getElementById('btnText');
-
-        // Start Loading
-        btn.disabled = true;
-        loader.style.display = 'inline-block';
-        btnText.innerText = "Processing...";
-
-        // Simulate Bank Response (2 Seconds)
-        setTimeout(() => {
-            loader.style.display = 'none';
-            btn.style.background = '#27ae60';
-            btnText.innerText = "Payment Successful!";
-            
-            saveOrder(name, "₹2,449", currentMethod);
-            
-            setTimeout(() => {
-                btn.disabled = false;
-                btn.style.background = 'var(--primary)';
-                btnText.innerText = "Confirm & Pay ₹2,449";
-                document.getElementById('custName').value = "";
-            }, 2000);
-        }, 2500);
-    }
-
-    function saveOrder(name, amount, method) {
-        const tableBody = document.getElementById('historyBody');
-        const date = new Date().toLocaleDateString();
-        const orderId = "#OSN" + Math.floor(Math.random() * 9000 + 1000);
-
-        const newRow = `
-            <tr>
-                <td>${orderId}</td>
-                <td>${date}</td>
-                <td>${name}</td>
-                <td>${amount}</td>
-                <td><span class="status-badge">PAID via ${method}</span></td>
-            </tr>
-        `;
-        
-        // Add to top of table
-        tableBody.insertAdjacentHTML('afterbegin', newRow);
-        
-        // Save to LocalStorage (Browser Memory)
-        const orders = JSON.parse(localStorage.getItem('myOrders') || "[]");
-        orders.unshift({id: orderId, date, name, amount, method});
-        localStorage.setItem('myOrders', JSON.stringify(orders));
-    }
-
-    // Load history on page refresh
-    window.onload = function() {
-        const orders = JSON.parse(localStorage.getItem('myOrders') || "[]");
-        const tableBody = document.getElementById('historyBody');
-        orders.forEach(order => {
-            tableBody.innerHTML += `
-                <tr>
-                    <td>${order.id}</td>
-                    <td>${order.date}</td>
-                    <td>${order.name}</td>
-                    <td>${order.amount}</td>
-                    <td><span class="status-badge">PAID via ${order.method}</span></td>
-                </tr>
+        mockOrders.forEach(order => {
+            list.innerHTML += `
+                <div class="order-card" onclick="selectOrder(this, '${order.id}', ${order.total})">
+                    <div style="display:flex; justify-content:space-between">
+                        <strong>${order.id}</strong>
+                        <span style="color:var(--primary)">₹${order.total}</span>
+                    </div>
+                    <small style="color:#64748b">${order.items}</small>
+                </div>
             `;
         });
     }
+
+    function selectOrder(el, id, amount) {
+        document.querySelectorAll('.order-card').forEach(c => c.classList.remove('selected'));
+        el.classList.add('selected');
+        
+        activeOrderId = id;
+        activeOrderAmount = amount;
+        
+        document.getElementById('payment-box').style.display = 'block';
+        document.getElementById('pay-amount').innerText = "₹" + amount;
+        document.getElementById('finalPayBtn').innerText = `Confirm & Pay ₹${amount}`;
+    }
+
+    function processPayment() {
+        const btn = document.getElementById('finalPayBtn');
+        const method = document.querySelector('input[name="pay-type"]:checked').value;
+        
+        btn.disabled = true;
+        btn.innerText = "Processing Transaction...";
+
+        setTimeout(() => {
+            alert(`Payment of ₹${activeOrderAmount} successful via ${method}!`);
+            
+            // Add to history table
+            const historyBody = document.getElementById('history-body');
+            const row = `
+                <tr>
+                    <td>${activeOrderId}</td>
+                    <td>${new Date().toLocaleDateString()}</td>
+                    <td>₹${activeOrderAmount}</td>
+                    <td>${method}</td>
+                    <td><span class="status-success"><i class="fas fa-check-circle"></i> PAID</span></td>
+                </tr>
+            `;
+            historyBody.insertAdjacentHTML('afterbegin', row);
+
+            // UI Reset
+            document.getElementById('payment-box').style.display = 'none';
+            // Asli app mein yahan backend API call hogi to remove pending order
+        }, 2000);
+    }
+
+    // Initial Load
+    loadPendingOrders();
 </script>
 
-</body>
-</html>
+{% endblock %}
