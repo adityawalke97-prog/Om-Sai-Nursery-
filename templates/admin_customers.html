@@ -19,15 +19,15 @@
             </tr>
         </thead>
         <tbody>
-            {% for c in customers %}
-            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); transition: 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.03)'" onmouseout="this.style.background='transparent'">
-                <td style="padding: 15px; color: #94a3b8;">#{{ c[0] }}</td>
-                <td style="padding: 15px; font-weight: 600;">{{ c[1] }}</td>
-                <td style="padding: 15px; color: #3b82f6;">{{ c[2] }}</td>
-                <td style="padding: 15px;">{{ c[3] }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
+    {% for c in customers %}
+    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); transition: 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.03)'" onmouseout="this.style.background='transparent'">
+        <td style="padding: 15px; color: #94a3b8;">#{{ c.id }}</td>
+        <td style="padding: 15px; font-weight: 600;">{{ c.name }}</td>
+        <td style="padding: 15px; color: #3b82f6;">{{ c.email }}</td>
+        <td style="padding: 15px;">{{ c.mobile }}</td>
+    </tr>
+    {% endfor %}
+</tbody>
     </table>
 </div>
 {% endblock %}
