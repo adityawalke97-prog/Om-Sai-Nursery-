@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Premium Inventory | Om Sai Nursery</title>
+    <title>Secure Checkout | Om Sai Nursery</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <style>
         :root { --primary: #2ecc71; --accent: #00d2ff; --bg: #0f172a; }
@@ -21,125 +21,129 @@
             border-radius: 24px;
             display: flex;
             width: 100%;
-            max-width: 900px;
+            max-width: 950px;
             overflow: hidden;
             box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
         }
 
-        /* Left Side: Form */
+        /* Form Section */
         .form-side { flex: 1.2; padding: 40px; border-right: 1px solid rgba(255,255,255,0.05); }
         
-        /* Right Side: Preview */
+        /* Card Preview Section */
         .preview-side { 
             flex: 0.8; background: rgba(255,255,255,0.02); 
             display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px;
         }
 
-        h2 { font-size: 24px; margin-bottom: 8px; background: linear-gradient(to right, #fff, #94a3b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        h2 { font-size: 26px; margin-bottom: 8px; color: #fff; }
         p.subtitle { color: #64748b; font-size: 14px; margin-bottom: 30px; }
 
-        .input-box { margin-bottom: 20px; position: relative; }
-        .input-box label { display: block; font-size: 12px; color: #94a3b8; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
+        .input-box { margin-bottom: 20px; }
+        .input-box label { display: block; font-size: 11px; color: #94a3b8; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1.5px; }
         
-        input, select {
+        input {
             width: 100%; background: rgba(15, 23, 42, 0.6); border: 1px solid #334155;
-            padding: 12px 16px; border-radius: 12px; color: white; font-size: 15px; transition: 0.3s;
+            padding: 14px 16px; border-radius: 12px; color: white; font-size: 15px; transition: 0.3s;
         }
 
         input:focus { border-color: var(--primary); box-shadow: 0 0 15px rgba(46, 204, 113, 0.2); outline: none; }
 
-        .btn-publish {
-            width: 100%; padding: 16px; background: var(--primary); color: #052e16;
-            border: none; border-radius: 12px; font-weight: 700; font-size: 16px; cursor: pointer;
-            display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.3s;
-            margin-top: 10px;
-        }
-        .btn-publish:hover { background: #27ae60; transform: translateY(-2px); box-shadow: 0 10px 20px rgba(46, 204, 113, 0.3); }
+        .grid-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
 
-        /* Preview Card UI */
-        .live-preview {
-            width: 100%; max-width: 260px; background: #1e293b; border-radius: 20px; overflow: hidden;
-            border: 1px solid rgba(255,255,255,0.1); transition: 0.5s;
+        .btn-pay {
+            width: 100%; padding: 16px; background: var(--primary); color: #052e16;
+            border: none; border-radius: 12px; font-weight: 800; font-size: 16px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.3s;
+            margin-top: 10px; text-transform: uppercase;
         }
-        .preview-img { width: 100%; height: 200px; background: #334155; object-fit: cover; }
-        .preview-content { padding: 15px; }
-        .preview-name { font-weight: 600; font-size: 18px; margin-bottom: 5px; }
-        .preview-price { color: var(--primary); font-weight: 700; font-size: 20px; }
+        .btn-pay:hover { background: #27ae60; transform: translateY(-2px); box-shadow: 0 10px 20px rgba(46, 204, 113, 0.3); }
+
+        /* Virtual Card Styling */
+        .credit-card {
+            width: 320px; height: 190px; background: linear-gradient(135deg, #2ecc71, #27ae60);
+            border-radius: 18px; padding: 25px; box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            position: relative; overflow: hidden; margin-bottom: 30px;
+        }
+        .card-chip { width: 45px; height: 35px; background: linear-gradient(135deg, #ffd700, #b8860b); border-radius: 8px; margin-bottom: 20px; }
+        .card-number-display { font-size: 20px; letter-spacing: 3px; font-weight: 600; margin-bottom: 20px; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+        .card-bottom { display: flex; justify-content: space-between; align-items: center; }
+        .card-holder-label { font-size: 10px; text-transform: uppercase; opacity: 0.8; }
+        .card-holder-name { font-size: 14px; font-weight: 500; }
+        .card-type { font-style: italic; font-weight: 900; font-size: 20px; }
+
+        .secure-badge { font-size: 12px; color: #64748b; display: flex; align-items: center; gap: 8px; }
     </style>
 </head>
 <body>
 
 <div class="main-card">
     <div class="form-side">
-        <h2>Add Premium Item</h2>
-        <p class="subtitle">Enter details to showcase your product in the gallery.</p>
+        <h2>Secure Payment</h2>
+        <p class="subtitle">Enter your card details to complete the purchase.</p>
 
-        <form action="/supplier/add_product" method="POST" enctype="multipart/form-data">
+        <form onsubmit="return false">
             <div class="input-box">
-                <label>Product Name</label>
-                <input type="text" name="name" id="nameInput" placeholder="e.g. Majestic Bonsai" required onkeyup="updatePreview()">
+                <label>Cardholder Name</label>
+                <input type="text" id="nameInput" placeholder="John Doe" onkeyup="updateCard()">
             </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+            <div class="input-box">
+                <label>Card Number</label>
+                <input type="text" id="numInput" placeholder="0000 0000 0000 0000" maxlength="19" onkeyup="formatCardNumber()">
+            </div>
+
+            <div class="grid-inputs">
                 <div class="input-box">
-                    <label>Price (₹)</label>
-                    <input type="number" name="price" id="priceInput" placeholder="499" required onkeyup="updatePreview()">
+                    <label>Expiry Date</label>
+                    <input type="text" id="expInput" placeholder="MM/YY" maxlength="5" onkeyup="updateCard()">
                 </div>
                 <div class="input-box">
-                    <label>Category</label>
-                    <select name="category">
-                        <option value="plant">Plant</option>
-                        <option value="seed">Seeds</option>
-                        <option value="pot">Pots</option>
-                    </select>
+                    <label>CVV</label>
+                    <input type="password" id="cvvInput" placeholder="***" maxlength="3">
                 </div>
             </div>
 
-            <div class="input-box">
-                <label>Stock Quantity</label>
-                <input type="number" name="stock" placeholder="50" required>
-            </div>
-
-            <div class="input-box">
-                <label>Upload Image</label>
-                <input type="file" name="image" id="imgInput" accept="image/*" required onchange="previewImage(event)">
-            </div>
-
-            <button type="submit" class="btn-publish">
-                <i class="fas fa-paper-plane"></i> Publish to Marketplace
+            <button class="btn-pay">
+                <i class="fas fa-lock"></i> Pay ₹2,499.00
             </button>
         </form>
-        <a href="/supplier" style="display: block; text-align: center; margin-top: 20px; color: #64748b; text-decoration: none; font-size: 13px;">
-            <i class="fas fa-arrow-left"></i> Back to Dashboard
-        </a>
     </div>
 
     <div class="preview-side">
-        <p style="font-size: 12px; color: #64748b; margin-bottom: 15px; font-weight: 600; text-transform: uppercase;">Live Marketplace Preview</p>
-        <div class="live-preview" id="cardPreview">
-            <img id="itemImg" src="https://via.placeholder.com/300x200?text=Upload+Image" class="preview-img">
-            <div class="preview-content">
-                <div class="preview-name" id="prevName">Product Name</div>
-                <div class="preview-price" id="prevPrice">₹0</div>
-                <div style="font-size: 12px; color: #64748b; margin-top: 5px;"><i class="fas fa-star" style="color: #f1c40f;"></i> 4.8 (New)</div>
+        <div class="credit-card">
+            <div class="card-chip"></div>
+            <div class="card-number-display" id="cardNum">#### #### #### ####</div>
+            <div class="card-bottom">
+                <div>
+                    <div class="card-holder-label">Card Holder</div>
+                    <div class="card-holder-name" id="cardName">FULL NAME</div>
+                </div>
+                <div>
+                    <div class="card-holder-label">Expires</div>
+                    <div id="cardExp">MM/YY</div>
+                </div>
+                <div class="card-type">VISA</div>
             </div>
+        </div>
+        <div class="secure-badge">
+            <i class="fas fa-shield-alt"></i> 256-bit SSL Encrypted Payment
         </div>
     </div>
 </div>
 
 <script>
-    function updatePreview() {
-        document.getElementById('prevName').innerText = document.getElementById('nameInput').value || "Product Name";
-        document.getElementById('prevPrice').innerText = "₹" + (document.getElementById('priceInput').value || "0");
+    function formatCardNumber() {
+        let input = document.getElementById('numInput');
+        let value = input.value.replace(/\D/g, ''); // Remove non-digits
+        let formatted = value.match(/.{1,4}/g)?.join(' ') || '';
+        input.value = formatted;
+        
+        document.getElementById('cardNum').innerText = formatted || "#### #### #### ####";
     }
 
-    function previewImage(event) {
-        const reader = new FileReader();
-        reader.onload = function() {
-            const output = document.getElementById('itemImg');
-            output.src = reader.result;
-        }
-        reader.readAsDataURL(event.target.files[0]);
+    function updateCard() {
+        document.getElementById('cardName').innerText = document.getElementById('nameInput').value.toUpperCase() || "FULL NAME";
+        document.getElementById('cardExp').innerText = document.getElementById('expInput').value || "MM/YY";
     }
 </script>
 
