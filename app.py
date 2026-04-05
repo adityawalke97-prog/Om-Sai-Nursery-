@@ -1,5 +1,4 @@
 import os
-from unittest.mock import DEFAULT
 from flask import Flask, flash, render_template, request, redirect, session, url_for, jsonify, g
 from flask_bcrypt import Bcrypt
 from datetime import timedelta
@@ -14,49 +13,30 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATABASE = os.path.join(BASE_DIR, "database.db")
 UPLOAD_FOLDER = os.path.join(BASE_DIR, 'static/images')
 
-# --- Ye aapke app.py ke upar ke hisse mein hoga ---
 app = Flask(__name__)
 app.secret_key = "supersecretkey"
-
-# ✅ YE WALI LINES ADD KAREIN:
-
-# -----------------------------------------------app.secret_key = "supersecretkey"
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 bcrypt = Bcrypt(app)
 app.permanent_session_lifetime = timedelta(days=7)
 
-def check_users():
-    conn = sqlite3.connect('nursery.db') # Aapki db file ka naam yahan likhein
-    conn.row_factory = sqlite3.Row
-    cur = conn.cursor()
-    
-    users = cur.execute("SELECT * FROM users").fetchall()
-    
-    print("\n--- Database mein ye Users hain ---")
-    for user in users:
-        print(f"ID: {user['id']} | Email: {user['email']} | Role: {user['role']} | Name: {user['name']}")
-    print("------------------------------------\n")
-    conn.close()
+# --- Database Helpers ---
 def get_db():
     if 'db' not in g:
-        # Dono lines ko merge karke sahi path aur row_factory set karein
-        g.db = sqlite3.connect(DATABASE, timeout=10, check_same_thread=False)
-        g.db.row_factory = sqlite3.Row  # Isse plant['name'] wala error khatam ho jayega
+        g.db = sqlite3.connect(DATABASE, timeout=10)
+        g.db.row_factory = sqlite3.Row 
     return g.db
 
 @app.teardown_appcontext
 def close_db(error):
-    """Request khatam hone par connection close karne ke liye"""
     db = g.pop('db', None)
     if db is not None:
         db.close()
 
 def add_column_if_not_exists(cursor, table, column_def):
-    """Database mein column add karne ka safe tarika taaki error na aaye"""
     try:
         cursor.execute(f"ALTER TABLE {table} ADD COLUMN {column_def}")
     except sqlite3.OperationalError:
-        pass  # Column pehle se hai, koi tension nahi
+        pass 
 
 # ----------------- DATABASE INITIALIZATION -----------------
 
@@ -65,7 +45,7 @@ def init_db():
     conn.row_factory = sqlite3.Row
     cur = conn.cursor()
 
-    # 1. Tables Create Karein
+    # 1. Tables Create Karein (Email UNIQUE fix)
     cur.execute("""CREATE TABLE IF NOT EXISTS users(
         id INTEGER PRIMARY KEY AUTOINCREMENT, 
         name TEXT, 
@@ -84,42 +64,27 @@ def init_db():
 
     cur.execute("""CREATE TABLE IF NOT EXISTS products(
         id INTEGER PRIMARY KEY AUTOINCREMENT, 
-        name TEXT, 
-        price REAL, 
-        stock INTEGER, 
-        image TEXT, 
-        category TEXT, 
-        supplier_id INTEGER)""")
-    
+        name TEXT, price REAL, stock INTEGER, image TEXT, 
+        category TEXT, supplier_id INTEGER)""")
     
     cur.execute('''CREATE TABLE IF NOT EXISTS cart 
-             (id INTEGER PRIMARY KEY AUTOINCREMENT, 
-              user_id INTEGER, 
-              product_name TEXT, 
-              price REAL, 
-              quantity INTEGER)''')
+                 (id INTEGER PRIMARY KEY AUTOINCREMENT, 
+                  user_id INTEGER, product_name TEXT, 
+                  price REAL, quantity INTEGER)''')
 
     cur.execute("""CREATE TABLE IF NOT EXISTS orders(
         id INTEGER PRIMARY KEY AUTOINCREMENT, 
-        user_id INTEGER, 
-        user_name TEXT, 
-        supplier_id INTEGER DEFAULT 0, 
-        product_name TEXT, 
-        price REAL, 
-        quantity INTEGER, 
-        total REAL, 
-        status TEXT DEFAULT 'Pending', 
-        payment_method TEXT, 
-        location TEXT, 
-        mobile TEXT, 
-        payment_id TEXT, 
+        user_id INTEGER, user_name TEXT, supplier_id INTEGER DEFAULT 0, 
+        product_name TEXT, price REAL, quantity INTEGER, total REAL, 
+        status TEXT DEFAULT 'Pending', payment_method TEXT, 
+        location TEXT, mobile TEXT, payment_id TEXT, 
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP)""")
 
     cur.execute("CREATE TABLE IF NOT EXISTS diseases(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, image TEXT, fertilizer_id INTEGER)")
     cur.execute("CREATE TABLE IF NOT EXISTS fertilizers(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, price REAL NOT NULL, stock INTEGER NOT NULL, image TEXT)")
     cur.execute("CREATE TABLE IF NOT EXISTS feedbacks (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, product TEXT, message TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)")
 
-    # 2. Columns safely add karein (ALTER TABLE fix)
+    # 2. Columns safely add
     add_column_if_not_exists(cur, "suppliers", "upi_id TEXT")
     add_column_if_not_exists(cur, "suppliers", "qr_code TEXT")
     add_column_if_not_exists(cur, "suppliers", "payment_mobile TEXT")
@@ -127,65 +92,35 @@ def init_db():
     add_column_if_not_exists(cur, "orders", "payment_settled INTEGER DEFAULT 0")
     add_column_if_not_exists(cur, "orders", "admin_commission REAL DEFAULT 0")
 
-    # 3. Default Products Insert Logic
-    products_list = [
-        ("Apple Plant", 120, 50, "appleplant.png", "plant", 0),
-        ("Banana Plant", 80, 40, "banana.png", "plant", 0),
-        ("Sunflower Seeds", 60, 100, "sunflower.png", "seed", 0),
-        ("Wheat Seed", 149, 100, "wheat.png", "seed", 0)
-    ]
-    for p in products_list:
-        cur.execute("SELECT id FROM products WHERE name=?", (p[0],))
-        if not cur.fetchone():
-            cur.execute("INSERT INTO products(name, price, stock, image, category, supplier_id) VALUES (?,?,?,?,?,?)", p)
-    
-    # 4. Old data migration (Supplier check)
-    cur.execute("SELECT user_id FROM suppliers LIMIT 1")
-    sup = cur.fetchone()
-    if sup:
-        cur.execute("UPDATE products SET supplier_id=? WHERE supplier_id=0 OR supplier_id IS NULL", (sup['user_id'],))
-
+  
     conn.commit()
     conn.close()
-    print("✅ Database Synchronized!")
+
 with app.app_context():
     init_db()
-    print("✅ Database initialized!")
-# Root route
-# 1. ROOT ROUTE (Redirects based on session)
+
+# ----------------- ROUTES -----------------
+
 @app.route("/")
 def index():
     if "user_id" not in session:
-        return redirect(url_for("login_page"))  # Redirect to the GET route below
+        return redirect(url_for("login"))
     
-    role = session.get("role")
-    if role == "customer":
-        return redirect("/home")
-    elif role == "admin":
-        return redirect("/admin")
-    elif role == "supplier":
-        return redirect("/supplier")
-    else:
-        return "Access Denied", 403
+    role = session.get("role", "").lower()
+    if role == "customer": return redirect("/home")
+    elif role == "admin": return redirect("/admin")
+    elif role == "supplier": return redirect("/supplier")
+    return "Access Denied", 403
 
 @app.context_processor
 def inject_translations():
-    # Session se language uthayein, default 'en'
     lang = session.get('lang', 'en')
-    
-    # Ye check karein ki 'translations' variable load hua hai ya nahi
     try:
         current_texts = translations.get(lang, translations.get('en', {}))
     except NameError:
-        current_texts = {} # Agar translations load nahi hua toh khali dict bhejien taaki crash na ho
-        
+        current_texts = {}
     return dict(texts=current_texts)
 
-@app.route("/login", methods=["GET"])
-def login_page():
-    return render_template("Sign_Up.html")
-
-# 3. LOGIN ACTION (POST) - This processes the data
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -193,8 +128,6 @@ def login():
         password = request.form.get("password", "") 
         
         db = get_db()
-        # Row factory ensures we can access data by column name like user['role']
-        db.row_factory = sqlite3.Row 
         user = db.execute("SELECT * FROM users WHERE email=?", (email,)).fetchone()
 
         if user and bcrypt.check_password_hash(user['password'], password):
@@ -203,14 +136,10 @@ def login():
             session["role"] = user['role']
             session["username"] = user['name']
             
-            # Role Wise Redirection
-            role = user['role'].lower() # Case-insensitive check
-            if role == "admin":
-                return redirect("/admin")
-            elif role == "supplier":
-                return redirect("/supplier")
-            else:
-                return redirect("/home")
+            role = user['role'].lower()
+            if role == "admin": return redirect("/admin")
+            elif role == "supplier": return redirect("/supplier")
+            else: return redirect("/home")
         
         return "Invalid Email or Password! ❌", 401
 
@@ -218,22 +147,23 @@ def login():
 
 @app.route("/signup", methods=["POST"])
 def signup():
+    db = get_db()
     name = request.form.get("name")
     email = request.form.get("email", "").strip().lower()
     password = request.form.get("password")
     mobile = request.form.get("mobile")
-    role = request.form.get("role", "customer") # Default customer
+    role = request.form.get("role", "customer").lower()
 
-    db = get_db()
+    # --- YE HAI FIX: PEHLE MANUALLY CHECK KARO ---
+    cursor = db.execute("SELECT id FROM users WHERE email = ?", (email,))
+    existing_user = cursor.fetchone()
     
-    # CHECK: Kya ye email pehle se hai?
-    existing_user = db.execute("SELECT id FROM users WHERE email=?", (email,)).fetchone()
-    if existing_user:
+    if existing_user is not None:
+        print(f"DEBUG: Email {email} already exists in DB!") # VS Code terminal mein dikhega
         return "Email already exists! ❌ Please Login.", 400
 
-    # Password hashing
+    # Agar user nahi mila, tabhi naya account banao
     hashed_password = bcrypt.generate_password_hash(password).decode("utf-8")
-    
     try:
         db.execute("""
             INSERT INTO users (name, email, password, role, mobile)
@@ -241,10 +171,12 @@ def signup():
         """, (name, email, hashed_password, role, mobile))
         db.commit()
         return "Signup Successful! ✅ Now please Login."
-    except Exception as e:
-        print(f"Signup Error: {e}")
-        return "Something went wrong! ❌", 500
-        # Customer dashboard
+    except sqlite3.IntegrityError:
+        return "Email already registered! ❌", 400
+
+
+    
+# Customer dashboard
 @app.route("/home")
 def home():
     if "user_id" not in session:
@@ -899,33 +831,30 @@ def approve_order(order_id):
 # -------------------------------- FINAL PAYMENT LOGIC -------------------------------- #
 @app.route("/payments")
 def payments():
-    if "user_id" not in session:
+    user_id = session.get("user_id")
+    if not user_id:
         return redirect("/login")
 
-    user_id = session["user_id"]
     db = get_db()
     
-    # 1. Admin ka mobile number nikalo (WhatsApp verify ke liye)
+    # Admin ka mobile number
     admin_data = db.execute("SELECT mobile FROM users WHERE role='admin' LIMIT 1").fetchone()
-    admin_mobile = admin_data['mobile'] if admin_data else "919999999999"
+    admin_mobile = admin_data['mobile'] if admin_data else "9999999999"
 
-    # 2. Pending orders uthao (Jo abhi pay karne baaki hain)
+    # Pending aur History orders fetch karna
     pending_orders = db.execute("SELECT * FROM orders WHERE user_id=? AND status='Pending'", (user_id,)).fetchall()
-    
-    # 3. Purane orders (History)
     history_orders = db.execute("SELECT * FROM orders WHERE user_id=? AND status != 'Pending' ORDER BY id DESC", (user_id,)).fetchall()
 
-    # 4. TOTAL Amount Calculate karein (Loop chala kar)
-    total_amt = 0
-    for order in pending_orders:
-        total_amt += float(order['total'])
-
+    # Total calculate karna
+    total = round(float(item["price"]) * int(item["quantity"]), 2)
+    # FIX: variable ka naam 'total_amt' rakhein jo HTML mein use hua hai
     return render_template("Payments.html", 
-                           orders=pending_orders, 
-                           history=history_orders, 
-                           total_amt=round(total_amt, 2),
-                           admin_mobile=admin_mobile,
-                           upi_id="8448170818@naviaxis") 
+                       orders=pending_orders, 
+                       history=history_orders, 
+                       total_amt=total,
+                       admin_mobile=admin_mobile,
+                       upi_id="yourname@upi")
+@app.route("/place_order", methods=["POST"])
 def place_order_action():
     if "user_id" not in session:
         return jsonify({"status": "error", "message": "Session expired! Please login again."}), 401
