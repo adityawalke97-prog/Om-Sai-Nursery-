@@ -230,43 +230,30 @@ body.dark-mode .search-bar { background: rgba(255, 255, 255, 0.05); }
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     z-index: 2000;
 }
-/* ================= MOBILE RESPONSIVE ================= */
-
+/* ===== MOBILE FINAL FIX ===== */
 @media (max-width: 768px) {
 
-    /* NAVBAR FIX */
+    /* NAVBAR */
     .top-nav {
-        flex-direction: column;
+        flex-wrap: wrap;
         height: auto;
-        padding: 15px;
+        padding: 10px;
         gap: 10px;
-    }
-
-    .logo {
-        font-size: 1.2rem;
     }
 
     .search-bar {
-        max-width: 100%;
+        order: 3;
         width: 100%;
     }
 
-    .user-actions {
-        width: 100%;
-        justify-content: space-between;
-        flex-wrap: wrap;
-        gap: 10px;
-    }
-
-    /* SIDEBAR → HIDE */
+    /* SIDEBAR HIDE */
     .sidebar {
-        position: fixed;
         left: -100%;
         top: 0;
-        width: 220px;
-        height: 100%;
-        border-radius: 0;
-        padding-top: 80px;
+        height: 100vh;
+        width: 240px;
+        position: fixed;
+        z-index: 2000;
         transition: 0.3s;
     }
 
@@ -274,11 +261,17 @@ body.dark-mode .search-bar { background: rgba(255, 255, 255, 0.05); }
         left: 0;
     }
 
-    /* CONTENT FULL WIDTH */
+    /* 🚨 MOST IMPORTANT FIX */
     .content-area {
-        margin-left: 0;
-        margin-right: 10px;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        width: 100%;
         padding: 15px;
+    }
+
+    /* WRAPPER FIX */
+    .main-wrapper {
+        display: block;
     }
 
     /* MENU BUTTON */
@@ -290,23 +283,14 @@ body.dark-mode .search-bar { background: rgba(255, 255, 255, 0.05); }
         color: var(--primary);
     }
 
-    /* FLOATING BUTTONS FIX */
+    /* FLOAT BUTTON FIX */
     .floating-cart {
-        width: 50px;
-        height: 50px;
-        bottom: 20px;
-        right: 20px;
+        bottom: 15px;
+        right: 15px;
     }
 
     .whatsapp-float {
-        width: 45px;
-        height: 45px;
-        bottom: 90px;
-        right: 20px;
-    }
-
-    /* PROFILE BOX FIX */
-    .profile-box {
-        right: 10px;
+        bottom: 80px;
+        right: 15px;
     }
 }
