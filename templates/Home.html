@@ -7,15 +7,11 @@
     
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css', v=1) }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v=1) }}">
 </head>
 <body>
     <div class="area">
         <ul class="circles">
-
-    <i class="fa-solid fa-bars"></i>
-</button>
             <li><i class="fa-solid fa-leaf"></i></li>
             <li><i class="fa-solid fa-seedling"></i></li>
             <li><i class="fa-solid fa-tree"></i></li>
@@ -31,9 +27,9 @@
 
     <nav class="top-nav">
         <div class="logo">
-
-    <i class="fa-solid fa-bars"></i>
-</button>
+            <button class="mobile-toggle" onclick="toggleSidebar()">
+                <i class="fa-solid fa-bars"></i>
+            </button>
             <i class="fa-solid fa-seedling"></i> Om Sai Nursery
         </div>
 
@@ -50,7 +46,7 @@
             </div>
 
             <button class="theme-toggle" onclick="toggleDarkMode()">
-                <i class="fa-solid fa-moon"></i>
+                <i class="fa-solid fa-moon" id="themeIcon"></i>
             </button>
 
             <div class="lang-switch">
@@ -58,11 +54,11 @@
                 <a href="{{ url_for('set_language', lang_code='hi') }}">HI</a>
             </div>
             
-            <div class="profile-container" onclick="toggleProfile()">
-                <i class="fa-solid fa-circle-user fa-2xl" style="color: #059669;"></i>
+            <div class="profile-container">
+                <i class="fa-solid fa-circle-user fa-2xl" style="color: #059669; cursor: pointer;" onclick="toggleProfile()"></i>
                 <div class="profile-box" id="profileBox">
-                    <p><strong>{{ session['username'] if session['username'] else 'Guest' }}</strong></p>
-                    <p style="font-size: 0.8rem; color: gray;">{{ session['role'] }}</p>
+                    <p><strong>{{ session['username'] if session.get('username') else 'Guest' }}</strong></p>
+                    <p style="font-size: 0.8rem; color: gray;">{{ session.get('role') | default('Visitor', true) }}</p>
                     <hr>
                     <a href="/logout" class="logout-btn"><i class="fa-solid fa-power-off"></i> Logout</a>
                 </div>
@@ -71,7 +67,7 @@
     </nav>
 
     <div class="main-wrapper">
-        <<aside class="sidebar" id="sidebar">
+        <aside class="sidebar" id="sidebar">
             <h3>Dashboard</h3>
             <ul class="nav-links">
                 <li><a href="/home" class="{{ 'active' if request.path == '/home' else '' }}"><i class="fa-solid fa-house"></i> {{ texts['home'] }}</a></li>
@@ -81,7 +77,6 @@
                 <li>
                     <a href="/orders" class="{{ 'active' if request.path == '/orders' else '' }}">
                         <i class="fa-solid fa-cart-shopping"></i> {{ texts['orders'] }}
-                        <span class="nav-badge"></span>
                     </a>
                 </li>
                 <li><a href="/payments" class="{{ 'active' if request.path == '/payments' else '' }}"><i class="fa-solid fa-wallet"></i> {{ texts['payments'] }}</a></li>
@@ -100,15 +95,23 @@
         <span class="cart-count">0</span>
     </a>
 
+    <a href="https://wa.me/919999999999" class="whatsapp-float" target="_blank">
+        <i class="fa-brands fa-whatsapp"></i>
+    </a>
+
     <script>
         function toggleProfile() {
             const box = document.getElementById("profileBox");
             box.style.display = box.style.display === "block" ? "none" : "block";
         }
 
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+        }
+
         function toggleDarkMode() {
             document.body.classList.toggle('dark-mode');
-            const icon = document.querySelector('.theme-toggle i');
+            const icon = document.getElementById('themeIcon');
             if(document.body.classList.contains('dark-mode')) {
                 icon.className = 'fa-solid fa-sun';
                 localStorage.setItem('theme', 'dark');
@@ -120,18 +123,23 @@
 
         // Initialize theme and cart count
         window.onload = () => {
-            if(localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-mode');
+            if(localStorage.getItem('theme') === 'dark') {
+                document.body.classList.add('dark-mode');
+                document.getElementById('themeIcon').className = 'fa-solid fa-sun';
+            }
             let cart = JSON.parse(localStorage.getItem("cart")) || [];
             document.querySelector('.cart-count').innerText = cart.length;
         };
+
+        // Close profile box if clicking outside
+        window.onclick = function(event) {
+            if (!event.target.matches('.fa-circle-user')) {
+                const box = document.getElementById("profileBox");
+                if (box.style.display === "block") {
+                    box.style.display = "none";
+                }
+            }
+        }
     </script>
-    <a href="https://wa.me/919999999999" class="whatsapp-float" target="_blank">
-    <i class="fa-brands fa-whatsapp"></i>
-</a>
-<script>
-function toggleSidebar() {
-    document.querySelector('.sidebar').classList.toggle('active');
-}
-</script>
 </body>
 </html>
