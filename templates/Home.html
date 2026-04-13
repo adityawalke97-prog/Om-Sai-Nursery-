@@ -141,5 +141,27 @@
             }
         }
     </script>
+<script>
+function toggleSidebar() {
+    const sidebar = document.getElementById("sidebar");
+    const overlay = document.querySelector(".overlay");
+
+    // Debug check
+    console.log("Button clicked");
+
+    if (!sidebar) {
+        console.log("Sidebar NOT found ❌");
+        return;
+    }
+
+    if (sidebar.style.left === "0px") {
+        sidebar.style.left = "-100%";
+        if (overlay) overlay.classList.remove("active");
+    } else {
+        sidebar.style.left = "0px";
+        if (overlay) overlay.classList.add("active");
+    }
+}
+</script>
 </body>
 </html>
