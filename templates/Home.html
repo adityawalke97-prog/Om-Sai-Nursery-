@@ -8,10 +8,14 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css', v=1) }}">
 </head>
 <body>
     <div class="area">
         <ul class="circles">
+<button class="menu-toggle" onclick="toggleSidebar()">
+    <i class="fa-solid fa-bars"></i>
+</button>
             <li><i class="fa-solid fa-leaf"></i></li>
             <li><i class="fa-solid fa-seedling"></i></li>
             <li><i class="fa-solid fa-tree"></i></li>
@@ -121,5 +125,10 @@
     <a href="https://wa.me/919999999999" class="whatsapp-float" target="_blank">
     <i class="fa-brands fa-whatsapp"></i>
 </a>
+<script>
+function toggleSidebar() {
+    document.querySelector('.sidebar').classList.toggle('active');
+}
+</script>
 </body>
 </html>
