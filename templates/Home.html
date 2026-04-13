@@ -31,6 +31,9 @@
 
     <nav class="top-nav">
         <div class="logo">
+<button class="menu-toggle" onclick="toggleSidebar()">
+    <i class="fa-solid fa-bars"></i>
+</button>
             <i class="fa-solid fa-seedling"></i> Om Sai Nursery
         </div>
 
@@ -68,7 +71,7 @@
     </nav>
 
     <div class="main-wrapper">
-        <aside class="sidebar">
+        <<aside class="sidebar" id="sidebar">
             <h3>Dashboard</h3>
             <ul class="nav-links">
                 <li><a href="/home" class="{{ 'active' if request.path == '/home' else '' }}"><i class="fa-solid fa-house"></i> {{ texts['home'] }}</a></li>
