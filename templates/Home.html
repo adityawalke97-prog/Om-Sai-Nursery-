@@ -27,11 +27,11 @@
 
     <nav class="top-nav">
         <div class="logo">
-            
-                <i class="fa-solid fa-bars"></i>
-            </button>
-            <i class="fa-solid fa-seedling"></i> Om Sai Nursery
-        </div>
+    <button class="menu-toggle" onclick="toggleSidebar()">
+        <i class="fa-solid fa-bars"></i>
+    </button>
+    <i class="fa-solid fa-seedling"></i> Om Sai Nursery
+</div>
 
         <div class="search-bar">
             <form action="{{ url_for('search') }}" method="GET" style="width: 100%; display: flex;">
