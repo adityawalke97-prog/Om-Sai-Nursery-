@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Om Sai Nursery{% endblock %}</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
@@ -10,100 +10,110 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 
     <style>
-        /* --- MOBILE REPAIR SYSTEM --- */
+        /* --- SIRF MOBILE KE LIYE CHANGES (Desktop Safe) --- */
         @media screen and (max-width: 768px) {
-            /* 1. Purani bakwas list hatana */
+            /* Desktop ki background animation hide */
             .area, .circles { display: none !important; }
 
-            /* 2. Top Nav ko Mobile App Header banana */
-            .top-nav {
-                display: flex !important;
-                position: sticky !important;
-                top: 0 !important;
-                background: #ffffff !important;
-                height: 60px !important;
-                padding: 0 15px !important;
-                align-items: center !important;
-                justify-content: space-between !important;
-                box-shadow: 0 2px 10px rgba(0,0,0,0.1) !important;
-                z-index: 999 !important;
-            }
-
-            /* 3. Sidebar ko hide karke drawer banana */
+            /* Sidebar ko hide karke mobile drawer banana */
             .sidebar {
                 position: fixed !important;
                 left: -100% !important;
-                top: 0 !important;
+                top: 0;
                 width: 280px !important;
                 height: 100vh !important;
                 background: white !important;
-                z-index: 10000 !important;
-                transition: 0.3s ease !important;
+                z-index: 10001 !important;
+                transition: 0.4s ease;
                 display: block !important;
-                padding-top: 20px !important;
-                box-shadow: 5px 0 20px rgba(0,0,0,0.2) !important;
+                box-shadow: 10px 0 20px rgba(0,0,0,0.2);
             }
             .sidebar.active { left: 0 !important; }
 
-            /* 4. Desktop buttons hide karna */
-            .search-bar, .weather-widget, .lang-switch, .floating-cart, .whatsapp-float { display: none !important; }
-
-            /* 5. Mobile Bottom Menu (App style) */
-            .mobile-bottom-bar {
+            /* Desktop ki top-nav ko fix karna */
+            .top-nav {
                 display: flex !important;
-                position: fixed !important;
-                bottom: 0 !important;
-                left: 0 !important;
-                width: 100% !important;
+                justify-content: space-between !important;
+                padding: 10px 15px !important;
                 background: white !important;
-                height: 70px !important;
-                border-top: 1px solid #eee !important;
-                justify-content: space-around !important;
+                height: 60px !important;
                 align-items: center !important;
-                z-index: 9999 !important;
-                padding-bottom: env(safe-area-inset-bottom) !important;
             }
+            .search-bar, .weather-widget, .lang-switch, .floating-cart { display: none !important; }
 
-            .m-item { text-decoration: none; color: #777; font-size: 11px; text-align: center; }
-            .m-item i { font-size: 22px; display: block; margin-bottom: 3px; }
-            .m-item.active { color: #059669; }
+            /* Mobile Bottom Bar */
+            .mob-app-nav {
+                display: flex !important;
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                width: 100%;
+                background: white;
+                height: 70px;
+                box-shadow: 0 -2px 15px rgba(0,0,0,0.1);
+                justify-content: space-around;
+                align-items: center;
+                z-index: 10000;
+                border-radius: 20px 20px 0 0;
+            }
+            .mob-app-nav a { text-decoration: none; color: #666; font-size: 11px; display: flex; flex-direction: column; align-items: center; }
+            .mob-app-nav i { font-size: 20px; margin-bottom: 4px; }
+            .mob-app-nav a.active { color: #059669; font-weight: bold; }
 
-            /* Content area space fix */
-            .main-wrapper { display: block !important; }
-            .content-area { padding-bottom: 90px !important; padding-top: 10px !important; }
+            .content-area { padding-bottom: 80px !important; }
+            .overlay-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 10000; }
+            .overlay-bg.active { display: block; }
         }
 
-        /* Desktop Safe Zone */
+        /* --- DESKTOP RECOVERY (Wahi purana look) --- */
         @media screen and (min-width: 769px) {
-            .mobile-bottom-bar, .mobile-toggle { display: none !important; }
+            .mob-app-nav, .mob-menu-icon, .overlay-bg { display: none !important; }
         }
-        
-        /* Sidebar Link Style */
-        .nav-links li a { display: flex; align-items: center; gap: 10px; }
+
+        /* Profile Dropdown fix */
+        #profileBox { display: none; position: absolute; right: 0; top: 50px; background: white; padding: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); border-radius: 8px; z-index: 10002; width: 150px; }
+        #profileBox.show { display: block; }
     </style>
 </head>
 <body>
-    <div id="mob-overlay" onclick="toggleMobileMenu()" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999;"></div>
+    <div class="overlay-bg" id="overlay" onclick="toggleSidebar()"></div>
+
+    <div class="area">
+        <ul class="circles">
+            <li><i class="fa-solid fa-leaf"></i></li>
+            <li><i class="fa-solid fa-seedling"></i></li>
+            <li><i class="fa-solid fa-tree"></i></li>
+            <li><i class="fa-solid fa-spa"></i></li>
+            <li><i class="fa-solid fa-leaf"></i></li>
+            <li><i class="fa-solid fa-seedling"></i></li>
+        </ul>
+    </div>
 
     <nav class="top-nav">
-        <div class="logo" style="display:flex; align-items:center;">
-            <i class="fa-solid fa-bars mobile-toggle" onclick="toggleMobileMenu()" style="margin-right:15px; cursor:pointer; font-size:20px;"></i>
+        <div class="logo">
+            <i class="fa-solid fa-bars mob-menu-icon" onclick="toggleSidebar()" style="cursor:pointer; margin-right:10px;"></i>
             <i class="fa-solid fa-seedling"></i> Om Sai Nursery
         </div>
-        
+
         <div class="search-bar">
             <form action="{{ url_for('search') }}" method="GET" style="display: flex;">
-                <input type="text" name="q" placeholder="Search...">
+                <input type="text" name="q" placeholder="Search plants, seeds...">
                 <button type="submit"><i class="fa-solid fa-magnifying-glass"></i></button>
             </form>
         </div>
 
         <div class="user-actions">
+            <div class="weather-widget">
+                <i class="fa-solid fa-cloud-sun"></i> <span>28°C</span>
+            </div>
             <button class="theme-toggle" onclick="toggleDarkMode()"><i class="fa-solid fa-moon"></i></button>
+            <div class="lang-switch">
+                <a href="{{ url_for('set_language', lang_code='en') }}">EN</a> | <a href="{{ url_for('set_language', lang_code='hi') }}">HI</a>
+            </div>
             <div class="profile-container" onclick="toggleProfile()" style="position:relative; cursor:pointer;">
                 <i class="fa-solid fa-circle-user fa-2xl" style="color: #059669;"></i>
-                <div class="profile-box" id="profileBox" style="display:none; position:absolute; right:0; top:50px; background:white; padding:15px; box-shadow:0 5px 15px rgba(0,0,0,0.1); border-radius:8px; width:160px; z-index:1001;">
-                    <p><strong>{{ session['username']|default('Aditya') }}</strong></p>
+                <div id="profileBox">
+                    <p><strong>{{ session['username']|default('User') }}</strong></p>
                     <hr>
                     <a href="/logout" style="color:red; text-decoration:none;"><i class="fa-solid fa-power-off"></i> Logout</a>
                 </div>
@@ -112,7 +122,7 @@
     </nav>
 
     <div class="main-wrapper">
-        <aside class="sidebar" id="mainSidebar">
+        <aside class="sidebar" id="sidebar">
             <h3 style="padding: 20px;">Dashboard</h3>
             <ul class="nav-links">
                 <li><a href="/home"><i class="fa-solid fa-house"></i> Home</a></li>
@@ -131,40 +141,28 @@
         </main>
     </div>
 
-    <div class="mobile-bottom-bar">
-        <a href="/home" class="m-item active"><i class="fa-solid fa-house"></i>Home</a>
-        <a href="/plants" class="m-item"><i class="fa-solid fa-leaf"></i>Plants</a>
-        <a href="/orders" class="m-item"><i class="fa-solid fa-basket-shopping"></i>Cart</a>
-        <a href="https://wa.me/919999999999" class="m-item"><i class="fa-brands fa-whatsapp"></i>Chat</a>
+    <div class="mob-app-nav">
+        <a href="/home" class="active"><i class="fa-solid fa-house"></i>Home</a>
+        <a href="/plants"><i class="fa-solid fa-leaf"></i>Plants</a>
+        <a href="/orders"><i class="fa-solid fa-basket-shopping"></i>Cart</a>
+        <a href="https://wa.me/919999999999"><i class="fa-brands fa-whatsapp"></i>Chat</a>
     </div>
 
     <script>
-        function toggleMobileMenu() {
-            const sb = document.getElementById('mainSidebar');
-            const ov = document.getElementById('mob-overlay');
-            if(sb.classList.contains('active')) {
-                sb.classList.remove('active');
-                ov.style.display = 'none';
-            } else {
-                sb.classList.add('active');
-                ov.style.display = 'block';
-            }
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('overlay').classList.toggle('active');
         }
-
         function toggleProfile() {
-            const p = document.getElementById('profileBox');
-            p.style.display = p.style.display === 'none' ? 'block' : 'none';
+            document.getElementById('profileBox').classList.toggle('show');
         }
-
         function toggleDarkMode() {
             document.body.classList.toggle('dark-mode');
         }
-
-        // Fix for Cache: Force reload mobile specific icons
         window.onload = () => {
             let cart = JSON.parse(localStorage.getItem("cart")) || [];
-            console.log("Mobile layout initialized");
-        }
+            // Update cart count if needed
+        };
     </script>
 </body>
 </html>
