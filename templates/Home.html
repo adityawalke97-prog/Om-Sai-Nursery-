@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Om Sai Nursery{% endblock %}</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
@@ -10,146 +10,177 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 
     <style>
-        /* --- DESKTOP DESIGN (Waisa hi jaisa aapko chahiye) --- */
-        @media (min-width: 769px) {
-            .mobile-only { display: none !important; }
-            .sidebar { position: static; display: block; }
-        }
+        /* --- MOBILE ONLY ADVANCED OVERRIDES --- */
+        @media screen and (max-width: 768px) {
+            /* Background Animation Hide on Mobile */
+            .area, .circles { display: none !important; }
 
-        /* --- MOBILE ADVANCED UI (Bakwaas hatane ke liye) --- */
-        @media (max-width: 768px) {
-            body { background: #f8fafc; margin: 0; padding: 0; }
-            
-            /* Background animation hide on mobile for speed */
-            .area { display: none; }
-
-            /* Top Header Fix */
+            /* Top Nav Fix */
             .top-nav {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                padding: 10px 15px;
-                background: #ffffff;
-                box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-                position: sticky;
+                display: flex !important;
+                position: sticky !important;
                 top: 0;
+                background: white !important;
                 z-index: 1000;
+                padding: 10px 15px !important;
+                justify-content: space-between !important;
+                align-items: center !important;
+                height: 60px !important;
+                box-shadow: 0 2px 5px rgba(0,0,0,0.05);
             }
-            .desktop-search, .weather-widget, .lang-switch { display: none !important; }
 
-            .logo { font-size: 1.1rem; font-weight: 600; color: #059669; display: flex; align-items: center; gap: 8px; }
-
-            /* Profile Container Fix */
-            .profile-container { position: relative; }
-            .profile-box {
-                position: absolute;
-                top: 50px;
-                right: 0;
-                background: white;
-                width: 200px;
-                border-radius: 12px;
-                box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-                padding: 15px;
-                display: none;
-                z-index: 2000;
-            }
-            .profile-box.active { display: block; }
-
-            /* Sidebar Drawer Fix */
+            /* Sidebar Drawer Logic */
             .sidebar {
                 position: fixed !important;
                 left: -100% !important;
                 top: 0;
-                width: 280px;
-                height: 100vh;
+                width: 280px !important;
+                height: 100vh !important;
                 background: white !important;
-                z-index: 3000;
-                transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-                box-shadow: 10px 0 30px rgba(0,0,0,0.1);
-                padding-top: 20px;
+                z-index: 9999 !important;
+                transition: 0.3s ease-in-out !important;
+                box-shadow: 5px 0 15px rgba(0,0,0,0.1);
+                display: block !important;
             }
             .sidebar.active { left: 0 !important; }
 
-            /* Bottom App Navigation (Super Modern) */
+            /* Mobile Menu Toggle Button */
+            .mob-menu-btn { display: block !important; cursor: pointer; font-size: 20px; color: #333; }
+
+            /* Desktop Elements Hide */
+            .search-bar, .weather-widget, .lang-switch, .floating-cart { display: none !important; }
+
+            /* Main Content Adjust */
+            .main-wrapper { display: block !important; }
+            .content-area { padding: 15px !important; padding-bottom: 100px !important; }
+
+            /* Advanced Bottom App Bar */
             .mobile-bottom-nav {
+                display: flex !important;
                 position: fixed;
                 bottom: 0;
                 left: 0;
-                right: 0;
-                height: 70px;
+                width: 100%;
                 background: white;
-                display: flex;
+                height: 70px;
+                box-shadow: 0 -3px 15px rgba(0,0,0,0.08);
                 justify-content: space-around;
                 align-items: center;
-                box-shadow: 0 -5px 20px rgba(0,0,0,0.05);
-                border-radius: 20px 20px 0 0;
                 z-index: 1000;
+                border-top-left-radius: 20px;
+                border-top-right-radius: 20px;
             }
             .nav-item {
                 text-decoration: none;
-                color: #94a3b8;
-                font-size: 11px;
+                color: #718096;
+                font-size: 10px;
                 display: flex;
                 flex-direction: column;
                 align-items: center;
                 gap: 4px;
-                transition: 0.3s;
             }
-            .nav-item i { font-size: 20px; }
-            .nav-item.active { color: #059669; }
+            .nav-item.active { color: #059669; font-weight: 600; }
+            .nav-item i { font-size: 22px; }
 
-            .content-area { padding: 15px; padding-bottom: 90px; min-height: 80vh; }
-            
+            /* Sidebar Links Fix */
+            .sidebar ul { padding: 20px; list-style: none; }
+            .sidebar li { margin-bottom: 8px; }
+            .sidebar a {
+                padding: 12px 15px;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                text-decoration: none;
+                color: #333;
+                border-radius: 10px;
+            }
+            .sidebar a.active { background: #ecfdf5; color: #059669; }
+
             .overlay {
+                display: none;
                 position: fixed;
                 inset: 0;
-                background: rgba(0,0,0,0.4);
-                backdrop-filter: blur(3px);
-                display: none;
-                z-index: 2500;
+                background: rgba(0,0,0,0.5);
+                z-index: 9998;
+                backdrop-filter: blur(2px);
             }
             .overlay.active { display: block; }
         }
 
-        /* Common Utility */
-        .cart-badge {
-            position: absolute;
-            top: -5px;
-            right: -10px;
-            background: #ef4444;
-            color: white;
-            font-size: 10px;
-            padding: 2px 6px;
-            border-radius: 50px;
-            font-weight: bold;
+        /* Desktop specific reset */
+        @media screen and (min-width: 769px) {
+            .mobile-bottom-nav, .mob-menu-btn, .overlay { display: none !important; }
         }
+
+        /* Profile Box */
+        .profile-box {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 55px;
+            background: white;
+            min-width: 180px;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            z-index: 1001;
+        }
+        .profile-box.show { display: block; }
+        .dark-mode .profile-box { background: #1a1a1a; color: white; border: 1px solid #333; }
     </style>
 </head>
-<body class="{% if request.path == '/home' %}home-page{% endif %}">
-
+<body>
     <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+    <div class="area">
+        <ul class="circles">
+            <li><i class="fa-solid fa-leaf"></i></li>
+            <li><i class="fa-solid fa-seedling"></i></li>
+            <li><i class="fa-solid fa-tree"></i></li>
+            <li><i class="fa-solid fa-spa"></i></li>
+            <li><i class="fa-solid fa-leaf"></i></li>
+            <li><i class="fa-solid fa-seedling"></i></li>
+            <li><i class="fa-solid fa-tree"></i></li>
+            <li><i class="fa-solid fa-spa"></i></li>
+            <li><i class="fa-solid fa-leaf"></i></li>
+            <li><i class="fa-solid fa-seedling"></i></li>
+        </ul>
+    </div>
 
     <nav class="top-nav">
         <div class="logo">
-            <button onclick="toggleSidebar()" class="mobile-only" style="background:none; border:none; color:#333; font-size: 1.2rem; cursor:pointer;">
-                <i class="fa-solid fa-bars-staggered"></i>
-            </button>
-            <i class="fa-solid fa-seedling"></i>
-            <span>Om Sai Nursery</span>
+            <i class="fa-solid fa-bars mob-menu-btn" onclick="toggleSidebar()" style="display:none;"></i>
+            <i class="fa-solid fa-seedling"></i> Om Sai Nursery
+        </div>
+
+        <div class="search-bar">
+            <form action="{{ url_for('search') }}" method="GET" style="width: 100%; display: flex;">
+                <input type="text" name="q" placeholder="Search plants, seeds...">
+                <button type="submit"><i class="fa-solid fa-magnifying-glass"></i></button>
+            </form>
         </div>
 
         <div class="user-actions">
-            <button class="theme-toggle" onclick="toggleDarkMode()" style="background:none; border:none; font-size: 1.2rem; cursor:pointer;">
+            <div class="weather-widget">
+                <i class="fa-solid fa-cloud-sun"></i> <span>28°C</span>
+            </div>
+
+            <button class="theme-toggle" onclick="toggleDarkMode()">
                 <i class="fa-solid fa-moon" id="themeIcon"></i>
             </button>
+
+            <div class="lang-switch">
+                <a href="{{ url_for('set_language', lang_code='en') }}">EN</a> |
+                <a href="{{ url_for('set_language', lang_code='hi') }}">HI</a>
+            </div>
             
-            <div class="profile-container" onclick="toggleProfile()">
+            <div class="profile-container" style="position:relative;" onclick="toggleProfile()">
                 <i class="fa-solid fa-circle-user fa-2xl" style="color: #059669; cursor:pointer;"></i>
                 <div class="profile-box" id="profileBox">
-                    <p style="margin:0;"><strong>{{ session['username'] if session.get('username') else 'Aditya Walke' }}</strong></p>
-                    <p style="font-size: 0.8rem; color: #64748b; margin: 5px 0;">User Account</p>
-                    <hr style="border:0; border-top:1px solid #eee; margin:10px 0;">
-                    <a href="/logout" style="color:#ef4444; text-decoration:none; font-size:0.9rem; display:flex; align-items:center; gap:8px;">
+                    <p><strong>{{ session['username'] if session['username'] else 'Guest' }}</strong></p>
+                    <p style="font-size: 0.8rem; color: gray;">{{ session['role'] }}</p>
+                    <hr>
+                    <a href="/logout" class="logout-btn" style="text-decoration:none; color:red; display:flex; align-items:center; gap:8px;">
                         <i class="fa-solid fa-power-off"></i> Logout
                     </a>
                 </div>
@@ -159,14 +190,16 @@
 
     <div class="main-wrapper">
         <aside class="sidebar" id="sidebar">
-            <div style="padding: 0 20px 20px; border-bottom: 1px solid #eee;">
-                <h3 style="color:#059669;">Dashboard</h3>
-            </div>
-            <ul class="nav-links" style="list-style:none; padding:10px;">
-                <li style="margin-bottom:5px;"><a href="/home" style="display:flex; align-items:center; gap:15px; padding:12px 15px; text-decoration:none; color:#334155; border-radius:8px;" class="active"><i class="fa-solid fa-house"></i> Home</a></li>
-                <li style="margin-bottom:5px;"><a href="/plants" style="display:flex; align-items:center; gap:15px; padding:12px 15px; text-decoration:none; color:#334155; border-radius:8px;"><i class="fa-solid fa-leaf"></i> Plants</a></li>
-                <li style="margin-bottom:5px;"><a href="/orders" style="display:flex; align-items:center; gap:15px; padding:12px 15px; text-decoration:none; color:#334155; border-radius:8px;"><i class="fa-solid fa-cart-shopping"></i> My Orders</a></li>
-                <li style="margin-bottom:5px;"><a href="/contact" style="display:flex; align-items:center; gap:15px; padding:12px 15px; text-decoration:none; color:#334155; border-radius:8px;"><i class="fa-solid fa-phone"></i> Contact</a></li>
+            <h3 style="padding: 20px 0 10px 25px; border-bottom: 1px solid #eee;">Dashboard</h3>
+            <ul class="nav-links">
+                <li><a href="/home" class="{{ 'active' if request.path == '/home' else '' }}"><i class="fa-solid fa-house"></i> {{ texts['home'] }}</a></li>
+                <li><a href="/plants" class="{{ 'active' if request.path == '/plants' else '' }}"><i class="fa-solid fa-leaf"></i> {{ texts['plants'] }}</a></li>
+                <li><a href="/seeds" class="{{ 'active' if request.path == '/seeds' else '' }}"><i class="fa-solid fa-spa"></i> {{ texts['seeds'] }}</a></li>
+                <li><a href="/diseases" class="{{ 'active' if request.path == '/diseases' else '' }}"><i class="fa-solid fa-bug"></i> {{ texts['diseases'] }}</a></li>
+                <li><a href="/orders" class="{{ 'active' if request.path == '/orders' else '' }}"><i class="fa-solid fa-cart-shopping"></i> {{ texts['orders'] }}</a></li>
+                <li><a href="/payments" class="{{ 'active' if request.path == '/payments' else '' }}"><i class="fa-solid fa-wallet"></i> {{ texts['payments'] }}</a></li>
+                <li><a href="/feedback" class="{{ 'active' if request.path == '/feedback' else '' }}"><i class="fa-solid fa-comment-dots"></i> {{ texts['feedback'] }}</a></li>
+                <li><a href="/contact" class="{{ 'active' if request.path == '/contact' else '' }}"><i class="fa-solid fa-phone"></i> {{ texts['contact'] }}</a></li>
             </ul>
         </aside>
 
@@ -175,44 +208,55 @@
         </main>
     </div>
 
-    <nav class="mobile-bottom-nav mobile-only">
-        <a href="/home" class="nav-item active">
+    <a href="/orders" class="floating-cart">
+        <i class="fa-solid fa-basket-shopping"></i>
+        <span class="cart-count">0</span>
+    </a>
+
+    <div class="mobile-bottom-nav" style="display:none;">
+        <a href="/home" class="nav-item {{ 'active' if request.path == '/home' else '' }}">
             <i class="fa-solid fa-house-chimney"></i>
             <span>Home</span>
         </a>
-        <a href="/plants" class="nav-item">
+        <a href="/plants" class="nav-item {{ 'active' if request.path == '/plants' else '' }}">
             <i class="fa-solid fa-leaf"></i>
             <span>Plants</span>
         </a>
-        <a href="/orders" class="nav-item">
+        <a href="/orders" class="nav-item {{ 'active' if request.path == '/orders' else '' }}">
             <div style="position:relative;">
                 <i class="fa-solid fa-basket-shopping"></i>
-                <span class="cart-count cart-badge">0</span>
+                <span class="cart-count" style="position:absolute; top:-5px; right:-8px; background:red; color:white; font-size:9px; border-radius:50%; padding:2px 5px;">0</span>
             </div>
             <span>Cart</span>
         </a>
         <a href="https://wa.me/919999999999" class="nav-item">
-            <i class="fa-brands fa-whatsapp"></i>
+            <i class="fa-brands fa-whatsapp" style="color:#25D366;"></i>
             <span>Chat</span>
         </a>
-    </nav>
+    </div>
 
     <script>
         function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('active');
-            document.getElementById('overlay').classList.toggle('active');
+            const side = document.getElementById('sidebar');
+            const over = document.getElementById('overlay');
+            side.classList.toggle('active');
+            over.classList.toggle('active');
         }
 
         function toggleProfile() {
-            document.getElementById("profileBox").classList.toggle("active");
+            document.getElementById("profileBox").classList.toggle("show");
         }
 
         function toggleDarkMode() {
             document.body.classList.toggle('dark-mode');
             const icon = document.getElementById('themeIcon');
-            const isDark = document.body.classList.contains('dark-mode');
-            icon.className = isDark ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
-            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            if(document.body.classList.contains('dark-mode')) {
+                icon.className = 'fa-solid fa-sun';
+                localStorage.setItem('theme', 'dark');
+            } else {
+                icon.className = 'fa-solid fa-moon';
+                localStorage.setItem('theme', 'light');
+            }
         }
 
         window.onload = () => {
@@ -224,10 +268,10 @@
             document.querySelectorAll('.cart-count').forEach(el => el.innerText = cart.length);
         };
 
-        // Close dropdowns on outside click
+        // Close profile when clicking outside
         window.addEventListener('click', function(e) {
             if (!document.querySelector('.profile-container').contains(e.target)) {
-                document.getElementById("profileBox").classList.remove("active");
+                document.getElementById("profileBox").classList.remove("show");
             }
         });
     </script>
