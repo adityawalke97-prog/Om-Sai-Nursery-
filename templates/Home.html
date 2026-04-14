@@ -2,9 +2,10 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>{% block title %}Om Sai Nursery{% endblock %}</title>
-    
+
+    <meta name="theme-color" content="#2e7d32">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
@@ -17,20 +18,20 @@
             <li><i class="fa-solid fa-tree"></i></li>
             <li><i class="fa-solid fa-spa"></i></li>
             <li><i class="fa-solid fa-leaf"></i></li>
-            <li><i class="fa-solid fa-seedling"></i></li>
-            <li><i class="fa-solid fa-tree"></i></li>
-            <li><i class="fa-solid fa-spa"></i></li>
-            <li><i class="fa-solid fa-leaf"></i></li>
-            <li><i class="fa-solid fa-seedling"></i></li>
         </ul>
     </div>
 
     <nav class="top-nav">
-        <div class="logo">
-            <i class="fa-solid fa-seedling"></i> Om Sai Nursery
+        <div class="nav-header">
+            <button class="menu-toggle mobile-only" onclick="toggleSidebar()">
+                <i class="fa-solid fa-bars-staggered"></i>
+            </button>
+            <div class="logo">
+                <i class="fa-solid fa-seedling"></i> Om Sai Nursery
+            </div>
         </div>
 
-        <div class="search-bar">
+        <div class="search-bar desktop-only">
             <form action="{{ url_for('search') }}" method="GET" style="width: 100%; display: flex;">
                 <input type="text" name="q" placeholder="Search plants, seeds...">
                 <button type="submit"><i class="fa-solid fa-magnifying-glass"></i></button>
@@ -38,24 +39,16 @@
         </div>
 
         <div class="user-actions">
-            <div class="weather-widget">
+            <div class="weather-widget desktop-only">
                 <i class="fa-solid fa-cloud-sun"></i> <span>28°C</span>
             </div>
-
             <button class="theme-toggle" onclick="toggleDarkMode()">
-                <i class="fa-solid fa-moon"></i>
+                <i class="fa-solid fa-moon" id="themeIcon"></i>
             </button>
-
-            <div class="lang-switch">
-                <a href="{{ url_for('set_language', lang_code='en') }}">EN</a> |
-                <a href="{{ url_for('set_language', lang_code='hi') }}">HI</a>
-            </div>
-            
             <div class="profile-container" onclick="toggleProfile()">
                 <i class="fa-solid fa-circle-user fa-2xl" style="color: #059669;"></i>
                 <div class="profile-box" id="profileBox">
                     <p><strong>{{ session['username'] if session['username'] else 'Guest' }}</strong></p>
-                    <p style="font-size: 0.8rem; color: gray;">{{ session['role'] }}</p>
                     <hr>
                     <a href="/logout" class="logout-btn"><i class="fa-solid fa-power-off"></i> Logout</a>
                 </div>
@@ -64,22 +57,19 @@
     </nav>
 
     <div class="main-wrapper">
-        <aside class="sidebar">
-            <h3>Dashboard</h3>
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header mobile-only">
+                <h3>Dashboard</h3>
+                <button onclick="toggleSidebar()">&times;</button>
+            </div>
             <ul class="nav-links">
-                <li><a href="/home" class="{{ 'active' if request.path == '/home' else '' }}"><i class="fa-solid fa-house"></i> {{ texts['home'] }}</a></li>
-                <li><a href="/plants" class="{{ 'active' if request.path == '/plants' else '' }}"><i class="fa-solid fa-leaf"></i> {{ texts['plants'] }}</a></li>
-                <li><a href="/seeds" class="{{ 'active' if request.path == '/seeds' else '' }}"><i class="fa-solid fa-spa"></i> {{ texts['seeds'] }}</a></li>
-                <li><a href="/diseases" class="{{ 'active' if request.path == '/diseases' else '' }}"><i class="fa-solid fa-bug"></i> {{ texts['diseases'] }}</a></li>
-                <li>
-                    <a href="/orders" class="{{ 'active' if request.path == '/orders' else '' }}">
-                        <i class="fa-solid fa-cart-shopping"></i> {{ texts['orders'] }}
-                        <span class="nav-badge"></span>
-                    </a>
-                </li>
-                <li><a href="/payments" class="{{ 'active' if request.path == '/payments' else '' }}"><i class="fa-solid fa-wallet"></i> {{ texts['payments'] }}</a></li>
-                <li><a href="/feedback" class="{{ 'active' if request.path == '/feedback' else '' }}"><i class="fa-solid fa-comment-dots"></i> {{ texts['feedback'] }}</a></li>
-                <li><a href="/contact" class="{{ 'active' if request.path == '/contact' else '' }}"><i class="fa-solid fa-phone"></i> {{ texts['contact'] }}</a></li>
+                <li><a href="/home" class="{{ 'active' if request.path == '/home' else '' }}"><i class="fa-solid fa-house"></i> Home</a></li>
+                <li><a href="/plants"><i class="fa-solid fa-leaf"></i> Plants</a></li>
+                <li><a href="/seeds"><i class="fa-solid fa-spa"></i> Seeds</a></li>
+                <li><a href="/diseases"><i class="fa-solid fa-bug"></i> Diseases</a></li>
+                <li><a href="/orders"><i class="fa-solid fa-cart-shopping"></i> My Orders</a></li>
+                <li><a href="/feedback"><i class="fa-solid fa-comment-dots"></i> Feedback</a></li>
+                <li><a href="/contact"><i class="fa-solid fa-phone"></i> Contact</a></li>
             </ul>
         </aside>
 
@@ -88,12 +78,25 @@
         </main>
     </div>
 
-    <a href="/orders" class="floating-cart">
-        <i class="fa-solid fa-basket-shopping"></i>
-        <span class="cart-count">0</span>
-    </a>
+    <div class="mobile-bottom-nav mobile-only">
+        <a href="/home" class="nav-item active"><i class="fa-solid fa-house"></i><span>Home</span></a>
+        <a href="/plants" class="nav-item"><i class="fa-solid fa-leaf"></i><span>Plants</span></a>
+        <a href="/orders" class="nav-item cart-btn">
+            <i class="fa-solid fa-basket-shopping"></i>
+            <span class="cart-count">0</span>
+            <span>Cart</span>
+        </a>
+        <a href="https://wa.me/919999999999" class="nav-item"><i class="fa-brands fa-whatsapp"></i><span>Chat</span></a>
+    </div>
+
+    <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
 
     <script>
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('overlay').classList.toggle('active');
+        }
+
         function toggleProfile() {
             const box = document.getElementById("profileBox");
             box.style.display = box.style.display === "block" ? "none" : "block";
@@ -101,7 +104,7 @@
 
         function toggleDarkMode() {
             document.body.classList.toggle('dark-mode');
-            const icon = document.querySelector('.theme-toggle i');
+            const icon = document.getElementById('themeIcon');
             if(document.body.classList.contains('dark-mode')) {
                 icon.className = 'fa-solid fa-sun';
                 localStorage.setItem('theme', 'dark');
@@ -111,15 +114,14 @@
             }
         }
 
-        // Initialize theme and cart count
         window.onload = () => {
-            if(localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-mode');
+            if(localStorage.getItem('theme') === 'dark') {
+                document.body.classList.add('dark-mode');
+                document.getElementById('themeIcon').className = 'fa-solid fa-sun';
+            }
             let cart = JSON.parse(localStorage.getItem("cart")) || [];
-            document.querySelector('.cart-count').innerText = cart.length;
+            document.querySelectorAll('.cart-count').forEach(el => el.innerText = cart.length);
         };
     </script>
-    <a href="https://wa.me/919999999999" class="whatsapp-float" target="_blank">
-    <i class="fa-brands fa-whatsapp"></i>
-</a>
 </body>
 </html>
