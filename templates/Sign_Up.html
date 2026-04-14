@@ -3,113 +3,168 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Om Sai Plant Nursery - Best Online Plant Store</title>
+    <title>Login / Sign Up - Om Sai Plant Nursery</title>
 
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='signup.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='signup.css') }}">
+    
+    <style>
+        /* Real-world Flash Alert Styling (Glassmorphism) */
+        .flash-container {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+            width: 90%;
+            max-width: 400px;
+        }
+        .alert {
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            animation: slideDown 0.5s ease;
+        }
+        .alert-danger { background: rgba(255, 59, 59, 0.5); }
+        .alert-success { background: rgba(40, 167, 69, 0.5); }
+
+        @keyframes slideDown {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+    </style>
 </head>
 
 <body>
 
-<div class="container" id="container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-container">
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
 
-   <div class="form-container sign-in-container">
-    <form action="/login" method="POST">
-        <h1>Sign In</h1>
-        <input type="email" name="email" placeholder="Enter your email" required>
-        <input type="password" name="password" placeholder="Enter Password" required>
+    <div class="container" id="container">
 
-        <!-- Ye dropdown ensure karta hai ki user sahi role select kare -->
-        <select name="role" required>
-            <option value="customer">Customer</option>
-            <option value="supplier">Supplier</option>
-            <option value="admin">Admin</option>
-        </select>
+        <div class="form-container sign-up-container">
+            <form id="signupForm" action="/signup" method="POST">
+                <h1>Create Account</h1>
+                <div class="social-container">
+                    <a href="#" class="social"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" class="social"><i class="fab fa-google-plus-g"></i></a>
+                </div>
+                <span>Enter details for registration</span>
+                
+                <input type="text" name="name" placeholder="Full Name" required>
+                <input type="email" name="email" placeholder="Email Address" required>
+                <input type="text" name="mobile" placeholder="Mobile (10 Digits)" pattern="[0-9]{10}" maxlength="10" required>
+                <input type="password" name="password" placeholder="Create Password" required>
 
-        <button type="submit">Login</button>
-    </form>
-</div>
-    <div class="form-container sign-up-container">
-        <form id="signupForm">
-            <h1>Create Account</h1>
+                <select name="role" required>
+                    <option value="" disabled selected>Select Role</option>
+                    <option value="customer">Customer</option>
+                    <option value="supplier">Supplier</option>
+                    <option value="admin">Admin</option>
+                </select>
 
-            <input type="text" name="name" placeholder="Enter your name" required>
+                <button type="submit" id="signupBtn">Sign Up</button>
+            </form>
+        </div>
 
-            <input type="email" name="email" placeholder="Enter your email" required>
+        <div class="form-container sign-in-container">
+            <form action="/login" method="POST">
+                <h1>Sign In</h1>
+                <div class="social-container">
+                    <a href="#" class="social"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" class="social"><i class="fab fa-google-plus-g"></i></a>
+                </div>
+                <span>Use your registered email</span>
+                
+                <input type="email" name="email" placeholder="Email" required>
+                <input type="password" name="password" placeholder="Password" required>
+                
+                <a href="#">Forgot your password?</a>
+                <button type="submit">Login</button>
+            </form>
+        </div>
 
-            <input type="text" 
-                   name="mobile" 
-                   placeholder="Enter 10 Digit Mobile Number" 
-                   required 
-                   pattern="[0-9]{10}" 
-                   maxlength="10">
-
-            <input type="password" name="password" placeholder="Password" required>
-
-            <select name="role" required>
-                <option value="customer">Customer</option>
-                <option value="supplier">Supplier</option>
-                <option value="admin">Admin</option>
-            </select>
-
-            <button type="submit">Sign Up</button>
-        </form>
-    </div>
-
-    <div class="overlay-container">
-        <div class="overlay">
-            <div class="overlay-panel overlay-left">
-                <h1>Welcome Back!</h1>
-                <p>To keep connected with us please login with your personal info</p>
-                <button class="ghost" id="signIn">Sign In</button>
-            </div>
-            <div class="overlay-panel overlay-right">
-                <h1>Hello, Friend!</h1>
-                <p>Enter your personal details and start journey with us</p>
-                <button class="ghost" id="signUp">Sign Up</button>
+        <div class="overlay-container">
+            <div class="overlay">
+                <div class="overlay-panel overlay-left">
+                    <h1>Welcome Back!</h1>
+                    <p>To keep connected with us please login with your personal info</p>
+                    <button class="ghost" id="signIn">Sign In</button>
+                </div>
+                <div class="overlay-panel overlay-right">
+                    <h1>Om Sai Nursery</h1>
+                    <p>Enter your personal details and start journey with us</p>
+                    <button class="ghost" id="signUp">Sign Up</button>
+                </div>
             </div>
         </div>
+
     </div>
-</div>
 
-<script>
-    const signUpBtn = document.getElementById("signUp");
-    const signInBtn = document.getElementById("signIn");
-    const container = document.getElementById("container");
+    <script>
+        const signUpButton = document.getElementById('signUp');
+        const signInButton = document.getElementById('signIn');
+        const container = document.getElementById('container');
 
-    signUpBtn.onclick = () => container.classList.add("right-panel-active");
-    signInBtn.onclick = () => container.classList.remove("right-panel-active");
-
-    /* ---------- SIGN UP LOGIC (FIXED) ---------- */
-    document.getElementById("signupForm").addEventListener("submit", function(e) {
-        e.preventDefault();
-
-        const formData = new FormData(this);
-
-        fetch("/signup", {
-            method: "POST",
-            body: formData
-        })
-        .then(async res => {
-            const message = await res.text(); // Python se aaya message (Success ya Error)
-            
-            if (res.ok) {
-                // Agar status 200 (Success) hai
-                alert(message); 
-                container.classList.remove("right-panel-active"); // Login panel par bhej do
-                this.reset();
-            } else {
-                // Agar status 400 (Duplicate Email) ya koi aur error hai
-                alert(message); 
-            }
-        })
-        .catch(err => {
-            alert("Server connection failed! Check if Flask is running.");
-            console.error(err);
+        // Panel Switch Animation
+        signUpButton.addEventListener('click', () => {
+            container.classList.add("right-panel-active");
         });
+
+        signInButton.addEventListener('click', () => {
+            container.classList.remove("right-panel-active");
+        });
+
+        // Auto-hide flash messages after 4 seconds
+        setTimeout(() => {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                alert.style.display = 'none';
+            });
+        }, 4000);
+        document.getElementById("signupForm").addEventListener("submit", function(e) {
+    e.preventDefault();
+
+    const formData = new FormData(this);
+
+    fetch("/signup", {
+        method: "POST",
+        body: formData
+    })
+    .then(res => res.text())
+    .then(data => {
+        if (data.includes("Successful")) {
+            // 1. Success message dikhao
+            alert("Registration Successful! Redirecting to Login...");
+            
+            // 2. Animation ke sath Login page par switch karo
+            container.classList.remove("right-panel-active");
+            
+            // 3. Form ko clear kar do
+            this.reset();
+        } else {
+            alert(data); // "Email already exists" ya koi aur error dikhayega
+        }
+    })
+    .catch(err => {
+        alert("Signup Failed! Please try again.");
+        console.log(err);
     });
-</script>
+});
+    </script>
 
 </body>
 </html>
