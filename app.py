@@ -852,7 +852,7 @@ def payments():
     
     # Admin ka mobile number fetch karna
     admin_data = db.execute("SELECT mobile FROM users WHERE role='admin' LIMIT 1").fetchone()
-    admin_mobile = admin_data['mobile'] if admin_data else "9999999999"
+    admin_mobile = admin_data['mobile'] if admin_data else "8446170818"
 
     # Pending aur History orders fetch karna
     pending_orders = db.execute("SELECT * FROM orders WHERE user_id=? AND status='Pending'", (user_id,)).fetchall()
@@ -872,7 +872,7 @@ def payments():
                        history=history_orders, 
                        total_amt=total_amt,
                        admin_mobile=admin_mobile,
-                       upi_id="yourname@upi")
+                       upi_id="8446170818@nyes")
 @app.route("/place_order", methods=["POST"])
 def place_order_action():
     if "user_id" not in session:
