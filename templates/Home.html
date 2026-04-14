@@ -10,76 +10,86 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 
     <style>
-        /* --- SIRF MOBILE KE LIYE CHANGES (Desktop Safe) --- */
-        @media screen and (max-width: 768px) {
-            /* Desktop ki background animation hide */
-            .area, .circles { display: none !important; }
-
-            /* Sidebar ko hide karke mobile drawer banana */
-            .sidebar {
-                position: fixed !important;
-                left: -100% !important;
-                top: 0;
-                width: 280px !important;
-                height: 100vh !important;
-                background: white !important;
-                z-index: 10001 !important;
-                transition: 0.4s ease;
-                display: block !important;
-                box-shadow: 10px 0 20px rgba(0,0,0,0.2);
+        /* --- MOBILE SPECIFIC CHANGES (Desktop me koi change nahi hoga) --- */
+        @media (max-width: 768px) {
+            /* 1. Desktop Sidebar Hide */
+            aside.sidebar {
+                display: none !important;
             }
-            .sidebar.active { left: 0 !important; }
 
-            /* Desktop ki top-nav ko fix karna */
+            /* 2. Main Content Adjustment */
+            main.content-area {
+                margin-left: 0 !important;
+                padding: 15px !important;
+                padding-bottom: 80px !important; /* Space for Mobile Nav */
+            }
+
+            /* 3. Top Nav Adjustment (Search bar ko chhota ya stack karne ke liye) */
             .top-nav {
-                display: flex !important;
-                justify-content: space-between !important;
-                padding: 10px 15px !important;
-                background: white !important;
-                height: 60px !important;
-                align-items: center !important;
+                flex-wrap: wrap;
+                height: auto !important;
+                padding: 10px !important;
             }
-            .search-bar, .weather-widget, .lang-switch, .floating-cart { display: none !important; }
+            .search-bar {
+                order: 3;
+                width: 100% !important;
+                margin-top: 10px;
+            }
 
-            /* Mobile Bottom Bar */
-            .mob-app-nav {
+            /* 4. Mobile App Bottom Bar (Sirf Mobile me show hoga) */
+            .mobile-bottom-nav {
                 display: flex !important;
                 position: fixed;
                 bottom: 0;
                 left: 0;
                 width: 100%;
-                background: white;
-                height: 70px;
-                box-shadow: 0 -2px 15px rgba(0,0,0,0.1);
+                background: rgba(255, 255, 255, 0.9);
+                backdrop-filter: blur(10px);
                 justify-content: space-around;
-                align-items: center;
+                padding: 10px 0;
+                border-top: 1px solid rgba(0,0,0,0.1);
+                box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
                 z-index: 10000;
-                border-radius: 20px 20px 0 0;
             }
-            .mob-app-nav a { text-decoration: none; color: #666; font-size: 11px; display: flex; flex-direction: column; align-items: center; }
-            .mob-app-nav i { font-size: 20px; margin-bottom: 4px; }
-            .mob-app-nav a.active { color: #059669; font-weight: bold; }
 
-            .content-area { padding-bottom: 80px !important; }
-            .overlay-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 10000; }
-            .overlay-bg.active { display: block; }
+            .mobile-nav-item {
+                text-decoration: none;
+                color: #059669;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                font-size: 11px;
+                font-weight: 600;
+            }
+
+            .mobile-nav-item i {
+                font-size: 20px;
+                margin-bottom: 2px;
+            }
+
+            /* 5. Products Grid (Mobile me 2 cards) */
+            #products {
+                display: grid !important;
+                grid-template-columns: 1fr 1fr !important;
+                gap: 10px !important;
+            }
         }
 
-        /* --- DESKTOP RECOVERY (Wahi purana look) --- */
-        @media screen and (min-width: 769px) {
-            .mob-app-nav, .mob-menu-icon, .overlay-bg { display: none !important; }
+        /* Desktop View Settings (Ensure Bottom Nav is hidden) */
+        @media (min-width: 769px) {
+            .mobile-bottom-nav {
+                display: none !important;
+            }
         }
-
-        /* Profile Dropdown fix */
-        #profileBox { display: none; position: absolute; right: 0; top: 50px; background: white; padding: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); border-radius: 8px; z-index: 10002; width: 150px; }
-        #profileBox.show { display: block; }
     </style>
 </head>
 <body>
-    <div class="overlay-bg" id="overlay" onclick="toggleSidebar()"></div>
-
     <div class="area">
         <ul class="circles">
+            <li><i class="fa-solid fa-leaf"></i></li>
+            <li><i class="fa-solid fa-seedling"></i></li>
+            <li><i class="fa-solid fa-tree"></i></li>
+            <li><i class="fa-solid fa-spa"></i></li>
             <li><i class="fa-solid fa-leaf"></i></li>
             <li><i class="fa-solid fa-seedling"></i></li>
             <li><i class="fa-solid fa-tree"></i></li>
@@ -91,12 +101,11 @@
 
     <nav class="top-nav">
         <div class="logo">
-            <i class="fa-solid fa-bars mob-menu-icon" onclick="toggleSidebar()" style="cursor:pointer; margin-right:10px;"></i>
             <i class="fa-solid fa-seedling"></i> Om Sai Nursery
         </div>
 
         <div class="search-bar">
-            <form action="{{ url_for('search') }}" method="GET" style="display: flex;">
+            <form action="{{ url_for('search') }}" method="GET" style="width: 100%; display: flex;">
                 <input type="text" name="q" placeholder="Search plants, seeds...">
                 <button type="submit"><i class="fa-solid fa-magnifying-glass"></i></button>
             </form>
@@ -106,33 +115,49 @@
             <div class="weather-widget">
                 <i class="fa-solid fa-cloud-sun"></i> <span>28°C</span>
             </div>
-            <button class="theme-toggle" onclick="toggleDarkMode()"><i class="fa-solid fa-moon"></i></button>
+
+            <button class="theme-toggle" onclick="toggleDarkMode()">
+                <i class="fa-solid fa-moon"></i>
+            </button>
+
             <div class="lang-switch">
-                <a href="{{ url_for('set_language', lang_code='en') }}">EN</a> | <a href="{{ url_for('set_language', lang_code='hi') }}">HI</a>
+                <a href="{{ url_for('set_language', lang_code='en') }}">EN</a> |
+                <a href="{{ url_for('set_language', lang_code='hi') }}">HI</a>
             </div>
-            <div class="profile-container" onclick="toggleProfile()" style="position:relative; cursor:pointer;">
+            
+            <div class="profile-container" onclick="toggleProfile()">
                 <i class="fa-solid fa-circle-user fa-2xl" style="color: #059669;"></i>
-                <div id="profileBox">
-                    <p><strong>{{ session['username']|default('User') }}</strong></p>
+                <div class="profile-box" id="profileBox">
+                    <p><strong>{{ session['username'] if session['username'] else 'Guest' }}</strong></p>
+                    <p style="font-size: 0.8rem; color: gray;">{{ session['role'] }}</p>
                     <hr>
-                    <a href="/logout" style="color:red; text-decoration:none;"><i class="fa-solid fa-power-off"></i> Logout</a>
+                    <a href="/logout" class="logout-btn"><i class="fa-solid fa-power-off"></i> Logout</a>
                 </div>
             </div>
         </div>
     </nav>
 
     <div class="main-wrapper">
-        <aside class="sidebar" id="sidebar">
-            <h3 style="padding: 20px;">Dashboard</h3>
+        <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+
+<nav id="main-nav" class="nav-links">
+    </nav>
+        <aside class="sidebar">
+            <h3>Dashboard</h3>
             <ul class="nav-links">
-                <li><a href="/home"><i class="fa-solid fa-house"></i> Home</a></li>
-                <li><a href="/plants"><i class="fa-solid fa-leaf"></i> Plants</a></li>
-                <li><a href="/seeds"><i class="fa-solid fa-spa"></i> Seeds</a></li>
-                <li><a href="/diseases"><i class="fa-solid fa-bug"></i> Diseases</a></li>
-                <li><a href="/orders"><i class="fa-solid fa-cart-shopping"></i> Orders</a></li>
-                <li><a href="/payments"><i class="fa-solid fa-wallet"></i> Payments</a></li>
-                <li><a href="/feedback"><i class="fa-solid fa-comment-dots"></i> Feedback</a></li>
-                <li><a href="/contact"><i class="fa-solid fa-phone"></i> Contact</a></li>
+                <li><a href="/home" class="{{ 'active' if request.path == '/home' else '' }}"><i class="fa-solid fa-house"></i> {{ texts['home'] }}</a></li>
+                <li><a href="/plants" class="{{ 'active' if request.path == '/plants' else '' }}"><i class="fa-solid fa-leaf"></i> {{ texts['plants'] }}</a></li>
+                <li><a href="/seeds" class="{{ 'active' if request.path == '/seeds' else '' }}"><i class="fa-solid fa-spa"></i> {{ texts['seeds'] }}</a></li>
+                <li><a href="/diseases" class="{{ 'active' if request.path == '/diseases' else '' }}"><i class="fa-solid fa-bug"></i> {{ texts['diseases'] }}</a></li>
+                <li>
+                    <a href="/orders" class="{{ 'active' if request.path == '/orders' else '' }}">
+                        <i class="fa-solid fa-cart-shopping"></i> {{ texts['orders'] }}
+                        <span class="nav-badge">3</span>
+                    </a>
+                </li>
+                <li><a href="/payments" class="{{ 'active' if request.path == '/payments' else '' }}"><i class="fa-solid fa-wallet"></i> {{ texts['payments'] }}</a></li>
+                <li><a href="/feedback" class="{{ 'active' if request.path == '/feedback' else '' }}"><i class="fa-solid fa-comment-dots"></i> {{ texts['feedback'] }}</a></li>
+                <li><a href="/contact" class="{{ 'active' if request.path == '/contact' else '' }}"><i class="fa-solid fa-phone"></i> {{ texts['contact'] }}</a></li>
             </ul>
         </aside>
 
@@ -141,28 +166,57 @@
         </main>
     </div>
 
-    <div class="mob-app-nav">
-        <a href="/home" class="active"><i class="fa-solid fa-house"></i>Home</a>
-        <a href="/plants"><i class="fa-solid fa-leaf"></i>Plants</a>
-        <a href="/orders"><i class="fa-solid fa-basket-shopping"></i>Cart</a>
-        <a href="https://wa.me/919999999999"><i class="fa-brands fa-whatsapp"></i>Chat</a>
-    </div>
+    <nav class="mobile-bottom-nav">
+        <a href="/home" class="mobile-nav-item">
+            <i class="fa-solid fa-house"></i>
+            <span>Home</span>
+        </a>
+        <a href="/plants" class="mobile-nav-item">
+            <i class="fa-solid fa-leaf"></i>
+            <span>Plants</span>
+        </a>
+        <a href="/orders" class="mobile-nav-item">
+            <i class="fa-solid fa-cart-shopping"></i>
+            <span>Orders</span>
+        </a>
+        <a href="/feedback" class="mobile-nav-item">
+            <i class="fa-solid fa-comment-dots"></i>
+            <span>Feedback</span>
+        </a>
+    </nav>
+
+    <a href="/orders" class="floating-cart">
+        <i class="fa-solid fa-basket-shopping"></i>
+        <span class="cart-count">0</span>
+    </a>
 
     <script>
-        function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('active');
-            document.getElementById('overlay').classList.toggle('active');
-        }
         function toggleProfile() {
-            document.getElementById('profileBox').classList.toggle('show');
+            const box = document.getElementById("profileBox");
+            box.style.display = box.style.display === "block" ? "none" : "block";
         }
+
         function toggleDarkMode() {
             document.body.classList.toggle('dark-mode');
+            const icon = document.querySelector('.theme-toggle i');
+            if(document.body.classList.contains('dark-mode')) {
+                icon.className = 'fa-solid fa-sun';
+                localStorage.setItem('theme', 'dark');
+            } else {
+                icon.className = 'fa-solid fa-moon';
+                localStorage.setItem('theme', 'light');
+            }
         }
+
         window.onload = () => {
+            if(localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-mode');
             let cart = JSON.parse(localStorage.getItem("cart")) || [];
-            // Update cart count if needed
+            document.querySelectorAll('.cart-count').forEach(el => el.innerText = cart.length);
         };
     </script>
+
+    <a href="https://wa.me/919999999999" class="whatsapp-float" target="_blank">
+        <i class="fa-brands fa-whatsapp"></i>
+    </a>
 </body>
 </html>
