@@ -1,191 +1,278 @@
 {% extends "Home.html" %}
 {% block content %}
 
-<div class="pay-container">
-    <div class="pay-header">
-        <h2><i class="fas fa-wallet"></i> Secure Payment Gateway</h2>
-        <p>Select an order to complete your payment</p>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+
+<style>
+    :root {
+        --primary: #27ae60;
+        --secondary: #2c3e50;
+        --bg-app: #f0f2f5;
+        --glass-bg: rgba(255, 255, 255, 0.85);
+        --glass-border: rgba(255, 255, 255, 0.5);
+        --text-main: #1e293b;
+        --text-muted: #64748b;
+        --card-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+    }
+
+    @media (prefers-color-scheme: dark) {
+        :root {
+            --bg-app: #0f172a;
+            --glass-bg: rgba(30, 41, 59, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+        }
+    }
+
+    body { background: var(--bg-app) !important; color: var(--text-main) !important; font-family: 'Poppins', sans-serif; }
+    .container { max-width: 1100px; margin: 40px auto; padding: 0 20px; }
+    .glass-card { 
+        background: var(--glass-bg) !important; 
+        backdrop-filter: blur(12px); 
+        border: 1px solid var(--glass-border) !important; 
+        border-radius: 24px; 
+        padding: 30px; 
+        margin-bottom: 30px; 
+        box-shadow: var(--card-shadow); 
+    }
+    
+    .table-container { overflow-x: auto; }
+    table { width: 100%; border-collapse: separate; border-spacing: 0 10px; }
+    th { padding: 15px; color: var(--text-muted); font-weight: 600; text-align: left; font-size: 13px; text-transform: uppercase; }
+    td { background: rgba(255, 255, 255, 0.3); padding: 20px; vertical-align: middle; }
+    tr td:first-child { border-radius: 15px 0 0 15px; }
+    tr td:last-child { border-radius: 0 15px 15px 0; }
+
+    /* Status Badges */
+    .status-badge {
+        padding: 6px 14px; border-radius: 20px; font-size: 11px; font-weight: 700;
+        display: inline-flex; align-items: center; gap: 6px; text-transform: uppercase;
+    }
+    .status-placed { background: #e0f2fe; color: #0369a1; }
+    .status-accepted { background: #fef3c7; color: #92400e; }
+    .status-ontheway { background: #fff3cd; color: #856404; border: 1px solid #ffe58f; animation: pulse 1.5s infinite; }
+    .status-delivered { background: #dcfce7; color: #166534; }
+    .status-rejected { background: #fee2e2; color: #991b1b; }
+
+    @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+
+    /* Buttons */
+    .btn-pay { background: linear-gradient(135deg, var(--primary), #2ecc71) !important; color: white !important; border: none; padding: 12px 25px; border-radius: 12px; font-weight: 600; cursor: pointer; transition: 0.3s; }
+    .btn-track { background: #3498db; color: white; text-decoration: none; padding: 8px 16px; border-radius: 8px; font-size: 12px; font-weight: 600; display: inline-block; transition: 0.3s; }
+    .btn-track:hover { background: #2980b9; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3); }
+
+    /* Modal */
+    #qrModal {
+        display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.85); z-index: 9999; align-items: center; justify-content: center;
+        opacity: 0; transition: opacity 0.3s ease;
+    }
+    .qr-box { background: white; padding: 30px; border-radius: 30px; text-align: center; max-width: 350px; width: 90%; color: #333; }
+</style>
+
+<div class="container">
+    <div class="glass-card">
+        <h2 style="margin-top:0;"><i class="fas fa-shopping-basket" style="color: var(--primary);"></i> Current Order</h2>
+        {% if orders %}
+            <div class="table-container">
+                <table>
+                    <thead><tr><th>Product</th><th>Qty</th><th>Subtotal</th></tr></thead>
+                    <tbody>
+                        {% for order in orders %}
+                        <tr>
+                            <td><strong>{{ order.product_name }}</strong></td>
+                            <td><span class="badge bg-light text-dark" style="padding: 5px 12px; border-radius: 8px;">{{ order.quantity }}</span></td>
+                            <td><strong style="color: var(--primary); font-size: 1.1rem;">₹{{ order.total }}</strong></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div style="text-align: right; margin-top: 25px; border-top: 1px solid var(--glass-border); padding-top: 20px;">
+                <h3 style="margin-bottom: 20px;">Total Amount: <span style="color: var(--primary);">₹{{ total_amount }}</span></h3>
+                <div style="display: flex; justify-content: flex-end; gap: 10px; align-items: center;">
+                    <select id="payMethod" style="padding: 12px; border-radius: 10px; border: 1px solid #ddd; outline: none;">
+                        <option value="upi">UPI QR Code (Instant)</option>
+                        <option value="cod">Cash on Delivery</option>
+                    </select>
+                    <button class="btn-pay" onclick="handlePayment()">Confirm & Pay Now</button>
+                </div>
+            </div>
+        {% else %}
+            <div style="text-align: center; padding: 20px; opacity: 0.5;">
+                <i class="fas fa-cart-plus" style="font-size: 2rem;"></i>
+                <p>Your cart is empty or no active orders found.</p>
+            </div>
+        {% endif %}
     </div>
 
-    <div class="pay-grid">
-        <div class="pending-orders">
-            <h3><i class="fas fa-clock"></i> Pending Payments</h3>
-            <div id="pending-list">
-                <p style="color:#64748b; padding:20px;">Fetching your orders...</p>
-            </div>
+    <div class="glass-card">
+        <h2 style="margin-top:0;"><i class="fas fa-truck-loading" style="color: #3498db;"></i> Order History & Order Details</h2>
+        {% if history %}
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Plant Details</th>
+                            <th style="text-align: center;">Qty</th>
+                            <th>Payment</th>
+                            <th>Status</th>
+                            <th style="text-align: center;">Tracking</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+    {% for h in history %}
+    <tr>
+        <td><small>#{{ h.id }}</small></td>
+        <td><strong>{{ h.product_name }}</strong></td>
+        <td style="text-align: center;">{{ h.quantity }}</td>
+        <td>
+            <span style="font-size: 12px; color: var(--text-muted);">
+                <i class="fas {{ 'fa-qrcode' if h.payment_method == 'Online' else 'fa-hand-holding-usd' }}"></i> 
+                {{ h.payment_method }}
+            </span>
+        </td>
+        <td>
+            {% if h.status == 'Placed' %}
+                <span class="status-badge status-placed"><i class="fas fa-clock"></i> Placed</span>
+            {% elif h.status == 'Accepted' %}
+                <span class="status-badge status-accepted"><i class="fas fa-box"></i> Accepted</span>
+            {% elif h.status == 'On the Way' %}
+                <span class="status-badge status-ontheway"><i class="fas fa-motorcycle"></i> On the Way</span>
+            {% elif h.status == 'Delivered' %}
+                <span class="status-badge status-delivered"><i class="fas fa-check-circle"></i> Delivered</span>
+            {% else %}
+                <span class="status-badge">{{ h.status }}</span>
+            {% endif %}
+        </td>
+        <td style="text-align: center;">
+    {% if h.status == 'On the Way' %}
+        <div style="background: rgba(255,255,255,0.05); padding: 5px; border-radius: 12px;">
+            <iframe 
+                width="180" 
+                height="100" 
+                style="border-radius: 8px; border: 1px solid var(--glass-border);"
+                src="https://maps.google.com/maps?q={{ h.location if h.location else 'Mumbai' }}&t=&z=13&ie=UTF8&iwloc=&output=embed" 
+                allowfullscreen>
+            </iframe>
+            <br>
+            <a href="https://www.google.com/maps/search/?api=1&query={{ h.location }}" target="_blank" class="btn-track" style="margin-top:5px; font-size:10px; padding: 5px 10px;">
+                <i class="fas fa-location-arrow"></i> Open Full Map
+            </a>
         </div>
-
-        <div class="payment-methods" id="payment-box" style="display: none;">
-            <h3><i class="fas fa-credit-card"></i> Choose Payment Method</h3>
-            <div class="selected-summary">
-                <span>Selected Order Total:</span>
-                <strong id="pay-amount">₹0</strong>
+    {% elif h.status == 'Delivered' %}
+        <span style="color: var(--primary); font-weight: 600;">
+            <i class="fas fa-check-double"></i> Received
+        </span>
+    {% else %}
+        <span style="color: var(--text-muted); font-size: 11px;">
+            <i class="fas fa-hourglass-half"></i> Awaiting Dispatch
+        </span>
+    {% endif %}
+</td>
+    </tr>
+    {% endfor %}
+</tbody>
+                </table>
             </div>
-
-            <div class="method-options">
-                <label class="method-item">
-                    <input type="radio" name="pay-type" value="UPI" checked>
-                    <div class="method-detail">
-                        <i class="fas fa-mobile-alt"></i>
-                        <span>UPI (GPay/PhonePe/Paytm)</span>
-                    </div>
-                </label>
-                <label class="method-item">
-                    <input type="radio" name="pay-type" value="CARD">
-                    <div class="method-detail">
-                        <i class="far fa-credit-card"></i>
-                        <span>Debit/Credit Card</span>
-                    </div>
-                </label>
-                <label class="method-item">
-                    <input type="radio" name="pay-type" value="COD">
-                    <div class="method-detail">
-                        <i class="fas fa-truck"></i>
-                        <span>Cash on Delivery</span>
-                    </div>
-                </label>
+        {% else %}
+            <div style="text-align: center; padding: 40px; opacity: 0.4;">
+                <i class="fas fa-history" style="font-size: 3rem; margin-bottom: 10px;"></i>
+                <p>No order history available yet.</p>
             </div>
-
-            <button class="pay-now-btn" id="finalPayBtn" onclick="processPayment()">
-                <span id="btnText">Confirm & Pay Now</span>
-            </button>
-        </div>
-    </div>
-
-    <div class="payment-history">
-        <h3><i class="fas fa-history"></i> Payment History</h3>
-        <table class="history-table">
-            <thead>
-                <tr>
-                    <th>Order ID</th>
-                    <th>Date</th>
-                    <th>Amount</th>
-                    <th>Method</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-            <tbody id="history-body">
-                </tbody>
-        </table>
+        {% endif %}
     </div>
 </div>
 
-<style>
-    :root { --primary: #2ecc71; --dark: #0f172a; --card-bg: #1e293b; }
-    .pay-container { max-width: 1100px; margin: 30px auto; padding: 20px; color: white; }
-    .pay-header { margin-bottom: 30px; text-align: center; }
-    .pay-header h2 { font-size: 28px; color: var(--primary); }
-
-    .pay-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-bottom: 40px; }
-
-    /* Pending Orders Styling */
-    .pending-orders, .payment-methods, .payment-history { 
-        background: var(--card-bg); border-radius: 20px; padding: 25px; border: 1px solid rgba(255,255,255,0.1); 
-    }
-    
-    .order-card { 
-        background: rgba(15, 23, 42, 0.6); padding: 15px; border-radius: 12px; margin-bottom: 12px;
-        border: 1px solid #334155; cursor: pointer; transition: 0.3s;
-    }
-    .order-card:hover { border-color: var(--primary); }
-    .order-card.selected { border-color: var(--primary); background: rgba(46, 204, 113, 0.1); }
-
-    /* Payment Methods Styling */
-    .selected-summary { background: #0f172a; padding: 15px; border-radius: 12px; margin: 15px 0; display: flex; justify-content: space-between; align-items: center; }
-    .selected-summary strong { font-size: 20px; color: var(--primary); }
-
-    .method-options { margin-top: 15px; }
-    .method-item { display: block; margin-bottom: 10px; cursor: pointer; }
-    .method-item input { display: none; }
-    .method-detail { 
-        display: flex; align-items: center; gap: 15px; padding: 15px; background: #0f172a; 
-        border: 1px solid #334155; border-radius: 12px; transition: 0.3s;
-    }
-    .method-item input:checked + .method-detail { border-color: var(--primary); background: rgba(46, 204, 113, 0.05); }
-
-    .pay-now-btn { 
-        width: 100%; padding: 15px; background: var(--primary); border: none; border-radius: 12px;
-        color: #052e16; font-weight: bold; font-size: 16px; cursor: pointer; margin-top: 20px; 
-    }
-
-    /* History Table */
-    .history-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    .history-table th, .history-table td { text-align: left; padding: 15px; border-bottom: 1px solid #334155; }
-    .status-success { color: var(--primary); font-weight: bold; font-size: 12px; }
-
-    @media (max-width: 768px) { .pay-grid { grid-template-columns: 1fr; } }
-</style>
+<div id="qrModal">
+    <div class="qr-box">
+        <h3>Scan to Pay</h3>
+        <div style="background:white; padding:10px; border-radius:15px; margin:20px 0; display:inline-block; border: 2px solid #eee;">
+            <img id="qrImg" width="200" alt="UPI QR">
+        </div>
+        <p style="font-weight: 600; color: var(--primary);">Amount: ₹{{ total_amount }}</p>
+        <button onclick="finishOrder('Online')" class="btn-pay" style="width:100%; margin-top: 15px;">Confirm Payment Done</button>
+        <button onclick="closeModal()" style="background:none; border:none; color:gray; cursor:pointer; margin-top: 15px; font-size: 13px;">Cancel Transaction</button>
+    </div>
+</div>
 
 <script>
-    let activeOrderId = null;
-    let activeOrderAmount = 0;
+    // Live Tracking Logic
+function startLiveTracking(orderId) {
+    const mapIframe = document.getElementById(`map-${orderId}`);
+    
+    // Har 10 second mein location update check karega
+    setInterval(async () => {
+        try {
+            const response = await fetch(`/get_supplier_location/${orderId}`);
+            const data = await response.json();
+            
+            if (data.status === "On the Way") {
+                // Map URL ko naye coordinates ke saath update karna
+                const newUrl = `https://www.google.com/maps?q=${data.lat},${data.lng}&output=embed`;
+                mapIframe.src = newUrl;
+                console.log("Location Updated:", data.lat, data.lng);
+            }
+        } catch (error) {
+            console.error("Tracking Error:", error);
+        }
+    }, 10000); // 10000ms = 10 seconds
+}
+    async function handlePayment() {
+        const method = document.getElementById("payMethod").value;
+        const totalAmt = "{{ total_amount }}";
+        const adminMobile = "{{ admin_mobile }}";
 
-    // Simulation of Orders coming from Backend (Aap ise Fetch se bhi replace kar sakte hain)
-    const mockOrders = [
-        {id: "ORD9921", total: 2449, items: "Majestic Bonsai, Pot", date: "2024-05-20"},
-        {id: "ORD8830", total: 850, items: "Organic Fertilizer", date: "2024-05-19"}
-    ];
+        if (method === 'cod') {
+            const result = await Swal.fire({
+                title: 'Confirm Order?',
+                text: "Order will be placed with Cash on Delivery",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#27ae60',
+                confirmButtonText: 'Yes, Place Order'
+            });
+            if (result.isConfirmed) finishOrder('COD');
+        } else {
+            if(!adminMobile || adminMobile === "None") {
+                Swal.fire('Error', 'Payment configuration missing!', 'error');
+                return;
+            }
+            const upiLink = `upi://pay?pa=${adminMobile}@upi&pn=OmSaiNursery&am=${totalAmt}&cu=INR`;
+            document.getElementById("qrImg").src = `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(upiLink)}&size=200x200`;
+            
+            const modal = document.getElementById("qrModal");
+            modal.style.display = "flex";
+            setTimeout(() => modal.style.opacity = "1", 50);
+        }
+    }
 
-    function loadPendingOrders() {
-        const list = document.getElementById('pending-list');
-        list.innerHTML = "";
-        
-        mockOrders.forEach(order => {
-            list.innerHTML += `
-                <div class="order-card" onclick="selectOrder(this, '${order.id}', ${order.total})">
-                    <div style="display:flex; justify-content:space-between">
-                        <strong>${order.id}</strong>
-                        <span style="color:var(--primary)">₹${order.total}</span>
-                    </div>
-                    <small style="color:#64748b">${order.items}</small>
-                </div>
-            `;
+    function closeModal() {
+        const modal = document.getElementById("qrModal");
+        modal.style.opacity = "0";
+        setTimeout(() => modal.style.display = "none", 300);
+    }
+
+    function finishOrder(method) {
+        Swal.fire({title: 'Processing...', didOpen: () => Swal.showLoading()});
+        fetch("/place_order", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({ method: method })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.message && data.message.includes("Successfully")) {
+                confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+                Swal.fire('Ordered!', data.message, 'success').then(() => window.location.reload());
+            } else {
+                Swal.fire('Oops!', data.message || "Something went wrong", 'error');
+            }
         });
     }
-
-    function selectOrder(el, id, amount) {
-        document.querySelectorAll('.order-card').forEach(c => c.classList.remove('selected'));
-        el.classList.add('selected');
-        
-        activeOrderId = id;
-        activeOrderAmount = amount;
-        
-        document.getElementById('payment-box').style.display = 'block';
-        document.getElementById('pay-amount').innerText = "₹" + amount;
-        document.getElementById('finalPayBtn').innerText = `Confirm & Pay ₹${amount}`;
-    }
-
-    function processPayment() {
-        const btn = document.getElementById('finalPayBtn');
-        const method = document.querySelector('input[name="pay-type"]:checked').value;
-        
-        btn.disabled = true;
-        btn.innerText = "Processing Transaction...";
-
-        setTimeout(() => {
-            alert(`Payment of ₹${activeOrderAmount} successful via ${method}!`);
-            
-            // Add to history table
-            const historyBody = document.getElementById('history-body');
-            const row = `
-                <tr>
-                    <td>${activeOrderId}</td>
-                    <td>${new Date().toLocaleDateString()}</td>
-                    <td>₹${activeOrderAmount}</td>
-                    <td>${method}</td>
-                    <td><span class="status-success"><i class="fas fa-check-circle"></i> PAID</span></td>
-                </tr>
-            `;
-            historyBody.insertAdjacentHTML('afterbegin', row);
-
-            // UI Reset
-            document.getElementById('payment-box').style.display = 'none';
-            // Asli app mein yahan backend API call hogi to remove pending order
-        }, 2000);
-    }
-
-    // Initial Load
-    loadPendingOrders();
 </script>
-
 {% endblock %}
