@@ -1,98 +1,152 @@
-/* --- Base Styles --- */
 :root {
-    --primary: #2e7d32;
-    --bg-light: #f4f7f6;
-    --text-dark: #333;
-    --white: #ffffff;
+    --primary: #059669; /* Emerald Green */
+    --primary-dark: #065f46;
+    --bg-light: #f8fafc;
+    --glass: rgba(255, 255, 255, 0.8);
+    --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+    --border-radius: 20px;
 }
 
 body {
     font-family: 'Poppins', sans-serif;
+    background-color: var(--bg-light);
+    color: #1e293b;
     margin: 0;
-    background: var(--bg-light);
-    overflow-x: hidden;
+    transition: all 0.3s ease;
 }
 
-/* --- Mobile Bottom Nav (HIDDEN ON PC) --- */
-.mobile-nav {
-    display: none; 
+/* --- Premium Top Nav --- */
+.top-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 20px;
+    background: var(--glass);
+    backdrop-filter: blur(12px);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    border-bottom: 1px solid rgba(255,255,255,0.3);
 }
 
-/* --- Responsive Sidebar Logic --- */
+.nav-left { display: flex; align-items: center; gap: 15px; }
+.logo { font-size: 1.4rem; font-weight: 600; color: var(--primary); display: flex; align-items: center; gap: 8px; }
+
+/* Modern Search Bar */
+.search-bar {
+    background: #f1f5f9;
+    border-radius: 15px;
+    padding: 8px 15px;
+    display: flex;
+    flex: 0.6;
+    transition: 0.3s;
+}
+
+.search-bar:focus-within {
+    background: #fff;
+    box-shadow: 0 0 0 2px var(--primary);
+}
+
+.search-bar input {
+    border: none;
+    background: transparent;
+    width: 100%;
+    outline: none;
+    font-size: 0.9rem;
+}
+
+/* --- Sidebar Style --- */
+.sidebar {
+    width: 260px;
+    background: #fff;
+    padding: 20px;
+    height: 100vh;
+    border-right: 1px solid #e2e8f0;
+}
+
+.nav-links li a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 15px;
+    border-radius: 12px;
+    color: #64748b;
+    text-decoration: none;
+    transition: 0.3s;
+}
+
+.nav-links li a.active, .nav-links li a:hover {
+    background: #ecfdf5;
+    color: var(--primary);
+}
+
+/* --- MOBILE ONLY ADVANCED UI --- */
 @media screen and (max-width: 768px) {
     .sidebar {
         position: fixed;
         left: -100%;
-        top: 0;
-        width: 80%;
-        max-width: 300px;
-        height: 100vh;
-        background: var(--white);
-        z-index: 2000;
-        transition: 0.3s ease;
-        box-shadow: 10px 0 20px rgba(0,0,0,0.1);
-    }
-
-    .sidebar.active {
-        left: 0;
-    }
-
-    .overlay.active {
-        display: block;
-        position: fixed;
-        inset: 0;
-        background: rgba(0,0,0,0.5);
-        z-index: 1999;
-    }
-
-    /* Show Bottom Nav on Mobile */
-    .mobile-nav {
-        display: flex;
-        position: fixed;
         bottom: 0;
+        top: auto;
         width: 100%;
+        height: 70vh; /* Drawer style */
+        border-radius: 30px 30px 0 0;
+        z-index: 2001;
+        transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .sidebar.active { left: 0; }
+
+    .mobile-nav {
+        position: fixed;
+        bottom: 15px;
+        left: 15px;
+        right: 15px;
+        background: rgba(15, 23, 42, 0.9); /* Dark iOS style bar */
+        backdrop-filter: blur(10px);
         height: 65px;
-        background: var(--white);
-        box-shadow: 0 -2px 15px rgba(0,0,0,0.1);
+        border-radius: 25px;
+        display: flex;
         justify-content: space-around;
         align-items: center;
-        z-index: 1000;
-        border-radius: 20px 20px 0 0;
+        padding: 0 10px;
+        z-index: 2000;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
     }
 
     .mob-nav-item {
+        color: #94a3b8;
+        text-align: center;
+        font-size: 10px;
         text-decoration: none;
-        color: #777;
-        font-size: 11px;
+    }
+
+    .mob-nav-item i { font-size: 22px; display: block; margin-bottom: 2px; }
+    .mob-nav-item.active { color: #fff; }
+
+    /* Center Plus Button for App Feel */
+    .mob-nav-item.center-btn {
+        background: var(--primary);
+        color: white;
+        width: 55px;
+        height: 55px;
+        border-radius: 50%;
         display: flex;
-        flex-direction: column;
+        justify-content: center;
         align-items: center;
+        margin-top: -35px;
+        border: 5px solid var(--bg-light);
+        box-shadow: 0 5px 15px rgba(5, 150, 105, 0.4);
     }
 
-    .mob-nav-item i { font-size: 20px; margin-bottom: 3px; }
-    .mob-nav-item.active { color: var(--primary); font-weight: 600; }
-
-    .content-area {
-        padding-bottom: 80px; /* Space for bottom nav */
-    }
-
-    .search-bar {
-        display: none; /* Hide top search on mobile to save space */
-    }
+    .search-bar { display: none; } /* Mobile pe search header me chhupa do */
 }
 
-/* --- Desktop Styles --- */
-@media screen and (min-width: 769px) {
-    .main-wrapper { display: flex; }
-    .sidebar { width: 250px; height: calc(100vh - 70px); position: sticky; top: 70px; }
-    .menu-toggle { display: none; }
-    .sidebar-header { display: none; }
-}
-
-/* --- Dark Mode --- */
+/* --- Dark Mode Enhancements --- */
 body.dark-mode {
-    --bg-light: #121212;
-    --text-dark: #e0e0e0;
-    --white: #1e1e1e;
+    background: #0f172a;
+    color: #f8fafc;
 }
-body.dark-mode .mobile-nav { background: #1e1e1e; border-top: 1px solid #333; }
+body.dark-mode .top-nav, body.dark-mode .sidebar {
+    background: #1e293b;
+    border-color: #334155;
+}
