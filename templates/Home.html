@@ -4,132 +4,154 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>{% block title %}Om Sai Nursery{% endblock %}</title>
-
+    
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    
+
     <style>
-        /* --- DESKTOP VS MOBILE LOGIC (CSS INLINE FOR QUICK FIX) --- */
-        
-        /* 1. Mobile specific styles (Sirf phone ke liye) */
+        /* --- DESKTOP DESIGN (Waisa hi jaisa aapko chahiye) --- */
+        @media (min-width: 769px) {
+            .mobile-only { display: none !important; }
+            .sidebar { position: static; display: block; }
+        }
+
+        /* --- MOBILE ADVANCED UI (Bakwaas hatane ke liye) --- */
         @media (max-width: 768px) {
+            body { background: #f8fafc; margin: 0; padding: 0; }
+            
+            /* Background animation hide on mobile for speed */
+            .area { display: none; }
+
+            /* Top Header Fix */
+            .top-nav {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 10px 15px;
+                background: #ffffff;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+                position: sticky;
+                top: 0;
+                z-index: 1000;
+            }
+            .desktop-search, .weather-widget, .lang-switch { display: none !important; }
+
+            .logo { font-size: 1.1rem; font-weight: 600; color: #059669; display: flex; align-items: center; gap: 8px; }
+
+            /* Profile Container Fix */
+            .profile-container { position: relative; }
+            .profile-box {
+                position: absolute;
+                top: 50px;
+                right: 0;
+                background: white;
+                width: 200px;
+                border-radius: 12px;
+                box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+                padding: 15px;
+                display: none;
+                z-index: 2000;
+            }
+            .profile-box.active { display: block; }
+
+            /* Sidebar Drawer Fix */
             .sidebar {
                 position: fixed !important;
                 left: -100% !important;
                 top: 0;
+                width: 280px;
                 height: 100vh;
-                width: 260px;
-                z-index: 9999;
-                transition: 0.3s ease;
                 background: white !important;
+                z-index: 3000;
+                transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+                box-shadow: 10px 0 30px rgba(0,0,0,0.1);
+                padding-top: 20px;
             }
-            .sidebar.active {
-                left: 0 !important;
-            }
-            .desktop-search { display: none !important; }
-            .main-wrapper { display: block !important; }
-            
-            /* Bottom App Bar */
-            .mobile-app-bar {
-                display: flex !important;
+            .sidebar.active { left: 0 !important; }
+
+            /* Bottom App Navigation (Super Modern) */
+            .mobile-bottom-nav {
                 position: fixed;
                 bottom: 0;
                 left: 0;
                 right: 0;
+                height: 70px;
                 background: white;
-                height: 65px;
-                box-shadow: 0 -2px 15px rgba(0,0,0,0.1);
+                display: flex;
                 justify-content: space-around;
                 align-items: center;
-                z-index: 1000;
+                box-shadow: 0 -5px 20px rgba(0,0,0,0.05);
                 border-radius: 20px 20px 0 0;
+                z-index: 1000;
             }
-            .app-bar-item {
+            .nav-item {
                 text-decoration: none;
-                color: #666;
+                color: #94a3b8;
                 font-size: 11px;
                 display: flex;
                 flex-direction: column;
                 align-items: center;
+                gap: 4px;
+                transition: 0.3s;
             }
-            .app-bar-item.active { color: #059669; font-weight: 600; }
-            .app-bar-item i { font-size: 20px; margin-bottom: 2px; }
+            .nav-item i { font-size: 20px; }
+            .nav-item.active { color: #059669; }
+
+            .content-area { padding: 15px; padding-bottom: 90px; min-height: 80vh; }
             
-            .content-area { padding-bottom: 80px !important; }
-            .menu-toggle { display: block !important; }
             .overlay {
-                display: none;
                 position: fixed;
                 inset: 0;
-                background: rgba(0,0,0,0.5);
-                z-index: 9998;
+                background: rgba(0,0,0,0.4);
+                backdrop-filter: blur(3px);
+                display: none;
+                z-index: 2500;
             }
             .overlay.active { display: block; }
         }
 
-        /* 2. Desktop styles (Sab kuch pehle jaisa) */
-        @media (min-width: 769px) {
-            .mobile-app-bar, .menu-toggle, .overlay { display: none !important; }
-            .sidebar { position: static !important; display: block !important; }
-        }
-        
-        /* Profile Box Fix */
-        .profile-box {
-            display: none;
+        /* Common Utility */
+        .cart-badge {
             position: absolute;
-            right: 0;
-            top: 50px;
-            background: white;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            padding: 15px;
-            border-radius: 10px;
-            z-index: 1001;
-            min-width: 150px;
+            top: -5px;
+            right: -10px;
+            background: #ef4444;
+            color: white;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 50px;
+            font-weight: bold;
         }
-        .profile-box.show { display: block; }
-        .dark-mode .profile-box { background: #222; color: white; }
     </style>
 </head>
-<body>
-    <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+<body class="{% if request.path == '/home' %}home-page{% endif %}">
 
-    <div class="area">
-        <ul class="circles">
-            <li><i class="fa-solid fa-leaf"></i></li>
-            <li><i class="fa-solid fa-seedling"></i></li>
-            <li><i class="fa-solid fa-tree"></i></li>
-            <li><i class="fa-solid fa-spa"></i></li>
-        </ul>
-    </div>
+    <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
 
     <nav class="top-nav">
         <div class="logo">
-            <button class="menu-toggle" onclick="toggleSidebar()" style="background:none; border:none; margin-right:10px; cursor:pointer;">
-                <i class="fa-solid fa-bars-staggered fa-lg"></i>
+            <button onclick="toggleSidebar()" class="mobile-only" style="background:none; border:none; color:#333; font-size: 1.2rem; cursor:pointer;">
+                <i class="fa-solid fa-bars-staggered"></i>
             </button>
-            <i class="fa-solid fa-seedling"></i> Om Sai Nursery
-        </div>
-
-        <div class="search-bar desktop-search">
-            <form action="{{ url_for('search') }}" method="GET" style="width: 100%; display: flex;">
-                <input type="text" name="q" placeholder="Search plants, seeds...">
-                <button type="submit"><i class="fa-solid fa-magnifying-glass"></i></button>
-            </form>
+            <i class="fa-solid fa-seedling"></i>
+            <span>Om Sai Nursery</span>
         </div>
 
         <div class="user-actions">
-            <button class="theme-toggle" onclick="toggleDarkMode()">
+            <button class="theme-toggle" onclick="toggleDarkMode()" style="background:none; border:none; font-size: 1.2rem; cursor:pointer;">
                 <i class="fa-solid fa-moon" id="themeIcon"></i>
             </button>
             
-            <div class="profile-container" style="position:relative;" onclick="toggleProfile()">
+            <div class="profile-container" onclick="toggleProfile()">
                 <i class="fa-solid fa-circle-user fa-2xl" style="color: #059669; cursor:pointer;"></i>
                 <div class="profile-box" id="profileBox">
-                    <p><strong>{{ session['username'] if session['username'] else 'Guest' }}</strong></p>
-                    <p style="font-size: 0.8rem; color: gray;">{{ session['role'] }}</p>
-                    <hr>
-                    <a href="/logout" class="logout-btn" style="text-decoration:none; color:red;"><i class="fa-solid fa-power-off"></i> Logout</a>
+                    <p style="margin:0;"><strong>{{ session['username'] if session.get('username') else 'Aditya Walke' }}</strong></p>
+                    <p style="font-size: 0.8rem; color: #64748b; margin: 5px 0;">User Account</p>
+                    <hr style="border:0; border-top:1px solid #eee; margin:10px 0;">
+                    <a href="/logout" style="color:#ef4444; text-decoration:none; font-size:0.9rem; display:flex; align-items:center; gap:8px;">
+                        <i class="fa-solid fa-power-off"></i> Logout
+                    </a>
                 </div>
             </div>
         </div>
@@ -137,15 +159,14 @@
 
     <div class="main-wrapper">
         <aside class="sidebar" id="sidebar">
-            <h3 style="padding: 20px 0 10px 20px;">Dashboard</h3>
-            <ul class="nav-links">
-                <li><a href="/home" class="{{ 'active' if request.path == '/home' else '' }}"><i class="fa-solid fa-house"></i> Home</a></li>
-                <li><a href="/plants"><i class="fa-solid fa-leaf"></i> Plants</a></li>
-                <li><a href="/seeds"><i class="fa-solid fa-spa"></i> Seeds</a></li>
-                <li><a href="/diseases"><i class="fa-solid fa-bug"></i> Diseases</a></li>
-                <li><a href="/orders"><i class="fa-solid fa-cart-shopping"></i> My Orders</a></li>
-                <li><a href="/payments"><i class="fa-solid fa-wallet"></i> Payments</a></li>
-                <li><a href="/contact"><i class="fa-solid fa-phone"></i> Contact</a></li>
+            <div style="padding: 0 20px 20px; border-bottom: 1px solid #eee;">
+                <h3 style="color:#059669;">Dashboard</h3>
+            </div>
+            <ul class="nav-links" style="list-style:none; padding:10px;">
+                <li style="margin-bottom:5px;"><a href="/home" style="display:flex; align-items:center; gap:15px; padding:12px 15px; text-decoration:none; color:#334155; border-radius:8px;" class="active"><i class="fa-solid fa-house"></i> Home</a></li>
+                <li style="margin-bottom:5px;"><a href="/plants" style="display:flex; align-items:center; gap:15px; padding:12px 15px; text-decoration:none; color:#334155; border-radius:8px;"><i class="fa-solid fa-leaf"></i> Plants</a></li>
+                <li style="margin-bottom:5px;"><a href="/orders" style="display:flex; align-items:center; gap:15px; padding:12px 15px; text-decoration:none; color:#334155; border-radius:8px;"><i class="fa-solid fa-cart-shopping"></i> My Orders</a></li>
+                <li style="margin-bottom:5px;"><a href="/contact" style="display:flex; align-items:center; gap:15px; padding:12px 15px; text-decoration:none; color:#334155; border-radius:8px;"><i class="fa-solid fa-phone"></i> Contact</a></li>
             </ul>
         </aside>
 
@@ -154,38 +175,36 @@
         </main>
     </div>
 
-    <nav class="mobile-app-bar">
-        <a href="/home" class="app-bar-item active">
+    <nav class="mobile-bottom-nav mobile-only">
+        <a href="/home" class="nav-item active">
             <i class="fa-solid fa-house-chimney"></i>
             <span>Home</span>
         </a>
-        <a href="/plants" class="app-bar-item">
+        <a href="/plants" class="nav-item">
             <i class="fa-solid fa-leaf"></i>
             <span>Plants</span>
         </a>
-        <a href="/orders" class="app-bar-item">
+        <a href="/orders" class="nav-item">
             <div style="position:relative;">
                 <i class="fa-solid fa-basket-shopping"></i>
-                <span class="cart-count" style="position:absolute; top:-5px; right:-10px; background:red; color:white; border-radius:50%; padding:2px 6px; font-size:10px;">0</span>
+                <span class="cart-count cart-badge">0</span>
             </div>
             <span>Cart</span>
         </a>
-        <a href="https://wa.me/919999999999" class="app-bar-item">
-            <i class="fa-brands fa-whatsapp" style="color:#25D366;"></i>
+        <a href="https://wa.me/919999999999" class="nav-item">
+            <i class="fa-brands fa-whatsapp"></i>
             <span>Chat</span>
         </a>
     </nav>
 
     <script>
         function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('overlay');
-            sidebar.classList.toggle('active');
-            overlay.classList.toggle('active');
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('overlay').classList.toggle('active');
         }
 
         function toggleProfile() {
-            document.getElementById("profileBox").classList.toggle("show");
+            document.getElementById("profileBox").classList.toggle("active");
         }
 
         function toggleDarkMode() {
@@ -205,12 +224,12 @@
             document.querySelectorAll('.cart-count').forEach(el => el.innerText = cart.length);
         };
 
-        // Close profile on outside click
-        window.onclick = function(event) {
-            if (!event.target.closest('.profile-container')) {
-                document.getElementById("profileBox").classList.remove("show");
+        // Close dropdowns on outside click
+        window.addEventListener('click', function(e) {
+            if (!document.querySelector('.profile-container').contains(e.target)) {
+                document.getElementById("profileBox").classList.remove("active");
             }
-        }
+        });
     </script>
 </body>
 </html>
