@@ -4,74 +4,53 @@
 
 <link rel="stylesheet" href="{{ url_for('static', filename='plant.css') }}">
 
+
+
 <h2>Our Nursery Plants</h2>
 
 <div id="products">
 
 {% for plant in plants %}
+    {# Sirf wahi product dikhayenge jiska supplier_id exist karta hai #}
     {% if plant['supplier_id'] and plant['supplier_id'] != 0 %}
-
-    {% set share_url = request.url_root + 'plant/' + plant['id']|string %}
-    {% set share_text = "Check this plant: " + plant['name'] + " 🌱 Price: ₹" + plant['price']|string + " 👉 " + share_url %}
-
     <div class="plant-card">
         <h3>{{ plant['name'] }}</h3>
 
         <img src="{{ url_for('static', filename='images/' + plant['image']) }}" width="150" alt="{{ plant['name'] }}">
 
-        <div class="price-section">
-            <span class="current-price">₹{{ plant['price'] }}</span>
-            <span class="original-price">₹{{ (plant['price'] * 1.3)|round|int }}</span>
-            <span class="discount-tag">30% OFF</span>
-        </div>
+<div class="price-section">
+    <span class="current-price">₹{{ plant['price'] }}</span>
+    
+    <span class="original-price">₹{{ (plant['price'] * 1.3)|round|int }}</span>
+    
+    <span class="discount-tag">30% OFF</span>
+</div>
+<div class="stock-wrapper">
+    <small>Availability: {{ plant['stock'] }} left</small>
+    <div class="progress-bar">
+        <div class="progress-fill" style="width: {{ (plant['stock']/50)*100 }}%; background: {{ 'red' if plant['stock'] < 5 else '#059669' }}"></div>
+    </div>
+</div>Stock:</b> {{ plant['stock'] }}</p>
 
-        <div class="stock-wrapper">
-            <small>Availability: {{ plant['stock'] }} left</small>
-            <div class="progress-bar">
-                <div class="progress-fill" 
-                     style="width: {{ (plant['stock']/50)*100 }}%; 
-                     background: {{ 'red' if plant['stock'] < 5 else '#059669' }}">
-                </div>
-            </div>
-        </div>
-
-        <p><b>Stock:</b> {{ plant['stock'] }}</p>
-
+        {# Sirf Admin ko dikhega ki kisne add kiya hai #}
         {% if session.get('role') == 'admin' %}
             <div class="supplier-info">
                 🏢 Supplier: {{ plant['supplier_name'] }}
             </div>
         {% endif %}
 
-        <!-- Action Area -->
         <div class="action-area">
-            <input type="number" id="qty_{{ plant['id'] }}" value="1" min="1">
+    <input 
+        type="number" 
+        id="qty_{{ plant['id'] }}" 
+        value="1" 
+        min="1"
+    >
 
-            <button disabled>
-                🚧 Delivery Coming Soon
-            </button>
-        </div>
-
-        <!-- 🔥 SHARE BUTTONS -->
-        <div class="share-buttons">
-
-            <!-- WhatsApp -->
-            <a href="https://wa.me/?text={{ share_text | urlencode }}" target="_blank">
-                📲 WhatsApp
-            </a>
-
-            <!-- Telegram -->
-            <a href="https://t.me/share/url?url={{ share_url }}&text={{ share_text | urlencode }}" target="_blank">
-                ✈️ Telegram
-            </a>
-
-            <!-- Copy Link -->
-            <button onclick="copyLink('{{ share_url }}')">
-                🔗 Copy Link
-            </button>
-
-        </div>
-
+    <button onclick='addToCartSafe({{ plant["id"] }}, "{{ plant["name"].replace("\"","\\\"") }}", {{ plant["price"] }}, {{ plant["supplier_id"] }})'>
+        <span>🛒</span> Add to Cart
+    </button>
+</div>
     </div>
     {% endif %}
 
@@ -84,16 +63,37 @@
 </div>
 
 <br>
-
 <div style="text-align: center;">
     <a href="{{ url_for('orders_page') }}" class="btn-cart">🛒 View My Cart</a>
 </div>
 
-<!-- 🔥 COPY LINK SCRIPT -->
 <script>
-function copyLink(url){
-    navigator.clipboard.writeText(url);
-    alert("Link copied!");
+function addToCartSafe(id, name, price, supplier_id){
+    let qtyInput = document.getElementById("qty_" + id);
+    let qty = 1;
+
+    if(qtyInput){
+        qty = parseInt(qtyInput.value) || 1;
+    }
+
+    let cart = JSON.parse(localStorage.getItem("cart")) || [];
+    let existing = cart.find(item => item.id === id);
+
+    if(existing){
+        existing.quantity += qty;
+    } 
+    else{
+        cart.push({
+            id: id,
+            name: name,
+            price: Number(price),
+            quantity: qty,
+            supplier_id: supplier_id // Supplier ID cart mein save kar rahe hain
+        });
+    }
+
+    localStorage.setItem("cart", JSON.stringify(cart));
+    alert(name + " added to cart!");
 }
 </script>
 
