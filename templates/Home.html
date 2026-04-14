@@ -5,33 +5,113 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>{% block title %}Om Sai Nursery{% endblock %}</title>
 
-    <meta name="theme-color" content="#2e7d32">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    
+    <style>
+        /* --- DESKTOP VS MOBILE LOGIC (CSS INLINE FOR QUICK FIX) --- */
+        
+        /* 1. Mobile specific styles (Sirf phone ke liye) */
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed !important;
+                left: -100% !important;
+                top: 0;
+                height: 100vh;
+                width: 260px;
+                z-index: 9999;
+                transition: 0.3s ease;
+                background: white !important;
+            }
+            .sidebar.active {
+                left: 0 !important;
+            }
+            .desktop-search { display: none !important; }
+            .main-wrapper { display: block !important; }
+            
+            /* Bottom App Bar */
+            .mobile-app-bar {
+                display: flex !important;
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                background: white;
+                height: 65px;
+                box-shadow: 0 -2px 15px rgba(0,0,0,0.1);
+                justify-content: space-around;
+                align-items: center;
+                z-index: 1000;
+                border-radius: 20px 20px 0 0;
+            }
+            .app-bar-item {
+                text-decoration: none;
+                color: #666;
+                font-size: 11px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+            .app-bar-item.active { color: #059669; font-weight: 600; }
+            .app-bar-item i { font-size: 20px; margin-bottom: 2px; }
+            
+            .content-area { padding-bottom: 80px !important; }
+            .menu-toggle { display: block !important; }
+            .overlay {
+                display: none;
+                position: fixed;
+                inset: 0;
+                background: rgba(0,0,0,0.5);
+                z-index: 9998;
+            }
+            .overlay.active { display: block; }
+        }
+
+        /* 2. Desktop styles (Sab kuch pehle jaisa) */
+        @media (min-width: 769px) {
+            .mobile-app-bar, .menu-toggle, .overlay { display: none !important; }
+            .sidebar { position: static !important; display: block !important; }
+        }
+        
+        /* Profile Box Fix */
+        .profile-box {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 50px;
+            background: white;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            padding: 15px;
+            border-radius: 10px;
+            z-index: 1001;
+            min-width: 150px;
+        }
+        .profile-box.show { display: block; }
+        .dark-mode .profile-box { background: #222; color: white; }
+    </style>
 </head>
 <body>
+    <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+
     <div class="area">
         <ul class="circles">
             <li><i class="fa-solid fa-leaf"></i></li>
             <li><i class="fa-solid fa-seedling"></i></li>
             <li><i class="fa-solid fa-tree"></i></li>
             <li><i class="fa-solid fa-spa"></i></li>
-            <li><i class="fa-solid fa-leaf"></i></li>
         </ul>
     </div>
 
     <nav class="top-nav">
-        <div class="nav-header">
-            <button class="menu-toggle mobile-only" onclick="toggleSidebar()">
-                <i class="fa-solid fa-bars-staggered"></i>
+        <div class="logo">
+            <button class="menu-toggle" onclick="toggleSidebar()" style="background:none; border:none; margin-right:10px; cursor:pointer;">
+                <i class="fa-solid fa-bars-staggered fa-lg"></i>
             </button>
-            <div class="logo">
-                <i class="fa-solid fa-seedling"></i> Om Sai Nursery
-            </div>
+            <i class="fa-solid fa-seedling"></i> Om Sai Nursery
         </div>
 
-        <div class="search-bar desktop-only">
+        <div class="search-bar desktop-search">
             <form action="{{ url_for('search') }}" method="GET" style="width: 100%; display: flex;">
                 <input type="text" name="q" placeholder="Search plants, seeds...">
                 <button type="submit"><i class="fa-solid fa-magnifying-glass"></i></button>
@@ -39,18 +119,17 @@
         </div>
 
         <div class="user-actions">
-            <div class="weather-widget desktop-only">
-                <i class="fa-solid fa-cloud-sun"></i> <span>28°C</span>
-            </div>
             <button class="theme-toggle" onclick="toggleDarkMode()">
                 <i class="fa-solid fa-moon" id="themeIcon"></i>
             </button>
-            <div class="profile-container" onclick="toggleProfile()">
-                <i class="fa-solid fa-circle-user fa-2xl" style="color: #059669;"></i>
+            
+            <div class="profile-container" style="position:relative;" onclick="toggleProfile()">
+                <i class="fa-solid fa-circle-user fa-2xl" style="color: #059669; cursor:pointer;"></i>
                 <div class="profile-box" id="profileBox">
                     <p><strong>{{ session['username'] if session['username'] else 'Guest' }}</strong></p>
+                    <p style="font-size: 0.8rem; color: gray;">{{ session['role'] }}</p>
                     <hr>
-                    <a href="/logout" class="logout-btn"><i class="fa-solid fa-power-off"></i> Logout</a>
+                    <a href="/logout" class="logout-btn" style="text-decoration:none; color:red;"><i class="fa-solid fa-power-off"></i> Logout</a>
                 </div>
             </div>
         </div>
@@ -58,17 +137,14 @@
 
     <div class="main-wrapper">
         <aside class="sidebar" id="sidebar">
-            <div class="sidebar-header mobile-only">
-                <h3>Dashboard</h3>
-                <button onclick="toggleSidebar()">&times;</button>
-            </div>
+            <h3 style="padding: 20px 0 10px 20px;">Dashboard</h3>
             <ul class="nav-links">
                 <li><a href="/home" class="{{ 'active' if request.path == '/home' else '' }}"><i class="fa-solid fa-house"></i> Home</a></li>
                 <li><a href="/plants"><i class="fa-solid fa-leaf"></i> Plants</a></li>
                 <li><a href="/seeds"><i class="fa-solid fa-spa"></i> Seeds</a></li>
                 <li><a href="/diseases"><i class="fa-solid fa-bug"></i> Diseases</a></li>
                 <li><a href="/orders"><i class="fa-solid fa-cart-shopping"></i> My Orders</a></li>
-                <li><a href="/feedback"><i class="fa-solid fa-comment-dots"></i> Feedback</a></li>
+                <li><a href="/payments"><i class="fa-solid fa-wallet"></i> Payments</a></li>
                 <li><a href="/contact"><i class="fa-solid fa-phone"></i> Contact</a></li>
             </ul>
         </aside>
@@ -78,40 +154,46 @@
         </main>
     </div>
 
-    <div class="mobile-bottom-nav mobile-only">
-        <a href="/home" class="nav-item active"><i class="fa-solid fa-house"></i><span>Home</span></a>
-        <a href="/plants" class="nav-item"><i class="fa-solid fa-leaf"></i><span>Plants</span></a>
-        <a href="/orders" class="nav-item cart-btn">
-            <i class="fa-solid fa-basket-shopping"></i>
-            <span class="cart-count">0</span>
+    <nav class="mobile-app-bar">
+        <a href="/home" class="app-bar-item active">
+            <i class="fa-solid fa-house-chimney"></i>
+            <span>Home</span>
+        </a>
+        <a href="/plants" class="app-bar-item">
+            <i class="fa-solid fa-leaf"></i>
+            <span>Plants</span>
+        </a>
+        <a href="/orders" class="app-bar-item">
+            <div style="position:relative;">
+                <i class="fa-solid fa-basket-shopping"></i>
+                <span class="cart-count" style="position:absolute; top:-5px; right:-10px; background:red; color:white; border-radius:50%; padding:2px 6px; font-size:10px;">0</span>
+            </div>
             <span>Cart</span>
         </a>
-        <a href="https://wa.me/919999999999" class="nav-item"><i class="fa-brands fa-whatsapp"></i><span>Chat</span></a>
-    </div>
-
-    <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+        <a href="https://wa.me/919999999999" class="app-bar-item">
+            <i class="fa-brands fa-whatsapp" style="color:#25D366;"></i>
+            <span>Chat</span>
+        </a>
+    </nav>
 
     <script>
         function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('active');
-            document.getElementById('overlay').classList.toggle('active');
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('overlay');
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
         }
 
         function toggleProfile() {
-            const box = document.getElementById("profileBox");
-            box.style.display = box.style.display === "block" ? "none" : "block";
+            document.getElementById("profileBox").classList.toggle("show");
         }
 
         function toggleDarkMode() {
             document.body.classList.toggle('dark-mode');
             const icon = document.getElementById('themeIcon');
-            if(document.body.classList.contains('dark-mode')) {
-                icon.className = 'fa-solid fa-sun';
-                localStorage.setItem('theme', 'dark');
-            } else {
-                icon.className = 'fa-solid fa-moon';
-                localStorage.setItem('theme', 'light');
-            }
+            const isDark = document.body.classList.contains('dark-mode');
+            icon.className = isDark ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
         }
 
         window.onload = () => {
@@ -122,6 +204,13 @@
             let cart = JSON.parse(localStorage.getItem("cart")) || [];
             document.querySelectorAll('.cart-count').forEach(el => el.innerText = cart.length);
         };
+
+        // Close profile on outside click
+        window.onclick = function(event) {
+            if (!event.target.closest('.profile-container')) {
+                document.getElementById("profileBox").classList.remove("show");
+            }
+        }
     </script>
 </body>
 </html>
