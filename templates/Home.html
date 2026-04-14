@@ -172,5 +172,11 @@ function toggleSidebar() {
     }
 }
 </script>
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/static/sw.js')
+    .then(() => console.log("SW Registered"));
+}
+</script>
 </body>
 </html>
