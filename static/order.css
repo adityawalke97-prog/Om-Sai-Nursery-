@@ -157,22 +157,129 @@ tfoot td {
     font-size: 1.1rem;
     color: var(--primary);
 }
-
-/* --- Responsive Table --- */
+/* Purana table hide karke clean mobile cards */
 @media (max-width: 768px) {
-    table, thead, tbody, th, td, tr { 
-        display: block; 
+    /* Table ko container ki tarah treat karein */
+    table, thead, tbody, tfoot, tr, td {
+        display: block;
+        width: 100%;
     }
-    thead tr { display: none; }
-    tr { margin-bottom: 15px; border: 1px solid var(--border); border-radius: 8px; }
-    td { text-align: right; padding-left: 50%; position: relative; }
+
+    /* Header ko hide karein (jarurat nahi mobile par) */
+    thead { display: none; }
+
+    /* Har row ab ek alag CARD dikhega */
+    tr {
+        background: white;
+        margin-bottom: 15px;
+        padding: 15px;
+        border-radius: 12px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        border: 1px solid #e0e0e0;
+    }
+
+    /* Rows ke andar ka data align karein */
+    td {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 1px solid #f1f1f1;
+        font-size: 15px;
+    }
+
+    td:last-child { border-bottom: none; }
+
+    /* Left side mein Label dikhane ke liye */
     td::before {
         content: attr(data-label);
-        position: absolute;
-        left: 15px;
-        width: 45%;
-        text-align: left;
-        font-weight: bold;
-        color: var(--primary);
+        font-weight: 700;
+        color: #2e7d32; /* Nursery Green */
     }
+
+    /* Remove Button styling */
+    td button {
+        background: #ff4d4d !important;
+        padding: 5px 12px !important;
+        font-size: 12px;
+    }
+
+    /* Grand Total Footer */
+    tfoot tr {
+        background: #2e7d32;
+        color: white;
+        text-align: center;
+        margin-top: 20px;
+    }
+
+    tfoot td::before { color: white; }
+
+    /* Map aur Input fix */
+    #map {
+        height: 250px;
+        border-radius: 15px;
+        margin: 15px 0;
+    }
+
+    input#location {
+        border: 2px solid #2e7d32;
+        border-radius: 8px;
+        margin-bottom: 10px;
+    }
+}
+/* ================= DARK MODE FIXES ================= */
+
+/* Jab body par .dark-mode class ho tab ye apply hoga */
+body.dark-mode .orders-container {
+    background-color: #121212; /* Deep Black background */
+    color: #e0e0e0; /* Light Gray text */
+}
+
+body.dark-mode h2, body.dark-mode h3 {
+    color: #4caf50; /* Bright Green for headings */
+}
+
+/* Dark mode mein cards ka look */
+@media (max-width: 600px) {
+    body.dark-mode tr {
+        background: #1e1e1e !important; /* Dark Grey Card */
+        border: 1px solid #333 !important;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    }
+
+    body.dark-mode td {
+        border-bottom: 1px dashed #333 !important;
+        color: #fff;
+    }
+
+    body.dark-mode td::before {
+        color: #81c784; /* Soft Green labels for dark mode */
+    }
+
+    body.dark-mode #grand-total-container {
+        background: #1b5e20; /* Darker Green for Total */
+        border: 1px solid #4caf50;
+        color: #fff;
+    }
+}
+
+/* Desktop Table Dark Mode */
+body.dark-mode .cart-table {
+    background: #1e1e1e;
+    color: white;
+}
+
+body.dark-mode .cart-table td {
+    border: 1px solid #333;
+}
+
+/* Input field in dark mode */
+body.dark-mode input#location-input {
+    background: #2c2c2c;
+    color: white;
+    border: 1px solid #444;
+}
+
+/* Leaflet Map Dark Filter (Optional: Map ko bhi thoda dark karne ke liye) */
+body.dark-mode .leaflet-tile {
+    filter: brightness(0.6) invert(1) contrast(3) hue-rotate(200deg) saturate(0.3);
 }
