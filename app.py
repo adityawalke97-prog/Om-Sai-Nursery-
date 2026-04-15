@@ -169,7 +169,8 @@ def signup():
     except sqlite3.IntegrityError:
         return "Email already exists ❌"
     finally:
-        conn.close()@app.route("/signup", methods=["POST"])
+        conn.close()
+@app.route("/signup", methods=["POST"])
 def signup():
     name = request.form.get("name")
     email = request.form.get("email").strip().lower()  # 🔥 FIX
