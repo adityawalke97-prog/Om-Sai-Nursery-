@@ -170,29 +170,7 @@ def signup():
         return "Email already exists ❌"
     finally:
         conn.close()
-@app.route("/signup", methods=["POST"])
-def signup():
-    name = request.form.get("name")
-    email = request.form.get("email").strip().lower()  # 🔥 FIX
-    password = request.form.get("password")
-    mobile = request.form.get("mobile")
-    role = request.form.get("role")
 
-    hashed_password = bcrypt.generate_password_hash(password).decode("utf-8")
-    
-    conn = get_db()
-    try:
-        conn.execute("""
-            INSERT INTO users (name, email, password, role, mobile)
-            VALUES (?, ?, ?, ?, ?)
-        """, (name, email, hashed_password, role, mobile))
-        conn.commit()
-        return "Signup Successful"
-
-    except sqlite3.IntegrityError:
-        return "Email already exists ❌"
-    finally:
-        conn.close()
 # Customer dashboard
 @app.route("/home")
 def home():
