@@ -1,4 +1,5 @@
 import os
+from unittest.mock import DEFAULT
 from flask import Flask, flash, render_template, request, redirect, session, url_for, jsonify, g
 from flask_bcrypt import Bcrypt
 from datetime import timedelta
@@ -19,175 +20,160 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 bcrypt = Bcrypt(app)
 app.permanent_session_lifetime = timedelta(days=7)
 
-# --- Database Helpers ---
+def check_users():
+    conn = sqlite3.connect('nursery.db') # Aapki db file ka naam yahan likhein
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+    
+    users = cur.execute("SELECT * FROM users").fetchall()
+    
+    print("\n--- Database mein ye Users hain ---")
+    for user in users:
+        print(f"ID: {user['id']} | Email: {user['email']} | Role: {user['role']} | Name: {user['name']}")
+    print("------------------------------------\n")
+    conn.close()
 def get_db():
     if 'db' not in g:
-        g.db = sqlite3.connect(DATABASE, timeout=10)
-        g.db.row_factory = sqlite3.Row 
+        # Dono lines ko merge karke sahi path aur row_factory set karein
+        g.db = sqlite3.connect(DATABASE, timeout=10, check_same_thread=False)
+        g.db.row_factory = sqlite3.Row  # Isse plant['name'] wala error khatam ho jayega
     return g.db
 
-@app.teardown_appcontext
-def close_db(error):
-    db = g.pop('db', None)
-    if db is not None:
-        db.close()
+@app.context_processor
+def inject_translations():
+    lang = session.get('lang', 'en')
+    return dict(texts=translations.get(lang, translations['en']))
+# Sirf ek baar run karne ke liye app.py mein dalein:
+_got_first_request = False
 
-def add_column_if_not_exists(cursor, table, column_def):
-    try:
-        cursor.execute(f"ALTER TABLE {table} ADD COLUMN {column_def}")
-    except sqlite3.OperationalError:
-        pass 
-
-# ----------------- DATABASE INITIALIZATION -----------------
-
+@app.before_request
+def func():
+    global _got_first_request
+    if not _got_first_request:
+        # Yahan apna admin banane wala logic likhein
+        print("Running first-time setup...")
+        _got_first_request = True
+# ----------------- DATABASE INITIALIZATION (FIXED) -----------------
 def init_db():
     conn = sqlite3.connect(DATABASE)
     conn.row_factory = sqlite3.Row
     cur = conn.cursor()
 
-    # 1. Tables Create Karein (Email UNIQUE fix)
-    cur.execute("""CREATE TABLE IF NOT EXISTS users(
-        id INTEGER PRIMARY KEY AUTOINCREMENT, 
-        name TEXT, 
-        email TEXT UNIQUE, 
-        password TEXT, 
-        role TEXT, 
-        mobile TEXT)""")
-
-    cur.execute("""CREATE TABLE IF NOT EXISTS suppliers(
-        id INTEGER PRIMARY KEY AUTOINCREMENT, 
-        user_id INTEGER, 
-        name TEXT, 
-        latitude REAL DEFAULT 18.5204, 
-        longitude REAL DEFAULT 73.8567, 
-        FOREIGN KEY(user_id) REFERENCES users(id))""")
-
-    cur.execute("""CREATE TABLE IF NOT EXISTS products(
-        id INTEGER PRIMARY KEY AUTOINCREMENT, 
-        name TEXT, price REAL, stock INTEGER, image TEXT, 
-        category TEXT, supplier_id INTEGER)""")
-    
-    cur.execute('''CREATE TABLE IF NOT EXISTS cart 
-                 (id INTEGER PRIMARY KEY AUTOINCREMENT, 
-                  user_id INTEGER, product_name TEXT, 
-                  price REAL, quantity INTEGER)''')
-
-    cur.execute("""CREATE TABLE IF NOT EXISTS orders(
-        id INTEGER PRIMARY KEY AUTOINCREMENT, 
-        user_id INTEGER, user_name TEXT, supplier_id INTEGER DEFAULT 0, 
-        product_name TEXT, price REAL, quantity INTEGER, total REAL, 
-        status TEXT DEFAULT 'Pending', payment_method TEXT, 
-        location TEXT, mobile TEXT, payment_id TEXT, 
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP)""")
-
+    # Saari Tables (Waisi ki waisi)
+    cur.execute("CREATE TABLE IF NOT EXISTS users(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, email TEXT UNIQUE, password TEXT, role TEXT, mobile TEXT)")
+    cur.execute("CREATE TABLE IF NOT EXISTS suppliers(id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, name TEXT, latitude REAL DEFAULT 18.5204, longitude REAL DEFAULT 73.8567, FOREIGN KEY(user_id) REFERENCES users(id))")
+    cur.execute("CREATE TABLE IF NOT EXISTS products(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, price REAL, stock INTEGER, image TEXT, category TEXT, supplier_id INTEGER)")
+    cur.execute("CREATE TABLE IF NOT EXISTS orders(id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, user_name TEXT, supplier_id INTEGER DEFAULT 0, product_name TEXT, price REAL, quantity INTEGER, total REAL, status TEXT DEFAULT 'Pending', payment_method TEXT, location TEXT, mobile TEXT, payment_id TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)")
     cur.execute("CREATE TABLE IF NOT EXISTS diseases(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, image TEXT, fertilizer_id INTEGER)")
     cur.execute("CREATE TABLE IF NOT EXISTS fertilizers(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, price REAL NOT NULL, stock INTEGER NOT NULL, image TEXT)")
     cur.execute("CREATE TABLE IF NOT EXISTS feedbacks (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, product TEXT, message TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)")
 
-    # 2. Columns safely add
-    add_column_if_not_exists(cur, "suppliers", "upi_id TEXT")
-    add_column_if_not_exists(cur, "suppliers", "qr_code TEXT")
-    add_column_if_not_exists(cur, "suppliers", "payment_mobile TEXT")
-    add_column_if_not_exists(cur, "suppliers", "address TEXT")
-    add_column_if_not_exists(cur, "orders", "payment_settled INTEGER DEFAULT 0")
-    add_column_if_not_exists(cur, "orders", "admin_commission REAL DEFAULT 0")
+    # Default Products Insert Logic (Aapka List)
+    products_list = [
+        ("Apple Plant",120,50,"appleplant.png","plant",0),
+        ("Banana Plant",80,40,"banana.png","plant",0),
+        ("Sunflower Seeds",60,100,"sunflower.png","seed",0),
+        ("Wheat Seed",149,100,"wheat.png","seed",0)
+    ]
+    for p in products_list:
+        cur.execute("SELECT id FROM products WHERE name=?", (p[0],))
+        if not cur.fetchone():
+            cur.execute("INSERT INTO products(name,price,stock,image,category,supplier_id) VALUES (?,?,?,?,?,?)", p)
+    
+    # Add payment_settled column if it doesn't exist
+    try:
+        cur.execute("ALTER TABLE orders ADD COLUMN payment_settled INTEGER DEFAULT 0")
+    except sqlite3.OperationalError:
+        pass  # Column already exists
 
-  
+    # --- 🛡️ CRITICAL FIX FOR OLD DATABASE ---
+    # 1. Default Supplier check karein
+    cur.execute("SELECT id FROM users WHERE role='supplier' LIMIT 1")
+    sup = cur.fetchone()
+    if sup:
+        # 2. Saare products jinki supplier_id 0 ya NULL hai, unhe is supplier se connect kar do
+        # Taaki JOIN query mein data gayab na ho
+        cur.execute("UPDATE products SET supplier_id=? WHERE supplier_id=0 OR supplier_id IS NULL", (sup['id'],))
+
     conn.commit()
     conn.close()
-
-with app.app_context():
-    init_db()
-
-# ----------------- ROUTES -----------------
-
+    print("✅ Database Synchronized! Purana data safe hai.")
+# --------------------------------SEND_OTP-------------------------------------#
+# Root route
+# 1. ROOT ROUTE (Redirects based on session)
 @app.route("/")
 def index():
     if "user_id" not in session:
-        return redirect(url_for("login"))
+        return redirect(url_for("login_page"))  # Redirect to the GET route below
     
-    role = session.get("role", "").lower()
-    if role == "customer": return redirect("/home")
-    elif role == "admin": return redirect("/admin")
-    elif role == "supplier": return redirect("/supplier")
-    return "Access Denied", 403
+    role = session.get("role")
+    if role == "customer":
+        return redirect("/home")
+    elif role == "admin":
+        return redirect("/admin")
+    elif role == "supplier":
+        return redirect("/supplier")
+    else:
+        return "Access Denied", 403
 
-@app.context_processor
-def inject_translations():
-    lang = session.get('lang', 'en')
-    try:
-        current_texts = translations.get(lang, translations.get('en', {}))
-    except NameError:
-        current_texts = {}
-    return dict(texts=current_texts)
 
+@app.route("/login", methods=["GET"])
+def login_page():
+    return render_template("Sign_Up.html")
+
+# 3. LOGIN ACTION (POST) - This processes the data
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
         email = request.form.get("email", "").strip().lower()
         password = request.form.get("password", "") 
-        selected_role = request.form.get("role", "").lower() # Dropdown se role uthao
         
         db = get_db()
+        # Sirf wahi user dhoondo jiska email match kare
         user = db.execute("SELECT * FROM users WHERE email=?", (email,)).fetchone()
 
-        if user and bcrypt.check_password_hash(user['password'], password):
-            # --- YE HAI MAIN FIX ---
-            actual_role = user['role'].lower()
-            
-            # Check karo ki kya selected role database wale role se match karta hai
-            if selected_role != actual_role:
-                return f"Access Denied! You are registered as a {actual_role.capitalize()}, not a {selected_role.capitalize()}. ❌", 403
-
-            # Agar sab sahi hai toh session set karo
-            session.permanent = True
-            session["user_id"] = user['id']
-            session["role"] = actual_role
-            session["username"] = user['name']
-            
-            # Sahi page par redirect karo
-            if actual_role == "admin": 
-                return redirect("/admin")
-            elif actual_role == "supplier": 
-                return redirect("/supplier")
-            else: 
-                return redirect("/home") # Customer ke liye home
-        
-        return "Invalid Email or Password! ❌", 401
+        if user:
+            # Bcrypt se password verify karo
+            if bcrypt.check_password_hash(user['password'], password):
+                session.permanent = True
+                session["user_id"] = user['id']
+                session["role"] = user['role']
+                session["username"] = user['name']
+                
+                # Role ke hisaab se sahi jagah bhejo
+                if user['role'] == "admin": return redirect("/admin")
+                elif user['role'] == "supplier": return redirect("/supplier")
+                else: return redirect("/home")
+            else:
+                return "Invalid Password! ❌", 401
+        else:
+            return "Account not found! Please Sign Up first. ❌", 404
 
     return render_template("Sign_Up.html")
-
 @app.route("/signup", methods=["POST"])
 def signup():
-    db = get_db()
     name = request.form.get("name")
-    email = request.form.get("email", "").strip().lower()
+    email = request.form.get("email")
     password = request.form.get("password")
     mobile = request.form.get("mobile")
-    role = request.form.get("role", "customer").lower()
+    role = request.form.get("role")
 
-    # --- YE HAI FIX: PEHLE MANUALLY CHECK KARO ---
-    cursor = db.execute("SELECT id FROM users WHERE email = ?", (email,))
-    existing_user = cursor.fetchone()
-    
-    if existing_user is not None:
-        print(f"DEBUG: Email {email} already exists in DB!") # VS Code terminal mein dikhega
-        return "Email already exists! ❌ Please Login.", 400
-
-    # Agar user nahi mila, tabhi naya account banao
     hashed_password = bcrypt.generate_password_hash(password).decode("utf-8")
+    
+    conn = get_db()
     try:
-        db.execute("""
+        conn.execute("""
             INSERT INTO users (name, email, password, role, mobile)
             VALUES (?, ?, ?, ?, ?)
         """, (name, email, hashed_password, role, mobile))
-        db.commit()
-        return "Signup Successful! ✅ Now please Login."
+        conn.commit()
+        return "Signup Successful"  # JavaScript isi message ko check karega
+
     except sqlite3.IntegrityError:
-        return "Email already registered! ❌", 400
+        return "Email already exists ❌"
+    finally:
+        conn.close()
 
-
-    
 # Customer dashboard
 @app.route("/home")
 def home():
@@ -489,16 +475,17 @@ def admin_dashboard():
     # CRITICAL FIX: Isse bhi Dictionary mein badlo
     unsettled_orders = [dict(row) for row in raw_unsettled]
 
-    return render_template("admin_index.html", # <--- Iska naam sahi karein
+    return render_template("admin.html", 
         total_products=total_products, 
         total_orders=total_orders, 
         total_customers=total_customers, 
         total_revenue=total_revenue, 
-        orders=recent_orders,
+        orders=recent_orders,  # Ab ye JSON serializable hai
+        unsettled_orders=unsettled_orders,
         active='dashboard')
 # --- NAYA: Payment Settle karne ka Route ---
 @app.route("/payment/<int:order_id>")
-def payment_pageo(order_id):
+def payment_page(order_id):
     if "user_id" not in session:
         return redirect("/login")
         
@@ -529,17 +516,16 @@ def supplier_dashboard():
 
     # LEFT JOIN use karein taaki agar user details missing bhi hon toh order dikhe
     orders = db.execute("""
-    SELECT 
-        o.id, o.product_name, o.quantity, o.total, o.status, o.location,
-        o.payment_method, o.payment_settled,
-        u.name AS user_name, u.mobile AS user_mobile
-    FROM orders o
-    LEFT JOIN users u ON o.user_id = u.id 
-    WHERE o.supplier_id = ?
-    ORDER BY o.id DESC
-""", (supplier_id,)).fetchall()
+        SELECT 
+            o.id, o.product_name, o.quantity, o.total, o.status, o.location,
+            u.name AS user_name, u.mobile AS user_mobile
+        FROM orders o
+        LEFT JOIN users u ON o.user_id = u.id 
+        WHERE o.supplier_id = ?
+        ORDER BY o.id DESC
+    """, (supplier_id,)).fetchall()
+    
     return render_template('supplier.html', orders=orders)
-
 @app.route('/contact')
 def contact_view(): # Naam badal diya taaki conflict na ho
     # Google Maps ka correct embed URL (No errors)
@@ -577,39 +563,38 @@ def supplier_action(order_id):
     
     print(f"DEBUG: Order {order_id} status updated to {new_status}")
     return redirect("/supplier")
-# Route 1: Sirf form dikhane ke liye (Supplier Dashboard se link isi par aayegi)
 @app.route("/supplier/add_product_page")
-def supplier_add_product_page():
+def add_product_page():
     if "user_id" not in session or session.get("role") != "supplier":
         return redirect("/login")
     return render_template("add_product.html")
 
-# Route 2: Data save karne ke liye (Form submit hone par ye chalega)
+# 2. Data Save Karne Ke Liye (POST)
 @app.route("/supplier/add_product", methods=["POST"])
-def supplier_add_product_post():
-    if "user_id" not in session or session.get("role") != "supplier":
+def supplier_add_product():
+    if "user_id" not in session:
         return redirect("/login")
 
     name = request.form.get("name")
     price = request.form.get("price")
     stock = request.form.get("stock")
     category = request.form.get("category")
-    supplier_id = session.get("user_id")
-
+    
+    # Image Handling
     image = request.files.get("image")
-    filename = "default_plant.png"
-    if image and image.filename != '':
-        filename = secure_filename(image.filename)
-        image.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+    image_name = "default_plant.png"
+    if image:
+        image_name = secure_filename(image.filename)
+        image.save(os.path.join(app.config['UPLOAD_FOLDER'], image_name))
 
     db = get_db()
     db.execute("""
-        INSERT INTO products (name, price, stock, category, image, supplier_id) 
+        INSERT INTO products (name, price, stock, image, category, supplier_id) 
         VALUES (?, ?, ?, ?, ?, ?)
-    """, (name, price, stock, category, filename, supplier_id))
+    """, (name, price, stock, image_name, category, session['user_id']))
     db.commit()
     
-    return redirect("/supplier")
+    return redirect("/supplier") # Wapas dashboard par bhej dega
 # --------------------------------ASSIGN_SUPPLIER -------------------------------------#
 @app.route("/update_order/<int:id>/<status>")
 def update_order(id, status):
@@ -821,27 +806,34 @@ def update_location():
 # --- YE AKELA FUNCTION RAKHEIN, BAAKI DO DELETE KAR DEIN ---
 from flask import jsonify # Sabse upar check karein ye import hai ya nahi
 
+@app.route("/place_order", methods=["POST"])
+def place_order():
+    if "user_id" not in session:
+        return jsonify({"message": "Session Expired! Please Login"}), 401
 
-@app.route("/admin/approve_order/<int:order_id>")
-def approve_order(order_id):
-    # Security: Sirf admin hi approve kar sake
-    if session.get('role') != 'admin':
-        return redirect(url_for('login'))
-
-    db = get_db()
-    # 1. Status ko 'Confirmed' karein 
-    # 2. payment_settled ko 1 (True) karein
-    db.execute("""
-        UPDATE orders 
-        SET status='Confirmed', payment_settled=1 
-        WHERE id=?
-    """, (order_id,))
+    user_id = session["user_id"]
+    data = request.get_json()
     
-    db.commit()
-    flash("Order verified and confirmed successfully!", "success")
-    return redirect(url_for('admin_orders')) # Apne orders route ka naam yahan likhein
-# --- PAYMENT PAGE ROUTE ---
-# -------------------------------- FINAL PAYMENT LOGIC -------------------------------- #
+    if not data:
+        return jsonify({"message": "No data received"}), 400
+
+    pay_method = data.get('method')
+    
+    try:
+        db = get_db()
+        # Dhyaan dein: Yahan status 'Placed' hi hona chahiye
+        db.execute("""
+            UPDATE orders 
+            SET status='Placed', payment_method=? 
+            WHERE user_id=? AND status='Pending'
+        """, (pay_method, user_id))
+        db.commit()
+        
+        return jsonify({"message": "Order Successfully Placed!"}), 200
+    except Exception as e:
+        print(f"❌ Database Error: {e}")
+        return jsonify({"message": "Internal Server Error"}), 500
+
 @app.route("/payments")
 def payments():
     user_id = session.get("user_id")
@@ -850,88 +842,21 @@ def payments():
 
     db = get_db()
     
-    # Admin ka mobile number fetch karna
+    # 1. Admin ka mobile number nikalna (Taki QR Admin ka bane)
     admin_data = db.execute("SELECT mobile FROM users WHERE role='admin' LIMIT 1").fetchone()
-    admin_mobile = admin_data['mobile'] if admin_data else "8446170818"
+    admin_mobile = admin_data['mobile'] if admin_data else "9999999999"
 
-    # Pending aur History orders fetch karna
+    # 2. Pending aur History orders fetch karna
     pending_orders = db.execute("SELECT * FROM orders WHERE user_id=? AND status='Pending'", (user_id,)).fetchall()
     history_orders = db.execute("SELECT * FROM orders WHERE user_id=? AND status != 'Pending' ORDER BY id DESC", (user_id,)).fetchall()
 
-    # --- FIX START: Total Calculate karne ka sahi tarika ---
-    total_amt = 0
-    for order in pending_orders:
-        # 'price' aur 'quantity' columns ke naam check kar lena DB mein sahi hain ya nahi
-        total_amt += float(order["price"]) * int(order["quantity"])
-    
-    total_amt = round(total_amt, 2)
-    # --- FIX END ---
+    total_to_pay = sum(order['total'] for order in pending_orders)
 
     return render_template("Payments.html", 
-                       orders=pending_orders, 
-                       history=history_orders, 
-                       total_amt=total_amt,
-                       admin_mobile=admin_mobile,
-                       upi_id="8446170818@nyes")
-@app.route("/place_order", methods=["POST"])
-def place_order_action():
-    if "user_id" not in session:
-        return jsonify({"status": "error", "message": "Session expired! Please login again."}), 401
-
-    data = request.get_json()
-    if not data:
-        return jsonify({"status": "error", "message": "No data received!"}), 400
-
-    method = data.get("method")
-    utr = data.get("utr")
-    user_id = session["user_id"]
-    user_name = session.get("username")
-    
-    db = get_db()
-    
-    try:
-        # 1. Cart se items uthao
-        cart_items = db.execute("SELECT * FROM cart WHERE user_id = ?", (user_id,)).fetchall()
-        
-        if not cart_items:
-            return jsonify({"status": "error", "message": "Cart is empty!"}), 400
-
-        for item in cart_items:
-            # Status logic (UPI ke liye alag, COD ke liye alag)
-            status = "Pending Approval" if method == "UPI" else "Pending"
-            
-            # 2. Product table se supplier_id nikalna (Taki supplier ko uska order dikhe)
-            prod = db.execute("SELECT supplier_id FROM products WHERE name=?", (item['product_name'],)).fetchone()
-            
-            # Agar product ka koi supplier nahi hai, toh Admin (ID: 1) ko assign kar do
-            s_id = prod['supplier_id'] if (prod and prod['supplier_id']) else 1
-
-            # 3. Total Price Calculation (Float/Int conversion zaroori hai)
-            item_price = float(item['price'])
-            item_qty = int(item['quantity'])
-            total_amt = round(item_price * item_qty, 2)
-
-            # 4. Order Table mein Insert karein
-            db.execute("""
-                INSERT INTO orders (
-                    user_id, user_name, product_name, price, quantity, total, 
-                    status, payment_method, payment_id, supplier_id
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (
-                user_id, user_name, item['product_name'], item_price, item_qty, 
-                total_amt, status, method, utr, s_id
-            ))
-
-        # 5. Order ke baad cart khali karein
-        db.execute("DELETE FROM cart WHERE user_id = ?", (user_id,))
-        db.commit()
-        
-        return jsonify({"status": "success", "message": "Order placed successfully! ✅"})
-
-    except Exception as e:
-        db.rollback() # Error aane par changes cancel karein
-        print(f"❌ Order Error: {e}")
-        return jsonify({"status": "error", "message": "Something went wrong while placing order."}), 500
+                           orders=pending_orders, 
+                           history=history_orders, 
+                           total_amount=total_to_pay,
+                           admin_mobile=admin_mobile)
 @app.route('/get_supplier_location/<int:order_id>')
 def get_supplier_location(order_id):
     # Maan lijiye aapka database order status check karta hai
@@ -993,44 +918,6 @@ def fix_db():
     db.commit()
     return "✅ Database Fix Ho Gaya! Ab Supplier Dashboard check karein."
 
-@app.route('/admin/delete_product/<int:id>', methods=['POST'])
-def delete_product(id):
-    db = get_db()
-    db.execute("DELETE FROM products WHERE id = ?", (id,))
-    db.commit()
-    return redirect(url_for('manage_products'))
-
-@app.route("/supplier/profile", methods=["GET", "POST"])
-def supplier_profile():
-    if session.get("role") != "supplier":
-        return redirect("/login")
-
-    db = get_db()
-
-    if request.method == "POST":
-        upi = request.form.get("upi_id")
-        mobile = request.form.get("payment_mobile")
-        address = request.form.get("address")
-
-        qr = request.files.get("qr")
-        qr_name = ""
-
-        if qr:
-            qr_name = secure_filename(qr.filename)
-            qr.save(os.path.join(app.config['UPLOAD_FOLDER'], qr_name))
-
-        db.execute("""
-            UPDATE suppliers 
-            SET upi_id=?, payment_mobile=?, address=?, qr_code=?
-            WHERE user_id=?
-        """, (upi, mobile, address, qr_name, session["user_id"]))
-
-        db.commit()
-        return "Profile Saved"
-
-    return render_template("supplier_profile.html")
 if __name__ == "__main__":
-    init_db() 
-    # Render ke liye port environment variable se lena behtar hai
-    port = int(os.environ.get("PORT", 5000))
-    app.run(debug=True, host="0.0.0.0", port=port)
+    init_db() # Direct call kara
+    app.run(debug=True, port=8000)
