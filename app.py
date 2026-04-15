@@ -104,7 +104,7 @@ def init_db():
 @app.route("/")
 def index():
     if "user_id" not in session:
-        return redirect(url_for("login_page"))  # Redirect to the GET route below
+        return redirect(url_for("login"))  # Redirect to the GET route below
     
     role = session.get("role")
     if role == "customer":
