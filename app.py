@@ -117,11 +117,6 @@ def index():
         return "Access Denied", 403
 
 
-@app.route("/login", methods=["GET"])
-def login_page():
-    return render_template("Sign_Up.html")
-
-# 3. LOGIN ACTION (POST) - This processes the data
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -129,31 +124,33 @@ def login():
         password = request.form.get("password", "") 
         
         db = get_db()
-        # Sirf wahi user dhoondo jiska email match kare
         user = db.execute("SELECT * FROM users WHERE email=?", (email,)).fetchone()
 
         if user:
-            # Bcrypt se password verify karo
-            if bcrypt.check_password_hash(user['password'], password):
+            # 🔥 FIX HERE (IMPORTANT)
+            if bcrypt.check_password_hash(user['password'].encode('utf-8'), password):
                 session.permanent = True
                 session["user_id"] = user['id']
                 session["role"] = user['role']
                 session["username"] = user['name']
                 
-                # Role ke hisaab se sahi jagah bhejo
-                if user['role'] == "admin": return redirect("/admin")
-                elif user['role'] == "supplier": return redirect("/supplier")
-                else: return redirect("/home")
+                if user['role'] == "admin":
+                    return redirect("/admin")
+                elif user['role'] == "supplier":
+                    return redirect("/supplier")
+                else:
+                    return redirect("/home")
             else:
                 return "Invalid Password! ❌", 401
         else:
-            return "Account not found! Please Sign Up first. ❌", 404
+            return "Account not found! ❌", 404
 
     return render_template("Sign_Up.html")
+
 @app.route("/signup", methods=["POST"])
 def signup():
     name = request.form.get("name")
-    email = request.form.get("email")
+    email = request.form.get("email").strip().lower()  # 🔥 FIX
     password = request.form.get("password")
     mobile = request.form.get("mobile")
     role = request.form.get("role")
@@ -167,13 +164,34 @@ def signup():
             VALUES (?, ?, ?, ?, ?)
         """, (name, email, hashed_password, role, mobile))
         conn.commit()
-        return "Signup Successful"  # JavaScript isi message ko check karega
+        return "Signup Successful"
+
+    except sqlite3.IntegrityError:
+        return "Email already exists ❌"
+    finally:
+        conn.close()@app.route("/signup", methods=["POST"])
+def signup():
+    name = request.form.get("name")
+    email = request.form.get("email").strip().lower()  # 🔥 FIX
+    password = request.form.get("password")
+    mobile = request.form.get("mobile")
+    role = request.form.get("role")
+
+    hashed_password = bcrypt.generate_password_hash(password).decode("utf-8")
+    
+    conn = get_db()
+    try:
+        conn.execute("""
+            INSERT INTO users (name, email, password, role, mobile)
+            VALUES (?, ?, ?, ?, ?)
+        """, (name, email, hashed_password, role, mobile))
+        conn.commit()
+        return "Signup Successful"
 
     except sqlite3.IntegrityError:
         return "Email already exists ❌"
     finally:
         conn.close()
-
 # Customer dashboard
 @app.route("/home")
 def home():
