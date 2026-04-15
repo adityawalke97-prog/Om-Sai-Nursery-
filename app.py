@@ -116,7 +116,12 @@ def index():
     else:
         return "Access Denied", 403
 
-
+@app.route("/delete_users")
+def delete_users():
+    db = get_db()
+    db.execute("DELETE FROM users")
+    db.commit()
+    return "All users deleted"
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
