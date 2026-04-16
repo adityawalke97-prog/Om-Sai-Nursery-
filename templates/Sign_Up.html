@@ -38,6 +38,26 @@
             from { transform: translateY(-20px); opacity: 0; }
             to { transform: translateY(0); opacity: 1; }
         }
+
+        /* Mobile specific Switch Link Styling */
+        .mobile-switch {
+            display: none; /* Desktop par hidden */
+            margin-top: 20px;
+            font-size: 14px;
+            color: #333;
+        }
+        .mobile-switch span {
+            color: #1abc9c;
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        @media (max-width: 480px) {
+            .mobile-switch {
+                display: block; /* Mobile par dikhega */
+            }
+        }
     </style>
 </head>
 
@@ -77,6 +97,8 @@
                 </select>
 
                 <button type="submit" id="signupBtn">Sign Up</button>
+
+                <p class="mobile-switch">Already have an account? <span onclick="openSignIn()">Login</span></p>
             </form>
         </div>
 
@@ -94,6 +116,8 @@
                 
                 <a href="#">Forgot your password?</a>
                 <button type="submit">Login</button>
+
+                <p class="mobile-switch">Don't have an account? <span onclick="openSignUp()">Create Account</span></p>
             </form>
         </div>
 
@@ -115,18 +139,22 @@
     </div>
 
     <script>
+        const container = document.getElementById('container');
         const signUpButton = document.getElementById('signUp');
         const signInButton = document.getElementById('signIn');
-        const container = document.getElementById('container');
 
-        // Panel Switch Animation
-        signUpButton.addEventListener('click', () => {
+        // Functions to Switch Panels
+        function openSignUp() {
             container.classList.add("right-panel-active");
-        });
+        }
 
-        signInButton.addEventListener('click', () => {
+        function openSignIn() {
             container.classList.remove("right-panel-active");
-        });
+        }
+
+        // Desktop Button Listeners
+        signUpButton.addEventListener('click', openSignUp);
+        signInButton.addEventListener('click', openSignIn);
 
         // Auto-hide flash messages after 4 seconds
         setTimeout(() => {
@@ -135,49 +163,31 @@
                 alert.style.display = 'none';
             });
         }, 4000);
+
+        // AJAX Signup logic
         document.getElementById("signupForm").addEventListener("submit", function(e) {
-    e.preventDefault();
+            e.preventDefault();
+            const formData = new FormData(this);
 
-    const formData = new FormData(this);
-
-    fetch("/signup", {
-        method: "POST",
-        body: formData
-    })
-    .then(res => res.text())
-    .then(data => {
-        if (data.includes("Successful")) {
-            // 1. Success message dikhao
-            alert("Registration Successful! Redirecting to Login...");
-            
-            // 2. Animation ke sath Login page par switch karo
-            container.classList.remove("right-panel-active");
-            
-            // 3. Form ko clear kar do
-            this.reset();
-        } else {
-            alert(data); // "Email already exists" ya koi aur error dikhayega
-        }
-    })
-    .catch(err => {
-        alert("Signup Failed! Please try again.");
-        console.log(err);
-    });
-});
-        const container = document.getElementById('container');
-
-// Mobile aur Desktop dono ke liye kaam karega
-function openSignUp() {
-    container.classList.add("right-panel-active");
-}
-
-function openSignIn() {
-    container.classList.remove("right-panel-active");
-}
-
-// Aapke purane event listeners bhi kaam karenge
-signUpButton.addEventListener('click', openSignUp);
-signInButton.addEventListener('click', openSignIn);
+            fetch("/signup", {
+                method: "POST",
+                body: formData
+            })
+            .then(res => res.text())
+            .then(data => {
+                if (data.includes("Successful")) {
+                    alert("Registration Successful! Redirecting to Login...");
+                    openSignIn(); // Switch to login panel
+                    this.reset();
+                } else {
+                    alert(data);
+                }
+            })
+            .catch(err => {
+                alert("Signup Failed! Please try again.");
+                console.log(err);
+            });
+        });
     </script>
 
 </body>
