@@ -900,20 +900,48 @@ def update_supplier_location():
         print(f"Location Update Error: {e}")
         return {"status": "error"}, 500
     
-import os
-from werkzeug.utils import secure_filename
+ 
+@app.route('/admin/inventory')
+def inventory():
+    conn = get_db()
+    products = conn.execute("SELECT * FROM products").fetchall()
+    conn.close()
+    return render_template('inventory.html', products=products)
 
-# Static folder ke andar images folder hona chahiye
-UPLOAD_FOLDER = 'static/images'
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-@app.route("/fix_db")
-def fix_db():
-    db = get_db()
-    # Maan lo aapki Supplier ki User ID '2' hai (Check in Users table)
-    # Ye query saare 0 wale orders ko ID 2 wale supplier ko assign kar degi
-    db.execute("UPDATE orders SET supplier_id = 2 WHERE supplier_id = 0 OR supplier_id IS NULL")
-    db.commit()
-    return "✅ Database Fix Ho Gaya! Ab Supplier Dashboard check karein."
+# Delete Product
+@app.route('/delete_product/<int:id>', methods=['POST'])
+def delete_product(id):
+    conn = get_db()
+    conn.execute("DELETE FROM products WHERE id=?", (id,))
+    conn.commit()
+    conn.close()
+    return redirect(url_for('inventory'))
+
+# Edit Page
+@app.route('/edit_product/<int:id>', methods=['GET', 'POST'])
+def edit_product(id):
+    conn = get_db()
+
+    if request.method == 'POST':
+        name = request.form['name']
+        price = request.form['price']
+        stock = request.form['stock']
+        category = request.form['category']
+
+        conn.execute("""
+            UPDATE products 
+            SET name=?, price=?, stock=?, category=? 
+            WHERE id=?
+        """, (name, price, stock, category, id))
+
+        conn.commit()
+        conn.close()
+        return redirect(url_for('inventory'))
+
+    product = conn.execute("SELECT * FROM products WHERE id=?", (id,)).fetchone()
+    conn.close()
+    return render_template('edit_product.html', product=product)
+
 
 if __name__ == "__main__":
     init_db() # Direct call kara
