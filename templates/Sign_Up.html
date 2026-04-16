@@ -164,6 +164,20 @@
         console.log(err);
     });
 });
+        const container = document.getElementById('container');
+
+// Mobile aur Desktop dono ke liye kaam karega
+function openSignUp() {
+    container.classList.add("right-panel-active");
+}
+
+function openSignIn() {
+    container.classList.remove("right-panel-active");
+}
+
+// Aapke purane event listeners bhi kaam karenge
+signUpButton.addEventListener('click', openSignUp);
+signInButton.addEventListener('click', openSignIn);
     </script>
 
 </body>
