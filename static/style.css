@@ -311,95 +311,223 @@ body.dark-mode .search-bar { background: rgba(255, 255, 255, 0.05); }
     }
 }
 /* ============================================================
-   STRICTLY MOBILE: ORDERS & MAP PREMIUM UI
+   🔥 ADVANCED MOBILE APP UI (STABLE + SMOOTH + PRO LEVEL)
    ============================================================ */
 
 @media (max-width: 768px) {
-    /* 1. Main Container Adjustment */
-    .content-area {
-        padding: 10px !important;
-        background: transparent !important; /* Base glass effect handle karega */
-        border: none !important;
+
+    /* ===== GLOBAL FIX ===== */
+    html, body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        overflow-x: hidden;
+        scroll-behavior: smooth;
+        -webkit-tap-highlight-color: transparent;
     }
 
-    /* 2. Table to Card Transformation */
-    .cart-table, .cart-table thead, .cart-table tbody, .cart-table tr, .cart-table td {
+    body {
+        animation: none !important; /* performance boost */
+        font-size: 14px;
+    }
+
+    /* ===== TOP NAV (FIXED - APP STYLE) ===== */
+    .top-nav {
+        position: fixed !important;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 60px;
+        margin: 0;
+        padding: 0 12px;
+        border-radius: 0 0 15px 15px;
+        background: rgba(255,255,255,0.95);
+        backdrop-filter: blur(10px);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        z-index: 1000;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    }
+
+    .logo {
+        font-size: 1rem;
+    }
+
+    .search-bar {
+        max-width: 160px;
+        height: 34px;
+        border-radius: 10px;
+        background: rgba(0,0,0,0.05);
+    }
+
+    .search-bar input {
+        font-size: 0.8rem;
+    }
+
+    /* ===== BOTTOM NAV (APP STYLE) ===== */
+    .bottom-nav {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 65px;
+        background: rgba(255,255,255,0.95);
+        backdrop-filter: blur(12px);
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        z-index: 1000;
+        border-top: 1px solid rgba(0,0,0,0.05);
+        box-shadow: 0 -3px 15px rgba(0,0,0,0.08);
+    }
+
+    .bottom-nav a {
+        text-decoration: none;
+        color: #64748b;
+        font-size: 0.75rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        transition: 0.2s;
+    }
+
+    .bottom-nav a.active {
+        color: var(--primary);
+        transform: scale(1.1);
+    }
+
+    /* ===== CONTENT AREA (SCROLL SAFE) ===== */
+    .content-area {
+        margin: 65px 0 75px 0 !important;
+        padding: 12px !important;
+        width: 100%;
+        background: transparent !important;
+        overflow-y: visible !important;
+    }
+
+    /* ===== REMOVE UNUSED DESKTOP UI ===== */
+    .sidebar,
+    .floating-cart,
+    .whatsapp-float {
+        display: none !important;
+    }
+
+    /* ===== CARD UI (MODERN) ===== */
+    .card, 
+    .cart-table tbody tr {
+        background: var(--card-bg);
+        border-radius: 18px;
+        padding: 14px;
+        margin-bottom: 12px;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 8px 18px rgba(0,0,0,0.05);
+        transition: 0.2s;
+    }
+
+    .card:active {
+        transform: scale(0.97);
+    }
+
+    /* ===== TABLE → CARD TRANSFORM ===== */
+    .cart-table,
+    .cart-table thead,
+    .cart-table tbody,
+    .cart-table tr,
+    .cart-table td {
         display: block;
         width: 100%;
     }
 
-    .cart-table thead { display: none; } /* Mobile par header ki zarurat nahi */
-
-    .cart-table tbody tr {
-        background: var(--card-bg); /* Aapke dark/light vars use honge */
-        margin-bottom: 15px;
-        padding: 15px;
-        border-radius: 20px;
-        border: 1px solid var(--border-color) !important;
-        box-shadow: 0 10px 20px rgba(0,0,0,0.05);
-        position: relative;
+    .cart-table thead {
+        display: none;
     }
 
     .cart-table td {
         display: flex;
         justify-content: space-between;
-        align-items: center;
-        padding: 10px 0 !important;
-        border: none !important;
-        border-bottom: 1px solid var(--border-color) !important;
-        color: var(--text-title);
-    }
-
-    .cart-table td:last-child { border-bottom: none !important; }
-
-    /* Data Label (Left Side Text) */
-    .cart-table td::before {
-        content: attr(data-label);
-        font-weight: 600;
-        color: var(--primary); /* Green accent */
+        padding: 8px 0;
+        border-bottom: 1px solid var(--border-color);
         font-size: 0.85rem;
     }
 
-    /* 3. Grand Total Box */
-    #grand-total-container {
-        background: linear-gradient(135deg, var(--primary), var(--accent));
-        color: #0f172a; /* Dark text for contrast on green */
-        padding: 20px;
-        border-radius: 18px;
-        text-align: center;
-        font-weight: 800;
-        font-size: 1.2rem;
-        margin: 20px 0;
-        box-shadow: 0 10px 25px rgba(5, 150, 105, 0.2);
+    .cart-table td:last-child {
+        border-bottom: none;
     }
 
-    /* 4. Map & Location UI */
+    .cart-table td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: var(--primary);
+    }
+
+    /* ===== GRAND TOTAL ===== */
+    #grand-total-container {
+        background: linear-gradient(135deg, var(--primary), var(--accent));
+        padding: 16px;
+        border-radius: 15px;
+        text-align: center;
+        font-weight: bold;
+        font-size: 1rem;
+        margin: 15px 0;
+        box-shadow: 0 8px 20px rgba(5,150,105,0.2);
+    }
+
+    /* ===== BUTTON (APP STYLE) ===== */
+    .buy-btn {
+        width: 100%;
+        padding: 16px;
+        border-radius: 50px;
+        background: linear-gradient(135deg, var(--primary), #059669);
+        color: white;
+        border: none;
+        font-size: 0.95rem;
+        font-weight: 600;
+        box-shadow: 0 6px 15px rgba(5,150,105,0.3);
+    }
+
+    .buy-btn:active {
+        transform: scale(0.96);
+    }
+
+    /* ===== MAP ===== */
     #map {
-        height: 250px !important;
-        border-radius: 20px !important;
-        border: 2px solid var(--primary) !important;
-        z-index: 10;
+        height: 220px;
+        border-radius: 15px;
+        border: 2px solid var(--primary);
     }
 
     input#location-input {
-        background: var(--card-bg) !important;
-        color: var(--text-title) !important;
-        border: 1px solid var(--border-color) !important;
-        padding: 15px !important;
-        border-radius: 12px !important;
-        font-family: inherit;
+        width: 100%;
+        padding: 12px;
+        border-radius: 10px;
+        border: 1px solid var(--border-color);
         margin-bottom: 10px;
+        font-size: 0.9rem;
     }
 
-    /* 5. Buy Button (Premium Pill) */
-    .buy-btn {
-        background: linear-gradient(135deg, var(--primary), #059669) !important;
-        border-radius: 50px !important;
-        padding: 18px !important;
-        box-shadow: 0 8px 20px rgba(5, 150, 105, 0.3) !important;
+    /* ===== DARK MODE MOBILE ===== */
+    body.dark-mode .top-nav,
+    body.dark-mode .bottom-nav {
+        background: rgba(15,23,42,0.95);
+    }
+
+    body.dark-mode .card,
+    body.dark-mode .cart-table tbody tr {
+        background: rgba(30,41,59,0.9);
+        color: #fff;
+    }
+
+    body.dark-mode input {
+        background: #0f172a;
+        color: #fff;
+        border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    body.dark-mode #map {
+        filter: invert(100%) hue-rotate(180deg);
     }
 }
-
 /* ============================================================
    DARK MODE SPECIFIC TWEAKS (FOR MAP & TABLE)
    ============================================================ */
