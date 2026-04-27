@@ -311,242 +311,124 @@ body.dark-mode .search-bar { background: rgba(255, 255, 255, 0.05); }
     }
 }
 /* ============================================================
-   🔥 ADVANCED MOBILE APP UI (STABLE + SMOOTH + PRO LEVEL)
+   📱 FINAL MOBILE FIX (FOR YOUR EXACT HTML)
    ============================================================ */
 
-@media (max-width: 768px) {
+@media screen and (max-width: 768px) {
 
-    /* ===== GLOBAL FIX ===== */
-    html, body {
-        margin: 0;
-        padding: 0;
-        height: 100%;
-        overflow-x: hidden;
-        scroll-behavior: smooth;
-        -webkit-tap-highlight-color: transparent;
-    }
-
+    /* ===== BODY FIX ===== */
     body {
-        animation: none !important; /* performance boost */
-        font-size: 14px;
+        overflow-x: hidden;
     }
 
-    /* ===== TOP NAV (FIXED - APP STYLE) ===== */
-    .top-nav {
-        position: fixed !important;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 60px;
-        margin: 0;
-        padding: 0 12px;
-        border-radius: 0 0 15px 15px;
-        background: rgba(255,255,255,0.95);
-        backdrop-filter: blur(10px);
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        z-index: 1000;
-        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-    }
-
-    .logo {
-        font-size: 1rem;
-    }
-
-    .search-bar {
-        max-width: 160px;
-        height: 34px;
-        border-radius: 10px;
-        background: rgba(0,0,0,0.05);
-    }
-
-    .search-bar input {
-        font-size: 0.8rem;
-    }
-
-    /* ===== BOTTOM NAV (APP STYLE) ===== */
-    .bottom-nav {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        height: 65px;
-        background: rgba(255,255,255,0.95);
-        backdrop-filter: blur(12px);
-        display: flex;
-        justify-content: space-around;
-        align-items: center;
-        z-index: 1000;
-        border-top: 1px solid rgba(0,0,0,0.05);
-        box-shadow: 0 -3px 15px rgba(0,0,0,0.08);
-    }
-
-    .bottom-nav a {
-        text-decoration: none;
-        color: #64748b;
-        font-size: 0.75rem;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        transition: 0.2s;
-    }
-
-    .bottom-nav a.active {
-        color: var(--primary);
-        transform: scale(1.1);
-    }
-
-    /* ===== CONTENT AREA (SCROLL SAFE) ===== */
-    .content-area {
-        margin: 65px 0 75px 0 !important;
-        padding: 12px !important;
-        width: 100%;
-        background: transparent !important;
-        overflow-y: visible !important;
-    }
-
-    /* ===== REMOVE UNUSED DESKTOP UI ===== */
-    .sidebar,
-    .floating-cart,
-    .whatsapp-float {
+    /* ===== SIDEBAR HIDE ===== */
+    aside.sidebar {
         display: none !important;
     }
 
-    /* ===== CARD UI (MODERN) ===== */
-    .card, 
-    .cart-table tbody tr {
-        background: var(--card-bg);
-        border-radius: 18px;
-        padding: 14px;
-        margin-bottom: 12px;
-        border: 1px solid var(--border-color);
-        box-shadow: 0 8px 18px rgba(0,0,0,0.05);
-        transition: 0.2s;
+    /* ===== TOP NAV FIX ===== */
+    .top-nav {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0;
+        right: 0;
+        height: auto !important;
+        padding: 10px !important;
+        z-index: 9999 !important;
     }
 
-    .card:active {
-        transform: scale(0.97);
+    /* SEARCH BAR FULL WIDTH */
+    .search-bar {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin-top: 8px;
     }
 
-    /* ===== TABLE → CARD TRANSFORM ===== */
+    /* ===== CONTENT FIX ===== */
+    .main-wrapper {
+        margin-left: 0 !important;
+    }
+
+    .content-area {
+        margin: 110px 0 90px 0 !important;
+        padding: 12px !important;
+        width: 100% !important;
+    }
+
+    /* ===== MOBILE NAV FIX ===== */
+    .mobile-bottom-nav {
+        display: flex !important;
+        position: fixed !important;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 65px;
+        background: rgba(255,255,255,0.95);
+        backdrop-filter: blur(10px);
+        justify-content: space-around;
+        align-items: center;
+        z-index: 9999;
+        border-top: 1px solid rgba(0,0,0,0.1);
+    }
+
+    .mobile-nav-item {
+        font-size: 11px;
+        color: #059669;
+        text-align: center;
+    }
+
+    .mobile-nav-item i {
+        font-size: 18px;
+    }
+
+    /* ===== FLOATING BUTTON FIX ===== */
+    .floating-cart {
+        bottom: 90px !important;
+        right: 20px;
+    }
+
+    .whatsapp-float {
+        bottom: 160px !important;
+        right: 20px;
+    }
+
+    /* ===== PRODUCT GRID FIX ===== */
+    #products {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 10px !important;
+    }
+
+    /* ===== TABLE TO CARD ===== */
+    .cart-table thead {
+        display: none !important;
+    }
+
     .cart-table,
-    .cart-table thead,
     .cart-table tbody,
     .cart-table tr,
     .cart-table td {
-        display: block;
+        display: block !important;
         width: 100%;
     }
 
-    .cart-table thead {
-        display: none;
+    .cart-table tr {
+        background: white;
+        margin-bottom: 12px;
+        padding: 12px;
+        border-radius: 12px;
     }
 
     .cart-table td {
-        display: flex;
+        display: flex !important;
         justify-content: space-between;
-        padding: 8px 0;
-        border-bottom: 1px solid var(--border-color);
-        font-size: 0.85rem;
-    }
-
-    .cart-table td:last-child {
-        border-bottom: none;
+        padding: 6px 0;
+        border-bottom: 1px solid #eee;
     }
 
     .cart-table td::before {
         content: attr(data-label);
-        font-weight: 600;
-        color: var(--primary);
-    }
-
-    /* ===== GRAND TOTAL ===== */
-    #grand-total-container {
-        background: linear-gradient(135deg, var(--primary), var(--accent));
-        padding: 16px;
-        border-radius: 15px;
-        text-align: center;
         font-weight: bold;
-        font-size: 1rem;
-        margin: 15px 0;
-        box-shadow: 0 8px 20px rgba(5,150,105,0.2);
+        color: #059669;
     }
-
-    /* ===== BUTTON (APP STYLE) ===== */
-    .buy-btn {
-        width: 100%;
-        padding: 16px;
-        border-radius: 50px;
-        background: linear-gradient(135deg, var(--primary), #059669);
-        color: white;
-        border: none;
-        font-size: 0.95rem;
-        font-weight: 600;
-        box-shadow: 0 6px 15px rgba(5,150,105,0.3);
-    }
-
-    .buy-btn:active {
-        transform: scale(0.96);
-    }
-
-    /* ===== MAP ===== */
-    #map {
-        height: 220px;
-        border-radius: 15px;
-        border: 2px solid var(--primary);
-    }
-
-    input#location-input {
-        width: 100%;
-        padding: 12px;
-        border-radius: 10px;
-        border: 1px solid var(--border-color);
-        margin-bottom: 10px;
-        font-size: 0.9rem;
-    }
-
-    /* ===== DARK MODE MOBILE ===== */
-    body.dark-mode .top-nav,
-    body.dark-mode .bottom-nav {
-        background: rgba(15,23,42,0.95);
-    }
-
-    body.dark-mode .card,
-    body.dark-mode .cart-table tbody tr {
-        background: rgba(30,41,59,0.9);
-        color: #fff;
-    }
-
-    body.dark-mode input {
-        background: #0f172a;
-        color: #fff;
-        border: 1px solid rgba(255,255,255,0.1);
-    }
-
-    body.dark-mode #map {
-        filter: invert(100%) hue-rotate(180deg);
-    }
-}
-/* ============================================================
-   DARK MODE SPECIFIC TWEAKS (FOR MAP & TABLE)
-   ============================================================ */
-body.dark-mode .cart-table tbody tr {
-    background: rgba(30, 41, 59, 0.8) !important; /* Dark Slate glass */
-    backdrop-filter: blur(10px);
-}
-
-body.dark-mode .cart-table td {
-    border-bottom: 1px solid rgba(255,255,255,0.05) !important;
-    color: #f8fafc;
-}
-
-body.dark-mode #grand-total-container {
-    color: #ffffff;
-    box-shadow: 0 10px 25px rgba(0, 255, 135, 0.1);
-}
-
-/* Map Dark Filter */
-body.dark-mode .leaflet-tile-container {
-    filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
 }
