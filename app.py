@@ -760,10 +760,17 @@ def manage_products():
 # Customers
 @app.route("/admin/customers")
 def admin_customers():
+
+    # 🔥 ADD THIS
+    if "user_id" not in session or session.get("role") != "admin":
+        return redirect("/login")
+
     conn = sqlite3.connect("database.db")
     cur = conn.cursor()
+
     cur.execute("SELECT id, name, email, mobile FROM users WHERE role='customer'")
     customers = cur.fetchall()
+
     conn.close()
 
     return render_template("admin_customers.html", customers=customers)
