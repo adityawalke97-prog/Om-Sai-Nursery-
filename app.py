@@ -46,11 +46,17 @@ def inject_translations():
 # Sirf ek baar run karne ke liye app.py mein dalein:
 _got_first_request = False
 
+_got_first_request = False
+
 @app.before_request
 def func():
     global _got_first_request
+
+    # 🔥 SESSION FIX (हर request पे)
+    session.permanent = True
+
+    # 🔥 FIRST TIME SETUP (sirf 1 baar)
     if not _got_first_request:
-        # Yahan apna admin banane wala logic likhein
         print("Running first-time setup...")
         _got_first_request = True
 # ----------------- DATABASE INITIALIZATION (FIXED) -----------------
@@ -127,13 +133,17 @@ def login():
         user = db.execute("SELECT * FROM users WHERE email=?", (email,)).fetchone()
 
         if user:
-            # 🔥 FIX HERE (IMPORTANT)
-            if bcrypt.check_password_hash(user['password'].encode('utf-8'), password):
+            if bcrypt.check_password_hash(user['password'], password):
+                
+                # 🔥 SESSION SET
+                session.clear()
                 session.permanent = True
                 session["user_id"] = user['id']
                 session["role"] = user['role']
                 session["username"] = user['name']
-                
+                session["mobile"] = user['mobile']   # ✅ FIX
+
+                # 🔥 REDIRECT BASED ON ROLE
                 if user['role'] == "admin":
                     return redirect("/admin")
                 elif user['role'] == "supplier":
@@ -146,7 +156,6 @@ def login():
             return "Account not found! ❌", 404
 
     return render_template("Sign_Up.html")
-
 @app.route("/signup", methods=["POST"])
 def signup():
     name = request.form.get("name")
@@ -658,7 +667,7 @@ def create_supplier():
 @app.route("/logout")
 def logout():
     session.clear()
-    return redirect("/")
+    return redirect("/login")
 # --------------------------------VERIFY_ORDER--------------------------------#
 @app.route("/verify_order/<mobile>")
 def verify_order(mobile):
