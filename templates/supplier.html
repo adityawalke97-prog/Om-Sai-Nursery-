@@ -227,6 +227,67 @@
                 </tbody>
             </table>
         </div>
+        <!-- ================= MY PRODUCTS ================= -->
+<div class="glass-card">
+    <h3 style="margin-bottom:15px;">
+        <i class="fas fa-seedling"></i> My Products
+    </h3>
+
+    <div style="overflow-x:auto;">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Image</th>
+                    <th>Product Name</th>
+                    <th>Category</th>
+                    <th>Price</th>
+                    <th>Stock</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for product in products %}
+                <tr>
+                    <td>#{{ product.id }}</td>
+
+                    <td>
+                        <img
+                            src="{{ url_for('static', filename='uploads/' + product.image) }}"
+                            width="60"
+                            height="60"
+                            style="border-radius:10px; object-fit:cover;"
+                        >
+                    </td>
+
+                    <td>{{ product.name }}</td>
+                    <td>{{ product.category }}</td>
+                    <td>₹{{ product.price }}</td>
+                    <td>{{ product.stock }}</td>
+
+                    <td>
+                        <a href="/delete_product/{{ product.id }}"
+                           onclick="return confirm('Delete this product?')"
+                           class="btn-action"
+                           style="background:#e74c3c;color:white;">
+                           Delete
+                        </a>
+                    </td>
+                </tr>
+
+                {% else %}
+                <tr>
+                    <td colspan="7" style="text-align:center;">
+                        No products added yet.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+<!-- ================= END MY PRODUCTS ================= -->
     </div>
 </div>
 
