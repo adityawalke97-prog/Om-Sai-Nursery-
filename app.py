@@ -580,6 +580,22 @@ def supplier_action(order_id):
     
     print(f"DEBUG: Order {order_id} status updated to {new_status}")
     return redirect("/supplier")
+
+@app.route('/delete_product/<int:product_id>')
+def delete_product(product_id):
+    if 'user_id' not in session:
+        return redirect('/login')
+
+    db = get_db()
+
+    db.execute(
+        "DELETE FROM products WHERE id=? AND supplier_id=?",
+        (product_id, session['user_id'])
+    )
+
+    db.commit()
+
+    return redirect('/supplier')
 @app.route("/supplier/add_product_page")
 def add_product_page():
     if "user_id" not in session or session.get("role") != "supplier":
