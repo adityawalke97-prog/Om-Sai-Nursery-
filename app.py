@@ -952,13 +952,6 @@ def inventory():
     return render_template('inventory.html', products=products)
 
 # Delete Product
-@app.route('/delete_product/<int:id>', methods=['POST'])
-def delete_product(id):
-    conn = get_db()
-    conn.execute("DELETE FROM products WHERE id=?", (id,))
-    conn.commit()
-    conn.close()
-    return redirect(url_for('inventory'))
 
 # Edit Page
 @app.route('/edit_product/<int:id>', methods=['GET', 'POST'])
