@@ -885,7 +885,7 @@ def payments():
     
     # 1. Admin ka mobile number nikalna (Taki QR Admin ka bane)
     admin_data = db.execute("SELECT mobile FROM users WHERE role='admin' LIMIT 1").fetchone()
-    admin_mobile = admin_data['mobile'] if admin_data else "8446170818"
+    admin_mobile = admin_data['mobile'] if admin_data else "8446170818@nyes"
 
     # 2. Pending aur History orders fetch karna
     pending_orders = db.execute("SELECT * FROM orders WHERE user_id=? AND status='Pending'", (user_id,)).fetchall()
