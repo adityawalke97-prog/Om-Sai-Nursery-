@@ -46,7 +46,7 @@
                 <td style="text-transform: capitalize;">{{ p[4] }}</td>
                 
                 <td style="text-align: center;">
-                    <form action="{{ url_for('delete_product', id=p[0]) }}" method="POST" 
+                    <form action="{{ url_for('delete_product', product_id=p[0]) }}" method="POST" 
                           onsubmit="return confirm('Haa product delete karaycha aahe ka?');" style="display:inline;">
                         <button type="submit" class="delete-btn">
                             <i data-lucide="trash-2"></i>
