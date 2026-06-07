@@ -237,7 +237,7 @@ def plants_page():
     return render_template("plants.html", plants=plants)
 
 # --- SEEDS PAGE ROUTE ---
-@app.route("/seeds")
+@app.route("/Seeds")
 def seeds_page():
     db = get_db()
     seeds = db.execute('''
