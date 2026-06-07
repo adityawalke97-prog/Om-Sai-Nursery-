@@ -590,7 +590,7 @@ def delete_product(product_id):
     db = get_db()
 
     db.execute(
-        "DELETE FROM products WHERE id=? AND supplier_id=?",
+        "DELETE FROM products WHERE product_id=? AND supplier_id=?",
         (product_id, session['user_id'])
     )
 
