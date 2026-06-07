@@ -237,7 +237,7 @@ def plants_page():
     return render_template("plants.html", plants=plants)
 
 # --- SEEDS PAGE ROUTE ---
-@app.route("/Seeds")
+@app.route("/seeds")
 def seeds_page():
     db = get_db()
     seeds = db.execute('''
@@ -246,7 +246,7 @@ def seeds_page():
         LEFT JOIN users u ON p.supplier_id = u.id 
         WHERE p.category = 'seed'
     ''').fetchall()
-    return render_template("seeds.html", seeds=seeds)
+    return render_template("Seeds.html", seeds=seeds)
 # --------------------------------FERTILIZERS -------------------------------------#
 @app.route("/fertilizers")
 def fertilizers_page():
