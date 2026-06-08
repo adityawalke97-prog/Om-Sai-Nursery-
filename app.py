@@ -530,22 +530,20 @@ def supplier_dashboard():
     supplier_id = session['user_id']
     db = get_db()
 
-    # Orders
- orders = db.execute("""
-    SELECT
-        o.*,
-        u.name AS user_name,
-        u.mobile AS user_mobile
-    FROM orders o
-    LEFT JOIN users u ON o.user_id = u.id
-    WHERE
-        o.supplier_id = ?
-        OR (o.supplier_id IS NULL AND o.status='Placed')
-        OR (o.supplier_id = 0 AND o.status='Placed')
-    ORDER BY o.id DESC
-""", (supplier_id,)).fetchall()
+    orders = db.execute("""
+        SELECT
+            o.*,
+            u.name AS user_name,
+            u.mobile AS user_mobile
+        FROM orders o
+        LEFT JOIN users u ON o.user_id = u.id
+        WHERE
+            o.supplier_id = ?
+            OR (o.supplier_id IS NULL AND o.status='Placed')
+            OR (o.supplier_id = 0 AND o.status='Placed')
+        ORDER BY o.id DESC
+    """, (supplier_id,)).fetchall()
 
-    # Supplier ke products
     products = db.execute("""
         SELECT *
         FROM products
@@ -557,8 +555,7 @@ def supplier_dashboard():
         'supplier.html',
         orders=orders,
         products=products
-    )
-@app.route('/contact')
+    )@app.route('/contact')
 def contact_view(): # Naam badal diya taaki conflict na ho
     # Google Maps ka correct embed URL (No errors)
     map_url = "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3781.332306353982!2d73.7661595751936!3d18.60411888251214!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bc2b97950949d97%3A0x600f7e6f8094d214!2sPimpri-Chinchwad%2C%20Maharashtra!5e0!3m2!1sen!2sin!4v1711912345678!5m2!1sen!2sin"
