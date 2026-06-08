@@ -354,7 +354,7 @@ def confirm_order():
                 INSERT INTO orders(
                     user_id, user_name, mobile,
                     product_name, price, quantity,
-                    total, location, status, supplier_id
+                    total, location, status
                 ) VALUES (?,?,?,?,?,?,?,?,?,?)
             """, (
                 user_id, user_name, mobile,
@@ -531,15 +531,19 @@ def supplier_dashboard():
     db = get_db()
 
     # Orders
-    orders = db.execute("""
-        SELECT 
-            o.id, o.product_name, o.quantity, o.total, o.status, o.location,
-            u.name AS user_name, u.mobile AS user_mobile
-        FROM orders o
-        LEFT JOIN users u ON o.user_id = u.id
-        WHERE o.supplier_id = ?
-        ORDER BY o.id DESC
-    """, (supplier_id,)).fetchall()
+ orders = db.execute("""
+    SELECT
+        o.*,
+        u.name AS user_name,
+        u.mobile AS user_mobile
+    FROM orders o
+    LEFT JOIN users u ON o.user_id = u.id
+    WHERE
+        o.supplier_id = ?
+        OR (o.supplier_id IS NULL AND o.status='Placed')
+        OR (o.supplier_id = 0 AND o.status='Placed')
+    ORDER BY o.id DESC
+""", (supplier_id,)).fetchall()
 
     # Supplier ke products
     products = db.execute("""
