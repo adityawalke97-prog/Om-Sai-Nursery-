@@ -289,29 +289,41 @@ def fertilizer_by_disease(id):
 def orders_page():
     if "user_id" not in session:
         return redirect("/login")
+
     user_id = session["user_id"]
+
     conn = get_db()
+
     cur = conn.cursor()
-    cur.execute("SELECT * FROM orders WHERE user_id=? ORDER BY created_at DESC", (user_id,))
+
+    cur.execute(
+        "SELECT * FROM orders WHERE user_id=? ORDER BY created_at DESC",
+        (user_id,)
+    )
+
     orders = cur.fetchall()
+
     return render_template("Orderss.html", orders=orders)
 @app.route("/order_history")
 def order_history():
-    user_id = session.get("user_id")
+    if "user_id" not in session:
+        return redirect("/login")
 
-    conn = sqlite3.connect("database.db")
-    cursor = conn.cursor()
+    user_id = session["user_id"]
 
-    cursor.execute("""
-        SELECT * FROM orders 
-        WHERE user_id=? 
-        ORDER BY id DESC
-    """, (user_id,))
+    db = get_db()
 
-    orders = cursor.fetchall()
-    conn.close()
+    orders = db.execute("""
+        SELECT *
+        FROM orders
+        WHERE user_id = ?
+        ORDER BY created_at DESC
+    """, (user_id,)).fetchall()
 
-    return render_template("history.html", orders=orders)
+    return render_template(
+        "order_history.html",
+        orders=orders
+    )
 @app.route("/confirm_order", methods=["POST"])
 def confirm_order():
     if "user_id" not in session:
