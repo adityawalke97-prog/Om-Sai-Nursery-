@@ -568,41 +568,41 @@ def supplier_action(order_id):
 
     action = request.form.get("action")
     db = get_db()
-    
-    # 1. Jab supplier order accept karega
+
+    # Order Accept
     if action == "accept":
-    db.execute("""
-        UPDATE orders
-        SET supplier_id=?,
-            status='Accepted'
-        WHERE id=?
-    """, (session["user_id"], order_id))
+        db.execute("""
+            UPDATE orders
+            SET supplier_id=?,
+                status='Accepted'
+            WHERE id=?
+        """, (session["user_id"], order_id))
 
-    db.commit()
-    return redirect("/supplier")
+        db.commit()
+        return redirect("/supplier")
 
-    db.commit()
-
-    return redirect("/supplier")
-        
-    # 2. Jab supplier nursery se niklega (Out for Delivery)
+    # Out for Delivery
     elif action == "out_for_delivery":
         new_status = "On the Way"
-        
-    # 3. Jab supplier customer ke ghar deliver kar dega
+
+    # Delivered
     elif action == "deliver":
         new_status = "Delivered"
-        
-    # 4. Agar reject karna ho
+
+    # Rejected
     elif action == "reject":
         new_status = "Rejected"
+
     else:
         return redirect("/supplier")
 
-    # Database mein status update kar do
-    db.execute("UPDATE orders SET status=? WHERE id=?", (new_status, order_id))
+    # Status Update
+    db.execute(
+        "UPDATE orders SET status=? WHERE id=?",
+        (new_status, order_id)
+    )
     db.commit()
-    
+
     print(f"DEBUG: Order {order_id} status updated to {new_status}")
     return redirect("/supplier")
 
