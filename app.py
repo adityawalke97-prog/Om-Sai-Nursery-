@@ -309,16 +309,14 @@ def order_history():
     if "user_id" not in session:
         return redirect("/login")
 
-    user_id = session["user_id"]
-
     db = get_db()
 
     orders = db.execute("""
         SELECT *
         FROM orders
-        WHERE user_id = ?
-        ORDER BY created_at DESC
-    """, (user_id,)).fetchall()
+        WHERE user_id=?
+        ORDER BY id DESC
+    """,(session["user_id"],)).fetchall()
 
     return render_template(
         "order_history.html",
