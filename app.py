@@ -573,7 +573,17 @@ def supplier_action(order_id):
     
     # 1. Jab supplier order accept karega
     if action == "accept":
-        new_status = "Accepted"
+
+    db.execute("""
+        UPDATE orders
+        SET supplier_id=?,
+            status='Accepted'
+        WHERE id=?
+    """, (session["user_id"], order_id))
+
+    db.commit()
+
+    return redirect("/supplier")
         
     # 2. Jab supplier nursery se niklega (Out for Delivery)
     elif action == "out_for_delivery":
@@ -878,10 +888,12 @@ def place_order():
         db = get_db()
         # Dhyaan dein: Yahan status 'Placed' hi hona chahiye
         db.execute("""
-            UPDATE orders 
-            SET status='Placed', payment_method=? 
-            WHERE user_id=? AND status='Pending'
-        """, (pay_method, user_id))
+    UPDATE orders
+    SET status='Placed',
+        payment_method=?,
+        supplier_id=NULL
+    WHERE user_id=? AND status='Pending'
+""", (pay_method, user_id))
         db.commit()
         
         return jsonify({"message": "Order Successfully Placed!"}), 200
