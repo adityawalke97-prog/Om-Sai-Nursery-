@@ -571,13 +571,15 @@ def supplier_action(order_id):
     
     # 1. Jab supplier order accept karega
     if action == "accept":
-
     db.execute("""
         UPDATE orders
         SET supplier_id=?,
             status='Accepted'
         WHERE id=?
     """, (session["user_id"], order_id))
+
+    db.commit()
+    return redirect("/supplier")
 
     db.commit()
 
