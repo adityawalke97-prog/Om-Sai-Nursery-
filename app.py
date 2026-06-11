@@ -1,4 +1,5 @@
 import os
+print(os.getcwd())
 from unittest.mock import DEFAULT
 from flask import Flask, flash, render_template, request, redirect, session, url_for, jsonify, g
 from flask_bcrypt import Bcrypt
@@ -8,7 +9,6 @@ import random
 from urllib.parse import quote
 from werkzeug.utils import secure_filename
 from translations import translations
-
 # ----------------- APP & DB CONFIG -----------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATABASE = os.path.join(BASE_DIR, "database.db")
@@ -350,20 +350,35 @@ def confirm_order():
             total = float(item["price"]) * int(item["quantity"])
 
             # --- Ab Insert karte waqt supplier_id daalo ---
-            db.execute("""
-                INSERT INTO orders(
-                    user_id, user_name, mobile,
-                    product_name, price, quantity,
-                    total, location, status
-                ) VALUES (?,?,?,?,?,?,?,?,?,?)
-            """, (
-                user_id, user_name, mobile,
-                item["name"], item["price"], item["quantity"],
-                total, location, "Pending", s_id
-            ))
+            
+        db.execute("""
+INSERT INTO orders(
+    user_id,
+    user_name,
+    mobile,
+    supplier_id,
+    product_name,
+    price,
+    quantity,
+    total,
+    location,
+    status
+) VALUES (?,?,?,?,?,?,?,?,?,?)
+""", (
+    user_id,
+    user_name,
+    mobile,
+    s_id,
+    item["name"],
+    item["price"],
+    item["quantity"],
+    total,
+    location,
+    "Pending"
+))
 
             # Stock kam karo
-            db.execute("UPDATE products SET stock = stock - ? WHERE name = ?", 
+        db.execute("UPDATE products SET stock = stock - ? WHERE name = ?", 
                        (item["quantity"], item["name"]))
 
         db.commit()
@@ -914,7 +929,10 @@ def payments():
     admin_mobile = admin_data['mobile'] if admin_data else "8446170818@nyes"
 
     # 2. Pending aur History orders fetch karna
-    pending_orders = db.execute("SELECT * FROM orders WHERE user_id=? AND status='Pending'", (user_id,)).fetchall()
+    pending_orders = db.execute(
+    "SELECT * FROM orders WHERE user_id=? AND status IN ('Pending','Placed')",
+    (user_id,)
+).fetchall()
     history_orders = db.execute("SELECT * FROM orders WHERE user_id=? AND status != 'Pending' ORDER BY id DESC", (user_id,)).fetchall()
 
     total_to_pay = sum(order['total'] for order in pending_orders)

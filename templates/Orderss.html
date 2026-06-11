@@ -148,25 +148,34 @@
     }
 
     function buyNow() {
-        let cart = JSON.parse(localStorage.getItem("cart")) || [];
-        let loc = document.getElementById("location-input").value;
-        if(cart.length === 0) return alert("Cart khali hai!");
-        if(!loc) return alert("Please select location on map!");
+    let cart = JSON.parse(localStorage.getItem("cart")) || [];
+    let loc = document.getElementById("location-input").value;
 
-        fetch("/confirm_order", {
-            method: "POST",
-            headers: {"Content-Type":"application/json"},
-            body: JSON.stringify({cart, location: loc})
-        })
-        .then(res => res.json())
-        .then(data => {
-            if(data.success) {
-                alert("Order Success!");
-                localStorage.removeItem("cart");
-                window.location.href="/payments";
-            }
-        });
-    }
+    console.log("Cart:", cart);
+    console.log("Location:", loc);
+
+    fetch("/confirm_order", {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({cart, location: loc})
+    })
+    .then(res => res.json())
+    .then(data => {
+        console.log(data);
+
+        if(data.success){
+            alert("Order Success!");
+            localStorage.removeItem("cart");
+            window.location.href="/payments";
+        } else {
+            alert(data.message);
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        alert("Server Error");
+    });
+}
 
     loadCart();
 </script>
