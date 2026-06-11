@@ -285,32 +285,7 @@ def verify_otp():
         flash("Invalid OTP!", "danger")
 
     return render_template("verify_otp.html")
-@app.route('/reset-password', methods=['GET', 'POST'])
-def reset_password():
-    if request.method == 'POST':
-        new_password = request.form['password']
 
-        hashed = bcrypt.generate_password_hash(
-            new_password
-        ).decode('utf-8')
-
-        db = get_db()
-
-        db.execute(
-            "UPDATE users SET password=? WHERE mobile=?",
-            (hashed, session['reset_mobile'])
-        )
-
-        db.commit()
-
-        session.pop('reset_otp', None)
-        session.pop('reset_mobile', None)
-
-        flash("Password Reset Successful!", "success")
-
-        return redirect('/login')
-
-    return render_template("reset_password.html")
 # --- PLANTS PAGE ROUTE ---
 @app.route("/plants")
 def plants_page():
