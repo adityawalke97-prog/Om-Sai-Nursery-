@@ -223,6 +223,94 @@ def search():
     return render_template("search_results.html", results=results, query=query)
 
 # --------------------------------PLANTS-------------------------------------#
+
+from random import randint
+@app.route('/reset-password', methods=['GET', 'POST'])
+def reset_password():
+
+    if request.method == 'POST':
+        new_password = request.form['password']
+
+        mobile = session.get('reset_mobile')
+
+        hashed_password = bcrypt.generate_password_hash(
+            new_password
+        ).decode('utf-8')
+
+        db = get_db()
+
+        db.execute(
+            "UPDATE users SET password=? WHERE mobile=?",
+            (hashed_password, mobile)
+        )
+
+        db.commit()
+
+        return redirect('/login')
+
+    return render_template('reset_password.html')
+@app.route('/forgot-password', methods=['GET', 'POST'])
+def forgot_password():
+    if request.method == 'POST':
+        mobile = request.form['mobile']
+
+        db = get_db()
+        user = db.execute(
+            "SELECT * FROM users WHERE mobile=?",
+            (mobile,)
+        ).fetchone()
+
+        if user:
+            otp = str(randint(100000, 999999))
+
+            session['reset_otp'] = otp
+            session['reset_mobile'] = mobile
+
+            # OTP send function call
+            send_otp_sms(mobile, otp)
+
+            return redirect('/verify-otp')
+
+        flash("Mobile number not found!", "danger")
+
+    return render_template("forgot_password.html")
+@app.route('/verify-otp', methods=['GET', 'POST'])
+def verify_otp():
+    if request.method == 'POST':
+        entered_otp = request.form['otp']
+
+        if entered_otp == session.get('reset_otp'):
+            return redirect('/reset-password')
+
+        flash("Invalid OTP!", "danger")
+
+    return render_template("verify_otp.html")
+@app.route('/reset-password', methods=['GET', 'POST'])
+def reset_password():
+    if request.method == 'POST':
+        new_password = request.form['password']
+
+        hashed = bcrypt.generate_password_hash(
+            new_password
+        ).decode('utf-8')
+
+        db = get_db()
+
+        db.execute(
+            "UPDATE users SET password=? WHERE mobile=?",
+            (hashed, session['reset_mobile'])
+        )
+
+        db.commit()
+
+        session.pop('reset_otp', None)
+        session.pop('reset_mobile', None)
+
+        flash("Password Reset Successful!", "success")
+
+        return redirect('/login')
+
+    return render_template("reset_password.html")
 # --- PLANTS PAGE ROUTE ---
 @app.route("/plants")
 def plants_page():
