@@ -115,6 +115,8 @@ def index():
     role = session.get("role")
     if role == "customer":
         return redirect("/home")
+.   elif role == "admin":
+return redirect("/admin")
    elif role == "supplier":
         return redirect("/supplier")
     else:
