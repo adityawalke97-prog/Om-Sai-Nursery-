@@ -1,0 +1,131 @@
+{% extends "Home.html" %}
+
+{% block content %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='plant.css') }}">
+
+<h2>🪴 Plant Pots</h2>
+
+<div id="products">
+
+{% if pots %}
+
+    {% for pot in pots %}
+
+    <div class="plant-card">
+
+        <h3>{{ pot['name'] }}</h3>
+
+        <img src="{{ url_for('static', filename='images/' + pot['image']) }}"
+             width="150"
+             alt="{{ pot['name'] }}">
+
+        <div class="price-section">
+
+            <span class="current-price">
+                ₹{{ pot['price'] }}
+            </span>
+
+            <span class="original-price">
+                ₹{{ ((pot['price']|float) * 1.3)|round|int }}
+            </span>
+
+            <span class="discount-tag">
+                30% OFF
+            </span>
+
+        </div>
+
+        <div class="stock-wrapper">
+
+            <small>
+                Availability: {{ pot['stock'] }} left
+            </small>
+
+            <div class="progress-bar">
+                <div class="progress-fill"
+                     style="width: {{ (pot['stock']/50)*100 }}%;
+                            background: {{ 'red' if pot['stock'] < 5 else '#059669' }}">
+                </div>
+            </div>
+
+        </div>
+
+        <p><b>Stock:</b> {{ pot['stock'] }}</p>
+
+        {% if session.get('role') == 'admin' %}
+        <div class="supplier-info">
+            🏢 Supplier: {{ pot['supplier_name'] }}
+        </div>
+        {% endif %}
+
+        <div class="action-area">
+
+            <input
+                type="number"
+                id="qty_{{ pot['id'] }}"
+                value="1"
+                min="1">
+
+            <button onclick='addToCartSafe(
+                {{ pot["id"] }},
+                "{{ pot["name"].replace("\"","\\\"") }}",
+                {{ pot["price"]|float }},
+                {{ pot["supplier_id"] }}
+            )'>
+                🛒 Add to Cart
+            </button>
+
+        </div>
+
+    </div>
+
+    {% endfor %}
+
+{% else %}
+
+<div class="no-products">
+    <h3>🪴 No Pots Available</h3>
+    <p>Currently no plant pots are available.</p>
+</div>
+
+{% endif %}
+
+</div>
+
+<br>
+
+<div style="text-align:center;">
+    <a href="{{ url_for('orders_page') }}" class="btn-cart">
+        🛒 View My Cart
+    </a>
+</div>
+
+<script>
+function addToCartSafe(id, name, price, supplier_id) {
+
+    let qty = parseInt(document.getElementById("qty_" + id).value) || 1;
+
+    let cart = JSON.parse(localStorage.getItem("cart")) || [];
+
+    let existing = cart.find(item => item.id === id);
+
+    if (existing) {
+        existing.quantity += qty;
+    } else {
+        cart.push({
+            id: id,
+            name: name,
+            price: Number(price),
+            quantity: qty,
+            supplier_id: supplier_id
+        });
+    }
+
+    localStorage.setItem("cart", JSON.stringify(cart));
+
+    alert(name + " added to cart!");
+}
+</script>
+
+{% endblock %}

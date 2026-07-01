@@ -1,0 +1,140 @@
+{% extends "Home.html" %}
+
+{% block content %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='plant.css') }}">
+
+<h2>Our Nursery Tools</h2>
+
+<div id="products">
+
+{% if tools %}
+    {% for tool in tools %}
+
+        {% if tool['supplier_id'] and tool['supplier_id'] != 0 %}
+        <div class="plant-card">
+
+            <h3>{{ tool['name'] }}</h3>
+
+            <img src="{{ url_for('static', filename='images/' + tool['image']) }}"
+                 width="150"
+                 alt="{{ tool['name'] }}">
+
+            <div class="price-section">
+
+                <span class="current-price">
+                    ₹{{ tool['price'] }}
+                </span>
+
+                <span class="original-price">
+                    ₹{{ ((tool ['price']|float) * 1.3)|round|int }}
+                </span>
+
+                <span class="discount-tag">
+                    30% OFF
+                </span>
+
+            </div>
+
+            <div class="stock-wrapper">
+
+                <small>
+                    Availability: {{ tool['stock'] }} left
+                </small>
+
+                <div class="progress-bar">
+                    <div class="progress-fill"
+                         style="width: {{ (tool['stock'] / 50) * 100 }}%;
+                                background: {{ 'red' if tool['stock'] < 5 else '#059669' }}">
+                    </div>
+                </div>
+
+            </div>
+
+            <p>
+                <b>Stock:</b> {{ tool['stock'] }}
+            </p>
+
+            {% if session.get('role') == 'admin' %}
+            <div class="supplier-info">
+                🏢 Supplier: {{ tool['supplier_name'] }}
+            </div>
+            {% endif %}
+
+            <div class="action-area">
+
+                <input
+                    type="number"
+                    id="qty_{{ tool['id'] }}"
+                    value="1"
+                    min="1">
+
+                <button onclick='addToCartSafe(
+                    {{ tool["id"] }},
+                    "{{ tool["name"].replace("\"","\\\"") }}",
+                    {{ tool["price"]|float }},
+                    {{ tool["supplier_id"] }}
+                )'>
+                    <span>🛒</span> Add to Cart
+                </button>
+
+            </div>
+
+        </div>
+        {% endif %}
+
+    {% endfor %}
+
+{% else %}
+
+    <div class="no-products">
+        <p>Abhi koi tools available nahi hain.</p>
+    </div>
+
+{% endif %}
+
+</div>
+
+<br>
+
+<div style="text-align:center;">
+    <a href="{{ url_for('orders_page') }}" class="btn-cart">
+        🛒 View My Cart
+    </a>
+</div>
+
+<script>
+
+function addToCartSafe(id, name, price, supplier_id) {
+
+    let qtyInput = document.getElementById("qty_" + id);
+    let qty = 1;
+
+    if (qtyInput) {
+        qty = parseInt(qtyInput.value) || 1;
+    }
+
+    let cart = JSON.parse(localStorage.getItem("cart")) || [];
+
+    let existing = cart.find(item => item.id === id);
+
+    if (existing) {
+        existing.quantity += qty;
+    } else {
+        cart.push({
+            id: id,
+            name: name,
+            price: Number(price),
+            quantity: qty,
+            supplier_id: supplier_id
+        });
+    }
+
+    localStorage.setItem("cart", JSON.stringify(cart));
+
+    alert(name + " added to cart!");
+}
+
+</script>
+
+{% endblock %}
