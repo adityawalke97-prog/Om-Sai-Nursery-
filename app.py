@@ -423,8 +423,8 @@ def search():
 
     query = request.args.get("query", "").strip()
 
-    conn = get_db_connection()
-    cursor = conn.cursor(pymysql.cursors.DictCursor)
+    conn = get_db()
+    cursor = conn.cursor()
 
     if query:
 
@@ -445,7 +445,6 @@ def search():
         results = []
 
     cursor.close()
-    conn.close()
 
     return render_template(
         "search_results.html",
@@ -976,7 +975,7 @@ def remove_order(order_id):
     cur = conn.cursor()
 
     cur.execute("""
-        DELETE FROM products
+        DELETE FROM orders
         WHERE id=%s
         AND user_id=%s
         AND status='Pending'
@@ -988,7 +987,6 @@ def remove_order(order_id):
     conn.commit()
 
     return redirect("/orders")
-
 
 # ================= BUY NOW =================
 
@@ -1352,7 +1350,7 @@ def delete_product(product_id):
 
     cur.execute("""
         DELETE FROM products
-        WHERE product_id=%s
+        WHERE id=%s
         AND supplier_id=%s
     """, (
         product_id,
