@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard | Om Sai Nursery</title>
     
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2%sfamily=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='admin.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='admin1.css') }}">
@@ -54,6 +54,9 @@
             </a>
             <a href="/admin/customers" class="nav-item">
                 <i data-lucide="users"></i> <span>Customers</span>
+            </a>
+            <a href="/admin/suppliers" class="nav-item">
+                <i data-lucide="users"></i> <span>Suppliers</span>
             </a>
             <a href="/admin/reports" class="nav-item">
                 <i data-lucide="bar-chart-3"></i> <span>Reports</span>

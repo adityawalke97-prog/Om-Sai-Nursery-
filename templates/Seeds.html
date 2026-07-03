@@ -15,7 +15,7 @@
 
         <div class="price-section">
             <span class="current-price">₹{{ seed['price'] }}</span>
-            <span class="original-price">₹{{ (seed['price'] * 1.2)|round|int }}</span>
+           <span class="original-price">₹{{ ((seed['price']|float) * 1.2)|int }}</span>
             <span class="discount-tag">20% OFF</span>
         </div>
 

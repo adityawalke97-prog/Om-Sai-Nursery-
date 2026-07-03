@@ -4,13 +4,13 @@
 
 <link rel="stylesheet" href="{{ url_for('static', filename='plant.css') }}">
 
-<h2>🪴 Nursery Plants</h2>
+<h2>🪴 Indoor Plants</h2>
 
 <div id="products">
 
-{% if plants %}
+{% if indoor_plants %}
 
-    {% for plant in plants %}
+    {% for plant in indoor_plants %}
 
     <div class="plant-card">
 
@@ -21,26 +21,18 @@
              alt="{{ plant['name'] }}">
 
         <div class="price-section">
-
-            <span class="current-price">
-                ₹{{ plant['price'] }}
-            </span>
+            <span class="current-price">₹{{ plant['price'] }}</span>
 
             <span class="original-price">
                 ₹{{ ((plant['price']|float) * 1.3)|round|int }}
             </span>
 
-            <span class="discount-tag">
-                30% OFF
-            </span>
-
+            <span class="discount-tag">30% OFF</span>
         </div>
 
         <div class="stock-wrapper">
 
-            <small>
-                Availability: {{ plant['stock'] }} left
-            </small>
+            <small>Availability: {{ plant['stock'] }} left</small>
 
             <div class="progress-bar">
                 <div class="progress-fill"
@@ -61,11 +53,10 @@
 
         <div class="action-area">
 
-            <input
-                type="number"
-                id="qty_{{ plant['id'] }}"
-                value="1"
-                min="1">
+            <input type="number"
+                   id="qty_{{ plant['id'] }}"
+                   value="1"
+                   min="1">
 
             <button onclick='addToCartSafe(
                 {{ plant["id"] }},
@@ -85,8 +76,8 @@
 {% else %}
 
 <div class="no-products">
-    <h3>🪴 No Plants Available</h3>
-    <p>Currently no plants are available.</p>
+    <h3>🪴 No Indoor Plants Available</h3>
+    <p>Currently no indoor plants are available.</p>
 </div>
 
 {% endif %}
@@ -104,25 +95,25 @@
 <script>
 function addToCartSafe(id, name, price, supplier_id) {
 
-    let qty = parseInt(document.getElementById("qty_" + id).value) || 1;
+    let qty = parseInt(document.getElementById("qty_"+id).value) || 1;
 
     let cart = JSON.parse(localStorage.getItem("cart")) || [];
 
     let existing = cart.find(item => item.id === id);
 
-    if (existing) {
+    if(existing){
         existing.quantity += qty;
-    } else {
+    }else{
         cart.push({
-            id: id,
-            name: name,
-            price: Number(price),
-            quantity: qty,
-            supplier_id: supplier_id
+            id:id,
+            name:name,
+            price:Number(price),
+            quantity:qty,
+            supplier_id:supplier_id
         });
     }
 
-    localStorage.setItem("cart", JSON.stringify(cart));
+    localStorage.setItem("cart",JSON.stringify(cart));
 
     alert(name + " added to cart!");
 }

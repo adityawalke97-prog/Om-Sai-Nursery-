@@ -4,13 +4,13 @@
 
 <link rel="stylesheet" href="{{ url_for('static', filename='plant.css') }}">
 
-<h2>🪴 Nursery Plants</h2>
+<h2>🌿 Herbal Plants</h2>
 
 <div id="products">
 
-{% if plants %}
+{% if herbal_plants %}
 
-    {% for plant in plants %}
+    {% for plant in herbal_plants %}
 
     <div class="plant-card">
 
@@ -45,7 +45,7 @@
             <div class="progress-bar">
                 <div class="progress-fill"
                      style="width: {{ (plant['stock']/50)*100 }}%;
-                            background: {{ 'red' if plant['stock'] < 5 else '#059669' }}">
+                     background: {{ 'red' if plant['stock'] < 5 else '#059669' }}">
                 </div>
             </div>
 
@@ -85,8 +85,8 @@
 {% else %}
 
 <div class="no-products">
-    <h3>🪴 No Plants Available</h3>
-    <p>Currently no plants are available.</p>
+    <h3>🌿 No Herbal Plants Available</h3>
+    <p>Currently no herbal plants are available.</p>
 </div>
 
 {% endif %}

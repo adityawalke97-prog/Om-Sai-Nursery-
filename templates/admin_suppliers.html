@@ -1,0 +1,171 @@
+{% extends "admin_layout.html" %}
+
+{% block header_title %}Suppliers{% endblock %}
+
+{% block content %}
+
+<div class="header" style="margin-bottom:25px;">
+    <h1>
+        <i data-lucide="truck"></i>
+        Suppliers Management
+    </h1>
+    <p>View and manage all nursery suppliers</p>
+</div>
+
+<!-- Stats Card -->
+<div class="stats-grid">
+
+    <div class="stat-card">
+        <span>Total Suppliers</span>
+        <h2>{{ suppliers|length }}</h2>
+    </div>
+
+</div>
+
+<!-- Search -->
+<div class="search-container" style="margin:20px 0;">
+    <input
+        type="text"
+        id="supplierSearch"
+        placeholder="Search supplier by name, email or mobile..."
+        style="
+            width:100%;
+            padding:14px;
+            border-radius:12px;
+            border:1px solid rgba(255,255,255,.08);
+            background:rgba(255,255,255,.04);
+            color:white;
+            outline:none;
+        ">
+</div>
+
+<!-- Supplier Table -->
+<div class="glass-panel">
+
+    <div class="table-container">
+
+        <table class="admin-orders-table" id="supplierTable">
+
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Supplier Name</th>
+                    <th>Email</th>
+                    <th>Mobile</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for s in suppliers %}
+
+                <tr>
+
+                    <td>#{{ s['id'] }}</td>
+
+                    <td>
+                        <strong>{{ s['name'] }}</strong>
+                    </td>
+
+                    <td>{{ s['email'] }}</td>
+
+                    <td>{{ s['mobile'] }}</td>
+
+                    <td>
+                        <span class="status-pill active-status">
+                            Active
+                        </span>
+                    </td>
+
+                    <td>
+
+                        <a
+                            href="{{ url_for('supplier_details', supplier_id=s['id']) }}"
+                            class="view-btn">
+                            View Details
+                        </a>
+
+                    </td>
+
+                </tr>
+
+                {% else %}
+
+                <tr>
+                    <td colspan="6" style="text-align:center;padding:25px;">
+                        No suppliers found.
+                    </td>
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+<style>
+
+.view-btn{
+    background:#27ae60;
+    color:white;
+    text-decoration:none;
+    padding:8px 14px;
+    border-radius:10px;
+    font-size:13px;
+    font-weight:600;
+    transition:.3s;
+}
+
+.view-btn:hover{
+    background:#219150;
+}
+
+.active-status{
+    background:rgba(39,174,96,.15);
+    color:#27ae60;
+    padding:6px 12px;
+    border-radius:20px;
+    font-size:12px;
+    font-weight:600;
+}
+
+#supplierTable tbody tr:hover{
+    background:rgba(39,174,96,.08);
+}
+
+</style>
+
+<script>
+
+lucide.createIcons();
+
+document.getElementById("supplierSearch").addEventListener("keyup", function(){
+
+    let filter = this.value.toLowerCase();
+
+    let rows = document.querySelectorAll(
+        "#supplierTable tbody tr"
+    );
+
+    rows.forEach(row => {
+
+        let text = row.innerText.toLowerCase();
+
+        row.style.display =
+            text.includes(filter)
+            ? ""
+            : "none";
+
+    });
+
+});
+
+</script>
+
+{% endblock %}

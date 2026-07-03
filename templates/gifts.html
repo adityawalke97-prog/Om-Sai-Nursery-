@@ -4,30 +4,30 @@
 
 <link rel="stylesheet" href="{{ url_for('static', filename='plant.css') }}">
 
-<h2>🪴 Nursery Plants</h2>
+<h2>🎁 Gift Plants</h2>
 
 <div id="products">
 
-{% if plants %}
+{% if gifts %}
 
-    {% for plant in plants %}
+    {% for gift in gifts %}
 
     <div class="plant-card">
 
-        <h3>{{ plant['name'] }}</h3>
+        <h3>{{ gift['name'] }}</h3>
 
-        <img src="{{ url_for('static', filename='images/' + plant['image']) }}"
+        <img src="{{ url_for('static', filename='images/' + gift['image']) }}"
              width="150"
-             alt="{{ plant['name'] }}">
+             alt="{{ gift['name'] }}">
 
         <div class="price-section">
 
             <span class="current-price">
-                ₹{{ plant['price'] }}
+                ₹{{ gift['price'] }}
             </span>
 
             <span class="original-price">
-                ₹{{ ((plant['price']|float) * 1.3)|round|int }}
+                ₹{{ ((gift['price']|float) * 1.3)|round|int }}
             </span>
 
             <span class="discount-tag">
@@ -39,39 +39,38 @@
         <div class="stock-wrapper">
 
             <small>
-                Availability: {{ plant['stock'] }} left
+                Availability: {{ gift['stock'] }} left
             </small>
 
             <div class="progress-bar">
                 <div class="progress-fill"
-                     style="width: {{ (plant['stock']/50)*100 }}%;
-                            background: {{ 'red' if plant['stock'] < 5 else '#059669' }}">
+                     style="width: {{ (gift['stock']/50)*100 }}%;
+                            background: {{ 'red' if gift['stock'] < 5 else '#059669' }}">
                 </div>
             </div>
 
         </div>
 
-        <p><b>Stock:</b> {{ plant['stock'] }}</p>
+        <p><b>Stock:</b> {{ gift['stock'] }}</p>
 
         {% if session.get('role') == 'admin' %}
         <div class="supplier-info">
-            🏢 Supplier: {{ plant['supplier_name'] }}
+            🏢 Supplier: {{ gift['supplier_name'] }}
         </div>
         {% endif %}
 
         <div class="action-area">
 
-            <input
-                type="number"
-                id="qty_{{ plant['id'] }}"
-                value="1"
-                min="1">
+            <input type="number"
+                   id="qty_{{ gift['id'] }}"
+                   value="1"
+                   min="1">
 
             <button onclick='addToCartSafe(
-                {{ plant["id"] }},
-                "{{ plant["name"].replace("\"","\\\"") }}",
-                {{ plant["price"]|float }},
-                {{ plant["supplier_id"] }}
+                {{ gift["id"] }},
+                "{{ gift["name"].replace("\"","\\\"") }}",
+                {{ gift["price"]|float }},
+                {{ gift["supplier_id"] }}
             )'>
                 🛒 Add to Cart
             </button>
@@ -85,8 +84,8 @@
 {% else %}
 
 <div class="no-products">
-    <h3>🪴 No Plants Available</h3>
-    <p>Currently no plants are available.</p>
+    <h3>🎁 No Gift Plants Available</h3>
+    <p>Currently no gift plants are available.</p>
 </div>
 
 {% endif %}

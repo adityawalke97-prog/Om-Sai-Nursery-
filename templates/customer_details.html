@@ -1,0 +1,333 @@
+{% extends "admin_layout.html" %}
+
+{% block content %}
+<style>
+
+    /* =========================
+   CUSTOMER PROFILE HEADER
+========================= */
+
+.customer-profile{
+    display:flex;
+    align-items:center;
+    gap:25px;
+    padding:30px;
+    border-radius:24px;
+    background:linear-gradient(135deg,#0f172a,#1e293b);
+    border:1px solid rgba(255,255,255,.08);
+    box-shadow:0 15px 40px rgba(0,0,0,.25);
+    margin-bottom:30px;
+}
+
+.avatar{
+    width:90px;
+    height:90px;
+    border-radius:50%;
+    background:linear-gradient(135deg,#10b981,#059669);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    font-size:36px;
+    font-weight:700;
+    color:white;
+    box-shadow:0 10px 25px rgba(16,185,129,.35);
+}
+
+.customer-info h1{
+    margin:0;
+    color:white;
+    font-size:32px;
+}
+
+.customer-info p{
+    margin:6px 0;
+    color:#94a3b8;
+}
+
+/* =========================
+   STATISTICS CARDS
+========================= */
+
+.stats-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+    gap:20px;
+    margin-bottom:30px;
+}
+
+.stat-card{
+    background:linear-gradient(145deg,#111827,#1f2937);
+    border-radius:22px;
+    padding:25px;
+    border:1px solid rgba(255,255,255,.08);
+    transition:.3s;
+    box-shadow:0 10px 30px rgba(0,0,0,.25);
+}
+
+.stat-card:hover{
+    transform:translateY(-5px);
+    box-shadow:0 15px 35px rgba(16,185,129,.15);
+}
+
+.stat-card h2{
+    margin:0;
+    font-size:34px;
+    color:#10b981;
+}
+
+.stat-card p{
+    margin-top:10px;
+    color:#94a3b8;
+    font-size:14px;
+}
+
+/* =========================
+   SECTION TITLES
+========================= */
+
+.section-title{
+    color:white;
+    margin-bottom:20px;
+    font-size:24px;
+    font-weight:700;
+}
+
+/* =========================
+   ORDER TABLE
+========================= */
+
+.table-container{
+    background:rgba(255,255,255,.03);
+    border-radius:20px;
+    overflow:hidden;
+    border:1px solid rgba(255,255,255,.05);
+    box-shadow:0 10px 30px rgba(0,0,0,.2);
+}
+
+.admin-orders-table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+.admin-orders-table thead{
+    background:#111827;
+}
+
+.admin-orders-table th{
+    color:white;
+    padding:18px;
+    text-align:left;
+    font-size:14px;
+}
+
+.admin-orders-table td{
+    padding:18px;
+    border-bottom:1px solid rgba(255,255,255,.05);
+    color:#e5e7eb;
+}
+
+.admin-orders-table tr:hover{
+    background:rgba(255,255,255,.03);
+}
+
+/* =========================
+   STATUS BADGES
+========================= */
+
+.badge{
+    padding:7px 14px;
+    border-radius:30px;
+    font-size:12px;
+    font-weight:600;
+}
+
+.delivered{
+    background:rgba(16,185,129,.15);
+    color:#10b981;
+}
+
+.pending{
+    background:rgba(245,158,11,.15);
+    color:#f59e0b;
+}
+
+.cancelled{
+    background:rgba(239,68,68,.15);
+    color:#ef4444;
+}
+
+/* =========================
+   CUSTOMER INSIGHTS
+========================= */
+
+.insights-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+    gap:20px;
+    margin-top:30px;
+}
+
+.insight-card{
+    background:linear-gradient(145deg,#111827,#1f2937);
+    border-radius:20px;
+    padding:25px;
+    border:1px solid rgba(255,255,255,.06);
+}
+
+.insight-card h3{
+    color:#10b981;
+    margin-bottom:12px;
+}
+
+.insight-card p{
+    color:#cbd5e1;
+    margin:0;
+}
+
+/* =========================
+   ACTIVITY TIMELINE
+========================= */
+
+.timeline{
+    margin-top:30px;
+}
+
+.timeline-item{
+    position:relative;
+    padding-left:30px;
+    margin-bottom:20px;
+}
+
+.timeline-item::before{
+    content:"";
+    width:12px;
+    height:12px;
+    border-radius:50%;
+    background:#10b981;
+    position:absolute;
+    left:0;
+    top:6px;
+}
+
+.timeline-item::after{
+    content:"";
+    position:absolute;
+    left:5px;
+    top:18px;
+    width:2px;
+    height:calc(100% + 10px);
+    background:rgba(255,255,255,.08);
+}
+
+.timeline-item:last-child::after{
+    display:none;
+}
+
+.timeline-item h4{
+    margin:0;
+    color:white;
+}
+
+.timeline-item p{
+    margin:5px 0 0;
+    color:#94a3b8;
+}
+
+/* =========================
+   MOBILE
+========================= */
+
+@media(max-width:768px){
+
+    .customer-profile{
+        flex-direction:column;
+        text-align:center;
+    }
+
+    .avatar{
+        width:80px;
+        height:80px;
+    }
+
+    .customer-info h1{
+        font-size:24px;
+    }
+
+    .stat-card h2{
+        font-size:26px;
+    }
+
+    .admin-orders-table{
+        font-size:13px;
+    }
+}
+</style>
+
+<div class="header">
+    <h1>👤 Customer Profile</h1>
+</div>
+
+<div class="stats-grid">
+
+    <div class="stat-card">
+        <h3>{{ customer['name'] }}</h3>
+        <p>Customer Name</p>
+    </div>
+
+    <div class="stat-card">
+        <h3>{{ customer['email'] }}</h3>
+        <p>Email</p>
+    </div>
+
+    <div class="stat-card">
+        <h3>{{ customer['mobile'] }}</h3>
+        <p>Mobile</p>
+    </div>
+
+    <div class="stat-card">
+        <h3>{{ stats['total_orders'] }}</h3>
+        <p>Total Orders</p>
+    </div>
+
+    <div class="stat-card">
+        <h3>₹{{ stats['total_spent'] }}</h3>
+        <p>Total Spent</p>
+    </div>
+
+</div>
+
+<h2 style="margin-top:30px;">🛒 Order History</h2>
+
+<div class="table-container">
+<table class="admin-orders-table">
+
+<thead>
+<tr>
+    <th>Order ID</th>
+    <th>Product</th>
+    <th>Qty</th>
+    <th>Total</th>
+    <th>Status</th>
+    <th>Date</th>
+</tr>
+</thead>
+
+<tbody>
+
+{% for o in orders %}
+<tr>
+    <td>{{ o['order_id'] }}</td>
+    <td>{{ o['product_name'] }}</td>
+    <td>{{ o['quantity'] }}</td>
+    <td>₹{{ o['total'] }}</td>
+    <td>{{ o['status'] }}</td>
+    <td>{{ o['created_at'] }}</td>
+</tr>
+{% endfor %}
+
+</tbody>
+
+</table>
+</div>
+
+{% endblock %}

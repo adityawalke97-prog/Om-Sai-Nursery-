@@ -1,0 +1,99 @@
+{% extends "admin_layout.html" %}
+
+{% block content %}
+
+<div class="customer-profile">
+
+    <div class="avatar">
+        {{ supplier['name'][0] }}
+    </div>
+
+    <div class="customer-info">
+        <h1>{{ supplier['name'] }}</h1>
+        <p>📧 {{ supplier['email'] }}</p>
+        <p>📱 {{ supplier['mobile'] }}</p>
+        <p>🏢 Supplier Account</p>
+    </div>
+
+</div>
+
+<div class="stats-grid">
+
+    <div class="stat-card">
+        <h2>{{ products|length }}</h2>
+        <p>Total Products</p>
+    </div>
+
+    <div class="stat-card">
+        <h2>{{ stats['total_orders'] }}</h2>
+        <p>Total Orders</p>
+    </div>
+
+    <div class="stat-card">
+        <h2>₹{{ stats['total_sales'] }}</h2>
+        <p>Total Sales</p>
+    </div>
+
+</div>
+
+<h2 class="section-title">🌱 Supplier Products</h2>
+
+<div class="table-container">
+<table class="admin-orders-table">
+
+<thead>
+<tr>
+    <th>ID</th>
+    <th>Product</th>
+    <th>Price</th>
+    <th>Stock</th>
+</tr>
+</thead>
+
+<tbody>
+{% for p in products %}
+<tr>
+    <td>{{ p['id'] }}</td>
+    <td>{{ p['name'] }}</td>
+    <td>₹{{ p['price'] }}</td>
+    <td>{{ p['stock'] }}</td>
+</tr>
+{% endfor %}
+</tbody>
+
+</table>
+</div>
+
+<br>
+
+<h2 class="section-title">📦 Supplier Orders</h2>
+
+<div class="table-container">
+<table class="admin-orders-table">
+
+<thead>
+<tr>
+    <th>Order ID</th>
+    <th>Product</th>
+    <th>Qty</th>
+    <th>Total</th>
+    <th>Status</th>
+</tr>
+</thead>
+
+<tbody>
+{% for o in orders %}
+<tr>
+    <td>{{ o['order_id'] }}</td>
+    <td>{{ o['product_name'] }}</td>
+    <td>{{ o['quantity'] }}</td>
+    <td>₹{{ o['total'] }}</td>
+    <td>{{ o['status'] }}</td>
+</tr>
+{% endfor %}
+</tbody>
+
+</table>
+</div>
+
+{% endblock %}

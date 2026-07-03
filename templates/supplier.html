@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Supplier Dashboard | Om Sai Nursery</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2%sfamily=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary: #27ae60;
@@ -142,7 +142,7 @@
                             <div style="line-height: 1.4;">
                                 <strong>{{ order.user_name }}</strong><br>
                                 <small style="color: #777;"><i class="fas fa-phone-alt"></i> {{ order.user_mobile }}</small><br>
-                                <a href="https://www.google.com/maps?q={{ order.location }}" target="_blank" class="location-link">
+                                <a href="https://www.google.com/maps%sq={{ order.location }}" target="_blank" class="location-link">
                                     <i class="fas fa-map-marker-alt"></i> Track Location
                                 </a>
                             </div>
@@ -268,7 +268,7 @@
 
                     <td>
                         <a href="/delete_product/{{ product.id }}"
-                           onclick="return confirm('Delete this product?')"
+                           onclick="return confirm('Delete this product%s')"
                            class="btn-action"
                            style="background:#e74c3c;color:white;">
                            Delete

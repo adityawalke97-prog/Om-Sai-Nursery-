@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Om Sai Nursery{% endblock %}</title>
     
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2%sfamily=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 
@@ -112,13 +112,12 @@
         </div>
 
         <div class="user-actions">
-            <div class="weather-widget">
-                <i class="fa-solid fa-cloud-sun"></i> <span>28°C</span>
-            </div>
-
-            <button class="theme-toggle" onclick="toggleDarkMode()">
-                <i class="fa-solid fa-moon"></i>
-            </button>
+           <div class="weather-widget">
+    <i class="fa-solid fa-cloud-sun"></i>
+    <span id="weather-temp">Loading...</span>
+</div>
+           
+         <!--    <button class="theme-toggle" onclick="toggleDarkMode()"><i class="fa-solid fa-moon"></i></button> -->
 
             <div class="lang-switch">
                 <a href="{{ url_for('set_language', lang_code='en') }}">EN</a> |
@@ -138,17 +137,35 @@
     </nav>
 
     <div class="main-wrapper">
-        <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+        
+ <aside class="sidebar1">
+    <ul class="nav-link">
 
+        <li><a href="/plants" class="{{ 'active' if request.path == '/plants' else '' }}"> {{ texts['plants'] }}</a></li>
+        <li><a href="/indoor_plants" class="{{ 'active' if request.path == '/indoor_plants' else '' }}"> Indoor Plants</a></li>
+        <li><a href="/outdoor_plants" class="{{ 'active' if request.path == '/outdoor_plants' else '' }}"> Outdoor Plants</a></li>        
+        <li><a href="/flowers" class="{{ 'active' if request.path == '/flowers' else '' }}"> {{ texts['flowers'] }}Flower</a></li>
+        <li><a href="/fruit_plants" class="{{ 'active' if request.path == '/fruit_plants' else '' }}"> Fruit Plants</a></li>
+        <li><a href="/herbal_plants" class="{{ 'active' if request.path == '/herbal_plants' else '' }}"> Herbal Plants</a></li>
+        <li><a href="/bonsai" class="{{ 'active' if request.path == '/bonsai' else '' }}"> Bonsai</a></li>
+        <li><a href="/succulents" class="{{ 'active' if request.path == '/succulents' else '' }}"> Succulents</a></li>
+        <li><a href="/seeds" class="{{ 'active' if request.path == '/seeds' else '' }}"> {{ texts['seeds'] }}</a></li>
+        <li><a href="/vegetable_seeds" class="{{ 'active' if request.path == '/vegetable_seeds' else '' }}"> Vegetable Seeds</a></li>
+        <li><a href="/fertilizers" class="{{ 'active' if request.path == '/fertilizers' else '' }}"> Fertilizers</a></li>
+        <li><a href="/pots" class="{{ 'active' if request.path == '/pots' else '' }}"> Pots & Planters</a></li>
+        <li><a href="/tools" class="{{ 'active' if request.path == '/tools' else '' }}"> Gardening Tools</a></li>
+        <li><a href="/soil" class="{{ 'active' if request.path == '/soil' else '' }}"> Soil & Compost</a></li>
+        <li><a href="/plant_care" class="{{ 'active' if request.path == '/plant_care' else '' }}"> Plant Care</a></li>
+        <li><a href="/gifts" class="{{ 'active' if request.path == '/gifts' else '' }}"> Gift Plants</a></li>
+        <li><a href="/diseases" class="{{ 'active' if request.path == '/diseases' else '' }}">{{ texts['diseases'] }}Diseases</a></li>
+    </ul>
+</aside>
 <nav id="main-nav" class="nav-links">
     </nav>
         <aside class="sidebar">
             <h3>Dashboard</h3>
             <ul class="nav-links">
                 <li><a href="/home" class="{{ 'active' if request.path == '/home' else '' }}"><i class="fa-solid fa-house"></i> {{ texts['home'] }}</a></li>
-                <li><a href="/plants" class="{{ 'active' if request.path == '/plants' else '' }}"><i class="fa-solid fa-leaf"></i> {{ texts['plants'] }}</a></li>
-                <li><a href="/seeds" class="{{ 'active' if request.path == '/seeds' else '' }}"><i class="fa-solid fa-spa"></i> {{ texts['seeds'] }}</a></li>
-                <li><a href="/diseases" class="{{ 'active' if request.path == '/diseases' else '' }}"><i class="fa-solid fa-bug"></i> {{ texts['diseases'] }}</a></li>
                 <li><a href="/orders" class="{{ 'active' if request.path == '/orders' else '' }}"><i class="fa-solid fa-cart-shopping"></i> {{ texts['orders'] }}<span class="nav-badge">3</span></a></li>
                 <li><a href="/payments" class="{{ 'active' if request.path == '/payments' else '' }}"><i class="fa-solid fa-wallet"></i> {{ texts['payments'] }}</a></li>
                 <li><a href="/feedback" class="{{ 'active' if request.path == '/feedback' else '' }}"><i class="fa-solid fa-comment-dots"></i> {{ texts['feedback'] }}</a></li>
@@ -208,10 +225,9 @@
 
     <script>
         function toggleProfile() {
-            const box = document.getElementById("profileBox");
-            box.style.display = box.style.display === "block" ? "none" : "block";
-        }
-
+    const box = document.getElementById("profileBox");
+    box.style.display = box.style.display === "block" ? "none" : "block";
+}
         function toggleDarkMode() {
             document.body.classList.toggle('dark-mode');
             const icon = document.querySelector('.theme-toggle i');
@@ -229,10 +245,56 @@
             let cart = JSON.parse(localStorage.getItem("cart")) || [];
             document.querySelectorAll('.cart-count').forEach(el => el.innerText = cart.length);
         };
+        
+        navigator.geolocation.getCurrentPosition(async (pos)=>{
+
+    const lat = pos.coords.latitude;
+    const lon = pos.coords.longitude;
+
+    const weather = await fetch(
+        `https://api.open-meteo.com/v1/forecast%slatitude=${lat}&longitude=${lon}&current=temperature_2m`
+    );
+
+    const data = await weather.json();
+
+    document.getElementById("weather-temp").innerHTML =
+        `${data.current.temperature_2m}°C`;
+
+});
+
+function loadWeather() {
+
+    if (!navigator.geolocation) {
+        document.getElementById("weather-temp").innerText = "Weather N/A";
+        return;
+    }
+
+    navigator.geolocation.getCurrentPosition(function(position){
+
+        let lat = position.coords.latitude;
+        let lon = position.coords.longitude;
+
+        fetch(`https://api.open-meteo.com/v1/forecast%slatitude=${lat}&longitude=${lon}&current=temperature_2m`)
+        .then(res => res.json())
+        .then(data => {
+
+            document.getElementById("weather-temp").innerText =
+                data.current.temperature_2m + "°C";
+
+        })
+        .catch(() => {
+            document.getElementById("weather-temp").innerText = "Weather N/A";
+        });
+
+    });
+}
+
+loadWeather();
+
     </script>
 
     <a href="https://wa.me/8446170808" class="whatsapp-float" target="_blank">
         <i class="fa-brands fa-whatsapp"></i>
     </a>
 </body>
-</html> my home page or advance banake do
+</html> 
