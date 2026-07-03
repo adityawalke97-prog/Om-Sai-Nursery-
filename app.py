@@ -1,334 +1,790 @@
 import os
 print(os.getcwd())
-from unittest.mock import DEFAULT
-from flask import Flask, flash, render_template, request, redirect, session, url_for, jsonify, g
+
+from flask import (
+    Flask, flash, render_template, request,
+    redirect, session, url_for, jsonify, g
+)
 from flask_bcrypt import Bcrypt
 from datetime import timedelta
-import sqlite3
+import pymysql
 import random
 from urllib.parse import quote
 from werkzeug.utils import secure_filename
+from dotenv import load_dotenv
 from translations import translations
-# ----------------- APP & DB CONFIG -----------------
+
+# ================= LOAD ENV =================
+
+load_dotenv()
+
+# ================= APP CONFIG =================
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATABASE = os.path.join(BASE_DIR, "database.db")
-UPLOAD_FOLDER = os.path.join(BASE_DIR, 'static/images')
+UPLOAD_FOLDER = os.path.join(BASE_DIR, "static/images")
 
 app = Flask(__name__)
-app.secret_key = "supersecretkey"
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+app.secret_key = os.getenv("SECRET_KEY", "supersecretkey")
+
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+
 bcrypt = Bcrypt(app)
+
 app.permanent_session_lifetime = timedelta(days=7)
 
-def check_users():
-    conn = sqlite3.connect('nursery.db') # Aapki db file ka naam yahan likhein
-    conn.row_factory = sqlite3.Row
-    cur = conn.cursor()
-    
-    users = cur.execute("SELECT * FROM users").fetchall()
-    
-    print("\n--- Database mein ye Users hain ---")
-    for user in users:
-        print(f"ID: {user['id']} | Email: {user['email']} | Role: {user['role']} | Name: {user['name']}")
-    print("------------------------------------\n")
-    conn.close()
+# ================= DATABASE CONFIG =================
+
+DB_HOST = os.getenv("DB_HOST", "localhost")
+DB_USER = os.getenv("DB_USER", "root")
+DB_PASSWORD = os.getenv("DB_PASSWORD", "")
+DB_NAME = os.getenv("DB_NAME", "om_sai_nursery")
+
+# ================= MYSQL CONNECTION =================
+
 def get_db():
-    if 'db' not in g:
-        # Dono lines ko merge karke sahi path aur row_factory set karein
-        g.db = sqlite3.connect(DATABASE, timeout=10, check_same_thread=False)
-        g.db.row_factory = sqlite3.Row  # Isse plant['name'] wala error khatam ho jayega
+    if "db" not in g:
+        g.db = pymysql.connect(
+            host=DB_HOST,
+            user=DB_USER,
+            password=DB_PASSWORD,
+            database=DB_NAME,
+            cursorclass=pymysql.cursors.DictCursor,
+            autocommit=True
+        )
     return g.db
+
+# ================= CLOSE CONNECTION =================
+
+@app.teardown_appcontext
+def close_db(error=None):
+    db = g.pop("db", None)
+
+    if db is not None:
+        db.close()
+
+# ================= CHECK USERS =================
+
+def check_users():
+
+    conn = pymysql.connect(
+        host=DB_HOST,
+        user=DB_USER,
+        password=DB_PASSWORD,
+        database=DB_NAME,
+        cursorclass=pymysql.cursors.DictCursor
+    )
+
+    cur = conn.cursor()
+
+    cur.execute("SELECT * FROM users")
+
+    users = cur.fetchall()
+
+    print("\n----- USERS -----")
+
+    for user in users:
+        print(
+            f"ID: {user['id']} | "
+            f"Email: {user['email']} | "
+            f"Role: {user['role']} | "
+            f"Name: {user['name']}"
+        )
+
+    print("-----------------\n")
+
+    cur.close()
+    conn.close()
+
+# ================= CREATE TABLES =================
+
+def init_db():
+
+    conn = pymysql.connect(
+        host=DB_HOST,
+        user=DB_USER,
+        password=DB_PASSWORD,
+        database=DB_NAME,
+        cursorclass=pymysql.cursors.DictCursor
+    )
+
+    cur = conn.cursor()
+
+    
+
+    # ---------------- USERS ----------------
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS users(
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        email VARCHAR(255) UNIQUE NOT NULL,
+        password TEXT NOT NULL,
+        role VARCHAR(50) NOT NULL,
+        mobile VARCHAR(20)
+    )
+    """)
+
+    # ---------------- SUPPLIERS ----------------
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS suppliers(
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT,
+        name VARCHAR(255),
+        latitude DOUBLE DEFAULT 18.5204,
+        longitude DOUBLE DEFAULT 73.8567
+    )
+    """)
+
+    # ---------------- PRODUCTS ----------------
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS products(
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        price DECIMAL(10,2) DEFAULT 0,
+        stock INT DEFAULT 0,
+        image VARCHAR(255),
+        category VARCHAR(100),
+        supplier_id INT DEFAULT 0
+    )
+        """)
+    # ---------------- ORDERS ----------------
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS orders(
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    user_name VARCHAR(255),
+    supplier_id INT DEFAULT 0,
+    product_name VARCHAR(255) NOT NULL,
+    price DECIMAL(10,2) DEFAULT 0,
+    quantity INT DEFAULT 1,
+    total DECIMAL(10,2) DEFAULT 0,
+    status VARCHAR(50) DEFAULT 'Pending',
+    payment_method VARCHAR(100),
+    location TEXT,
+    mobile VARCHAR(20),
+    payment_id VARCHAR(255),
+    payment_settled TINYINT(1) DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    order_id VARCHAR(255) UNIQUE
+)
+    """)
+   
+    # ---------------- DISEASES ----------------
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS diseases(
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255),
+        image VARCHAR(255),
+        fertilizer_id INT
+    )
+    """)
+
+    # ---------------- FERTILIZERS ----------------
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS fertilizers(
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        price DECIMAL(10,2) DEFAULT 0,
+        stock INT DEFAULT 0,
+        image VARCHAR(255)
+    )
+    """)
+
+    # ---------------- FEEDBACKS ----------------
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS feedbacks(
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT,
+        product VARCHAR(255),
+        message TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
+
+    # ---------------- DEFAULT PRODUCTS ----------------
+
+    products_list = [
+        ("Apple Plant", 120, 50, "appleplant.png", "plant", 0),
+        ("Banana Plant", 80, 40, "banana.png", "plant", 0),
+        ("Sunflower Seeds", 60, 100, "sunflower.png", "seed", 0),
+        ("Wheat Seed", 149, 100, "wheat.png", "seed", 0)
+    ]
+
+    for p in products_list:
+
+        cur.execute(
+            "SELECT id FROM products WHERE name=%s",
+            (p[0],)
+        )
+
+        if not cur.fetchone():
+
+            cur.execute("""
+            INSERT INTO products
+            (name, price, stock, image, category, supplier_id)
+            VALUES (%s, %s, %s, %s, %s, %s)
+            """, p)
+
+    conn.commit()
+    conn.close()
+
+    print("✅ MySQL Database Initialized")
+    # ================= TRANSLATIONS =================
 
 @app.context_processor
 def inject_translations():
-    lang = session.get('lang', 'en')
-    return dict(texts=translations.get(lang, translations['en']))
-# Sirf ek baar run karne ke liye app.py mein dalein:
-_got_first_request = False
+    lang = session.get("lang", "en")
+    return {
+        "texts": translations.get(
+            lang,
+            translations["en"]
+        )
+    }
+
+
+# ================= SESSION SETUP =================
 
 _got_first_request = False
 
 @app.before_request
-def func():
+def before_request():
+
     global _got_first_request
 
-    # 🔥 SESSION FIX (हर request पे)
     session.permanent = True
 
-    # 🔥 FIRST TIME SETUP (sirf 1 baar)
     if not _got_first_request:
-        print("Running first-time setup...")
+        print("✅ Running first-time setup...")
         _got_first_request = True
-# ----------------- DATABASE INITIALIZATION (FIXED) -----------------
-def init_db():
-    conn = sqlite3.connect(DATABASE)
-    conn.row_factory = sqlite3.Row
-    cur = conn.cursor()
 
-    # Saari Tables (Waisi ki waisi)
-    cur.execute("CREATE TABLE IF NOT EXISTS users(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, email TEXT UNIQUE, password TEXT, role TEXT, mobile TEXT)")
-    cur.execute("CREATE TABLE IF NOT EXISTS suppliers(id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, name TEXT, latitude REAL DEFAULT 18.5204, longitude REAL DEFAULT 73.8567, FOREIGN KEY(user_id) REFERENCES users(id))")
-    cur.execute("CREATE TABLE IF NOT EXISTS products(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, price REAL, stock INTEGER, image TEXT, category TEXT, supplier_id INTEGER)")
-    cur.execute("CREATE TABLE IF NOT EXISTS orders(id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, user_name TEXT, supplier_id INTEGER DEFAULT 0, product_name TEXT, price REAL, quantity INTEGER, total REAL, status TEXT DEFAULT 'Pending', payment_method TEXT, location TEXT, mobile TEXT, payment_id TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)")
-    cur.execute("CREATE TABLE IF NOT EXISTS diseases(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, image TEXT, fertilizer_id INTEGER)")
-    cur.execute("CREATE TABLE IF NOT EXISTS fertilizers(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, price REAL NOT NULL, stock INTEGER NOT NULL, image TEXT)")
-    cur.execute("CREATE TABLE IF NOT EXISTS feedbacks (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, product TEXT, message TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)")
 
-    # Default Products Insert Logic (Aapka List)
-    products_list = [
-        ("Apple Plant",120,50,"appleplant.png","plant",0),
-        ("Banana Plant",80,40,"banana.png","plant",0),
-        ("Sunflower Seeds",60,100,"sunflower.png","seed",0),
-        ("Wheat Seed",149,100,"wheat.png","seed",0)
-    ]
-    for p in products_list:
-        cur.execute("SELECT id FROM products WHERE name=?", (p[0],))
-        if not cur.fetchone():
-            cur.execute("INSERT INTO products(name,price,stock,image,category,supplier_id) VALUES (?,?,?,?,?,?)", p)
-    
-    # Add payment_settled column if it doesn't exist
-    try:
-        cur.execute("ALTER TABLE orders ADD COLUMN payment_settled INTEGER DEFAULT 0")
-    except sqlite3.OperationalError:
-        pass  # Column already exists
+# ================= ROOT ROUTE =================
 
-    # --- 🛡️ CRITICAL FIX FOR OLD DATABASE ---
-    # 1. Default Supplier check karein
-    cur.execute("SELECT id FROM users WHERE role='supplier' LIMIT 1")
-    sup = cur.fetchone()
-    if sup:
-        # 2. Saare products jinki supplier_id 0 ya NULL hai, unhe is supplier se connect kar do
-        # Taaki JOIN query mein data gayab na ho
-        cur.execute("UPDATE products SET supplier_id=? WHERE supplier_id=0 OR supplier_id IS NULL", (sup['id'],))
-
-    conn.commit()
-    conn.close()
-    print("✅ Database Synchronized! Purana data safe hai.")
-# --------------------------------SEND_OTP-------------------------------------#
-# Root route
-# 1. ROOT ROUTE (Redirects based on session)
 @app.route("/")
 def index():
+
     if "user_id" not in session:
-        return redirect(url_for("login"))  # Redirect to the GET route below
-    
+        return redirect(url_for("login"))
+
     role = session.get("role")
+
     if role == "customer":
         return redirect("/home")
-.   elif role == "admin":
-.       return redirect("/admin")
-   elif role == "supplier":
-        return redirect("/supplier")
-    else:
-        return "Access Denied", 403
 
+    elif role == "admin":
+        return redirect("/admin")
+
+    elif role == "supplier":
+        return redirect("/supplier")
+
+    return "Access Denied", 403
+
+
+# ================= LOGIN =================
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
+
     if request.method == "POST":
-        email = request.form.get("email", "").strip().lower()
-        password = request.form.get("password", "") 
-        
-        db = get_db()
-        user = db.execute("SELECT * FROM users WHERE email=?", (email,)).fetchone()
 
-        if user:
-            if bcrypt.check_password_hash(user['password'], password):
-                
-                # 🔥 SESSION SET
-                session.clear()
-                session.permanent = True
-                session["user_id"] = user['id']
-                session["role"] = user['role']
-                session["username"] = user['name']
-                session["mobile"] = user['mobile']   # ✅ FIX
+        email = request.form.get(
+            "email",
+            ""
+        ).strip().lower()
 
-                # 🔥 REDIRECT BASED ON ROLE
-                if user['role'] == "admin":
-                    return redirect("/admin")
-                elif user['role'] == "supplier":
-                    return redirect("/supplier")
-                else:
-                    return redirect("/home")
-            else:
-                return "Invalid Password! ❌", 401
-        else:
+        password = request.form.get(
+            "password",
+            ""
+        )
+
+        conn = get_db()
+        cur = conn.cursor()
+
+        cur.execute(
+            "SELECT * FROM users WHERE email=%s",
+            (email,)
+        )
+
+        user = cur.fetchone()
+
+        if not user:
             return "Account not found! ❌", 404
 
+        if not bcrypt.check_password_hash(
+            user["password"],
+            password
+        ):
+            return "Invalid Password! ❌", 401
+
+        session.clear()
+
+        session["user_id"] = user["id"]
+        session["role"] = user["role"]
+        session["username"] = user["name"]
+        session["mobile"] = user.get("mobile")
+
+        if user["role"] == "admin":
+            return redirect("/admin")
+
+        elif user["role"] == "supplier":
+            return redirect("/supplier")
+
+        return redirect("/home")
+
     return render_template("Sign_Up.html")
+
 @app.route("/signup", methods=["POST"])
 def signup():
+
     name = request.form.get("name")
-    email = request.form.get("email").strip().lower()  # 🔥 FIX
+    email = request.form.get("email", "").strip().lower()
     password = request.form.get("password")
     mobile = request.form.get("mobile")
     role = request.form.get("role")
 
-    hashed_password = bcrypt.generate_password_hash(password).decode("utf-8")
-    
+    hashed_password = bcrypt.generate_password_hash(
+        password
+    ).decode("utf-8")
+
     conn = get_db()
+    cur = conn.cursor()
+
     try:
-        conn.execute("""
-            INSERT INTO users (name, email, password, role, mobile)
-            VALUES (?, ?, ?, ?, ?)
-        """, (name, email, hashed_password, role, mobile))
+
+        cur.execute("""
+            INSERT INTO users
+            (name, email, password, role, mobile)
+            VALUES (%s, %s, %s, %s, %s)
+        """, (
+            name,
+            email,
+            hashed_password,
+            role,
+            mobile
+        ))
+
         conn.commit()
-        return "Signup Successful"
 
-    except sqlite3.IntegrityError:
+        return redirect("/login")
+
+    except pymysql.err.IntegrityError:
+
         return "Email already exists ❌"
-    finally:
-        conn.close()
 
-# Customer dashboard
+# ================= CUSTOMER HOME =================
+
 @app.route("/home")
 def home():
+
     if "user_id" not in session:
         return redirect("/login")
 
     if session.get("role") != "customer":
-        return "Access Denied"
+        return "Access Denied", 403
 
-    lang = session.get('lang', 'en')
-    texts = translations[lang]
+    lang = session.get("lang", "en")
 
-    return render_template("Home.html", username=session.get("username"), texts=texts)
+    return render_template(
+        "Home.html",
+        username=session.get("username"),
+        texts=translations.get(
+            lang,
+            translations["en"]
+        )
+    )
 
 
-@app.route('/set_language/<lang_code>')
+# ================= LANGUAGE =================
+
+@app.route("/set_language/<lang_code>")
 def set_language(lang_code):
+
     if lang_code in translations:
-        session['lang'] = lang_code
-    return redirect(request.referrer or url_for('start'))
-    
+        session["lang"] = lang_code
 
-# ------------------------------------- COMMON PAGES -------------------------------------------------#
+    return redirect(
+        request.referrer or url_for("home")
+    )
 
+
+# ================= SEARCH =================
 @app.route("/search")
 def search():
-    query = request.args.get("q", "").lower()
 
-    conn = get_db()
-    cur = conn.cursor()
+    if "user_id" not in session:
+        return redirect("/login")
 
-    # search in all categories
-    cur.execute("""
-        SELECT * FROM products 
-        WHERE LOWER(name) LIKE ?
-    """, ('%' + query + '%',))
+    query = request.args.get("query", "").strip()
 
-    results = cur.fetchall()
+    conn = get_db_connection()
+    cursor = conn.cursor(pymysql.cursors.DictCursor)
+
+    if query:
+
+        search = "%" + query + "%"
+
+        cursor.execute("""
+            SELECT *
+            FROM products
+            WHERE
+                name LIKE %s
+                OR category LIKE %s
+            ORDER BY id DESC
+        """, (search, search))
+
+        results = cursor.fetchall()
+
+    else:
+        results = []
+
+    cursor.close()
     conn.close()
 
-    return render_template("search_results.html", results=results, query=query)
+    return render_template(
+        "search_results.html",
+        query=query,
+        results=results
+    )
+    # ================= PLANTS =================
 
-# --------------------------------PLANTS-------------------------------------#
-
-from random import randint
-@app.route('/reset-password', methods=['GET', 'POST'])
-def reset_password():
-
-    if request.method == 'POST':
-        new_password = request.form['password']
-
-        mobile = session.get('reset_mobile')
-
-        hashed_password = bcrypt.generate_password_hash(
-            new_password
-        ).decode('utf-8')
-
-        db = get_db()
-
-        db.execute(
-            "UPDATE users SET password=? WHERE mobile=?",
-            (hashed_password, mobile)
-        )
-
-        db.commit()
-
-        return redirect('/login')
-
-    return render_template('reset_password.html')
-@app.route('/forgot-password', methods=['GET', 'POST'])
-def forgot_password():
-    if request.method == 'POST':
-        mobile = request.form['mobile']
-
-        db = get_db()
-        user = db.execute(
-            "SELECT * FROM users WHERE mobile=?",
-            (mobile,)
-        ).fetchone()
-
-        if user:
-            otp = str(randint(100000, 999999))
-
-            session['reset_otp'] = otp
-            session['reset_mobile'] = mobile
-
-            # OTP send function call
-            send_otp_sms(mobile, otp)
-
-            return redirect('/verify-otp')
-
-        flash("Mobile number not found!", "danger")
-
-    return render_template("forgot_password.html")
-@app.route('/verify-otp', methods=['GET', 'POST'])
-def verify_otp():
-    if request.method == 'POST':
-        entered_otp = request.form['otp']
-
-        if entered_otp == session.get('reset_otp'):
-            return redirect('/reset-password')
-
-        flash("Invalid OTP!", "danger")
-
-    return render_template("verify_otp.html")
-
-# --- PLANTS PAGE ROUTE ---
 @app.route("/plants")
 def plants_page():
-    db = get_db()
-    
-    plants = db.execute('''
-        SELECT p.*, u.name as supplier_name 
-        FROM products p 
-        LEFT JOIN users u ON p.supplier_id = u.id 
-        WHERE p.category = 'plant'
-    ''').fetchall()
-    return render_template("plants.html", plants=plants)
 
-# --- SEEDS PAGE ROUTE ---
-@app.route("/seeds")
-def seeds_page():
-    db = get_db()
-    seeds = db.execute('''
-        SELECT p.*, u.name as supplier_name 
-        FROM products p 
-        LEFT JOIN users u ON p.supplier_id = u.id 
-        WHERE p.category = 'seed'
-    ''').fetchall()
-    return render_template("Seeds.html", seeds=seeds)
-# --------------------------------FERTILIZERS -------------------------------------#
-@app.route("/fertilizers")
-def fertilizers_page():
     conn = get_db()
     cur = conn.cursor()
+
+    cur.execute("""
+        SELECT
+            p.*,
+            u.name AS supplier_name
+        FROM products p
+        LEFT JOIN users u
+            ON p.supplier_id = u.id
+        WHERE p.category='plant'
+    """)
+
+    plants = cur.fetchall()
+
+    return render_template(
+        "plants.html",
+        plants=plants
+    )
+
+
+# ================= SEEDS =================
+
+@app.route("/seeds")
+def seeds_page():
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT
+            p.*,
+            u.name AS supplier_name
+        FROM products p
+        LEFT JOIN users u
+            ON p.supplier_id = u.id
+        WHERE p.category='seed'
+    """)
+
+    seeds = cur.fetchall()
+
+    return render_template(
+        "Seeds.html",
+        seeds=seeds
+    )
+# --------------------------------FERTILIZERS -------------------------------------#
+# ================= FERTILIZERS =================
+
+@app.route("/fertilizers")
+def fertilizers_page():
+
+    conn = get_db()
+    cur = conn.cursor()
+
     cur.execute("SELECT * FROM fertilizers")
+
     fertilizers = cur.fetchall()
-    return render_template("fertilizers.html", fertilizers=fertilizers)
+
+    return render_template(
+        "fertilizers.html",
+        fertilizers=fertilizers
+    )
+
+
+# ================= DISEASES =================
+
 @app.route("/diseases")
 def diseases_page():
+
     conn = get_db()
     cur = conn.cursor()
 
     cur.execute("SELECT * FROM diseases")
+
     diseases = cur.fetchall()
 
-    conn.close()
+    return render_template(
+        "diseases.html",
+        diseases=diseases
+    )
 
-    return render_template("diseases.html", diseases=diseases)
+
+@app.route("/flowers")
+def flowers_page():
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT
+            p.*,
+            u.name AS supplier_name
+        FROM products p
+        LEFT JOIN users u
+            ON p.supplier_id = u.id
+        WHERE p.category='flower'
+    """)
+
+    flowers = cur.fetchall()
+
+    return render_template(
+        "flowers.html",
+        flowers=flowers
+    )
+@app.route("/bonsai")
+def bonsai_page():
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT
+            p.*,
+            u.name AS supplier_name
+        FROM products p
+        LEFT JOIN users u
+            ON p.supplier_id = u.id
+        WHERE p.category='bonsai'
+    """)
+
+    plants = cur.fetchall()
+
+    return render_template(
+        "bonsai.html",
+        plants=plants
+    )
+@app.route("/fruit_plants")
+def fruit_plants_page():
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT
+            p.*,
+            u.name AS supplier_name
+        FROM products p
+        LEFT JOIN users u
+            ON p.supplier_id = u.id
+        WHERE p.category='fruit_plants'
+    """)
+
+    fruit_plants = cur.fetchall()
+
+    return render_template(
+        "fruit_plants.html",
+        fruit_plants=fruit_plants
+    )
+@app.route("/pots")
+def pots_page():
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT
+            p.*,
+            u.name AS supplier_name
+        FROM products p
+        LEFT JOIN users u
+            ON p.supplier_id = u.id
+        WHERE p.category='pots'
+    """)
+
+    pots = cur.fetchall()
+
+    return render_template(
+        "pots.html",
+        pots=pots
+    )
+@app.route("/soil")
+def soil_page():
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT
+            p.*,
+            u.name AS supplier_name
+        FROM products p
+        LEFT JOIN users u
+            ON p.supplier_id = u.id
+        WHERE p.category='soil'
+    """)
+
+    soil = cur.fetchall()
+
+    return render_template(
+        "soil.html",
+        soil=soil
+    )
+
+@app.route("/vegetable_seeds")
+def vegetable_seeds_page():
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT
+            p.*,
+            u.name AS supplier_name
+        FROM products p
+        LEFT JOIN users u
+            ON p.supplier_id = u.id
+        WHERE p.category='vegetable_seeds'
+    """)
+
+    vegetable_seeds = cur.fetchall()
+
+    return render_template(
+        "vegetable_seeds.html",
+        vegetable_seeds=vegetable_seeds
+    )
+@app.route("/indoor_plants")
+def indoor_plants_page():
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT
+            p.*,
+            u.name AS supplier_name
+        FROM products p
+        LEFT JOIN users u
+            ON p.supplier_id = u.id
+        WHERE p.category='indoor_plants'
+    """)
+
+    indoor_plants = cur.fetchall()
+
+    return render_template(
+        "indoor_plants.html",
+        indoor_plants=indoor_plants
+    )
+@app.route("/outdoor_plants")
+def outdoor_plants_page():
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT
+            p.*,
+            u.name AS supplier_name
+        FROM products p
+        LEFT JOIN users u
+            ON p.supplier_id = u.id
+        WHERE p.category='outdoor_plants'
+    """)
+
+    outdoor_plants = cur.fetchall()
+
+    return render_template(
+        "outdoor_plants.html",
+        outdoor_plants=outdoor_plants
+    )
+
+@app.route("/gifts")
+def gifts_page():
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT
+            p.*,
+            u.name AS supplier_name
+        FROM products p
+        LEFT JOIN users u
+            ON p.supplier_id = u.id
+        WHERE p.category='gifts'
+    """)
+
+    gifts = cur.fetchall()
+
+    return render_template(
+        "gifts.html",
+        gifts=gifts
+    )
+@app.route("/herbal_plants")
+def herbal_plants_page():
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT
+            p.*,
+            u.name AS supplier_name
+        FROM products p
+        LEFT JOIN users u
+            ON p.supplier_id = u.id
+        WHERE p.category='herbal_plants'
+    """)
+
+    herbal_plants = cur.fetchall()
+
+    return render_template(
+        "herbal_plants.html",
+        herbal_plants=herbal_plants
+    )    
+@app.route("/succulents")
+def succulents_page():
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT
+            p.*,
+            u.name AS supplier_name
+        FROM products p
+        LEFT JOIN users u
+            ON p.supplier_id = u.id
+        WHERE p.category='succulents'
+    """)
+
+    succulents = cur.fetchall()
+
+    return render_template(
+        "succulents.html",
+        succulents=succulents
+    )    
+# ================= FERTILIZER BY DISEASE =================
+
 @app.route("/fertilizer/<int:id>")
 def fertilizer_by_disease(id):
 
@@ -338,755 +794,1498 @@ def fertilizer_by_disease(id):
     cur.execute("""
         SELECT f.*
         FROM diseases d
-        JOIN fertilizers f ON d.fertilizer_id = f.id
-        WHERE d.id=?
+        JOIN fertilizers f
+            ON d.fertilizer_id = f.id
+        WHERE d.id=%s
     """, (id,))
 
     fertilizer = cur.fetchone()
 
-    conn.close()
+    return render_template(
+        "fertilizer_view.html",
+        fertilizer=fertilizer
+    )
 
-    return render_template("fertilizer_view.html", fertilizer=fertilizer)
-# --------------------------------ORDERS-------------------------------------#
+
+# ================= ORDERS =================
+
 @app.route("/orders")
 def orders_page():
+
     if "user_id" not in session:
         return redirect("/login")
 
-    user_id = session["user_id"]
-
     conn = get_db()
-
     cur = conn.cursor()
 
-    cur.execute(
-        "SELECT * FROM orders WHERE user_id=? ORDER BY created_at DESC",
-        (user_id,)
-    )
+    cur.execute("""
+        SELECT *
+        FROM orders
+        WHERE user_id=%s
+        ORDER BY created_at DESC
+    """, (session["user_id"],))
 
     orders = cur.fetchall()
 
-    return render_template("Orderss.html", orders=orders)
+    return render_template(
+        "Orderss.html",
+        orders=orders
+    )
+
+
+# ================= ORDER HISTORY =================
+
+# ================= ORDER HISTORY =================
+
 @app.route("/order_history")
 def order_history():
+
     if "user_id" not in session:
         return redirect("/login")
 
-    db = get_db()
+    conn = get_db()
+    cur = conn.cursor()
 
-    orders = db.execute("""
+    cur.execute("""
         SELECT *
         FROM orders
-        WHERE user_id=?
+        WHERE user_id=%s
         ORDER BY id DESC
-    """,(session["user_id"],)).fetchall()
+    """, (session["user_id"],))
+
+    orders = cur.fetchall()
 
     return render_template(
         "order_history.html",
         orders=orders
     )
+
+
+# ================= CONFIRM ORDER =================
 @app.route("/confirm_order", methods=["POST"])
 def confirm_order():
+
     if "user_id" not in session:
-        return jsonify({"success": False, "message": "Login required"})
+        return jsonify({
+            "success": False,
+            "message": "Login required"
+        })
 
     data = request.get_json()
-    if not data:
-        return jsonify({"success": False, "message": "No data received"})
 
-    cart = data.get("cart")
-    location = data.get("location")
+    if not data:
+        return jsonify({
+            "success": False,
+            "message": "No data received"
+        })
+
+    cart = data.get("cart", [])
+    location = data.get("location", "")
+
     user_id = session.get("user_id")
     user_name = session.get("username")
     mobile = session.get("mobile")
 
-    db = get_db()
+    conn = get_db()
+    cur = conn.cursor()
+
     try:
+
         for item in cart:
-            # --- 🛡️ CRITICAL STEP: Product se Supplier ID nikalo ---
-            # Agar product table mein supplier_id 0 hai ya null, toh default 1 (Admin) ko assign karo
-            res = db.execute("SELECT supplier_id FROM products WHERE name = ?", (item["name"],)).fetchone()
-            
-            # Agar res milta hai aur usme id hai toh wo use karo, warna default 1
-            s_id = res['supplier_id'] if (res and res['supplier_id'] != 0) else 1
+
+            cur.execute(
+                "SELECT supplier_id FROM products WHERE name=%s",
+                (item["name"],)
+            )
+
+            res = cur.fetchone()
+
+            supplier_id = (
+                res["supplier_id"]
+                if res and res["supplier_id"]
+                else 1
+            )
 
             total = float(item["price"]) * int(item["quantity"])
 
-            # --- Ab Insert karte waqt supplier_id daalo ---
-            
-        db.execute("""
-INSERT INTO orders(
-    user_id,
-    user_name,
-    mobile,
-    supplier_id,
-    product_name,
-    price,
-    quantity,
-    total,
-    location,
-    status
-) VALUES (?,?,?,?,?,?,?,?,?,?)
-""", (
-    user_id,
-    user_name,
-    mobile,
-    s_id,
-    item["name"],
-    item["price"],
-    item["quantity"],
-    total,
-    location,
-    "Pending"
-))
+            cur.execute("""
+                INSERT INTO orders(
+                    user_id,
+                    user_name,
+                    mobile,
+                    supplier_id,
+                    product_name,
+                    price,
+                    quantity,
+                    total,
+                    location,
+                    status
+                )
+                VALUES(
+                    %s,%s,%s,%s,%s,
+                    %s,%s,%s,%s,%s
+                )
+            """, (
+                user_id,
+                user_name,
+                mobile,
+                supplier_id,
+                item["name"],
+                item["price"],
+                item["quantity"],
+                total,
+                location,
+                "Pending"
+            ))
 
-            # Stock kam karo
-        db.execute("UPDATE products SET stock = stock - ? WHERE name = ?", 
-                       (item["quantity"], item["name"]))
+            cur.execute("""
+                UPDATE products
+                SET stock = stock - %s
+                WHERE name=%s
+            """, (
+                item["quantity"],
+                item["name"]
+            ))
 
-        db.commit()
-        return jsonify({"success": True})
+        conn.commit()
+
+        return jsonify({
+            "success": True
+        })
 
     except Exception as e:
-        print("❌ Order Logic Error:", e)
-        return jsonify({"success": False, "message": str(e)})
-# --------------------------------PAYMENTS-------------------------------------#
-# Remove order
+
+        conn.rollback()
+
+        print("❌ Order Error:", e)
+
+        return jsonify({
+            "success": False,
+            "message": str(e)
+        })
+
+
+
 @app.route("/remove_order/<int:order_id>", methods=["POST"])
 def remove_order(order_id):
+
     if "user_id" not in session:
         return redirect("/login")
+
     conn = get_db()
     cur = conn.cursor()
-    # Only allow removing pending orders for this user
-    cur.execute("DELETE FROM orders WHERE id=? AND user_id=? AND status='Pending'", 
-                (order_id, session["user_id"]))
+
+    cur.execute("""
+        DELETE FROM products
+        WHERE id=%s
+        AND user_id=%s
+        AND status='Pending'
+    """, (
+        order_id,
+        session["user_id"]
+    ))
+
     conn.commit()
+
     return redirect("/orders")
 
-# Buy Now (redirect to payment page)
+
+# ================= BUY NOW =================
+
 @app.route("/buy_now/<int:order_id>", methods=["POST"])
 def buy_now(order_id):
+
     if "user_id" not in session:
         return redirect("/login")
+
     conn = get_db()
     cur = conn.cursor()
-    # Fetch the order details
-    cur.execute("SELECT * FROM orders WHERE id=? AND user_id=?", (order_id, session["user_id"]))
+
+    cur.execute("""
+        SELECT *
+        FROM orders
+        WHERE id=%s
+        AND user_id=%s
+    """, (
+        order_id,
+        session["user_id"]
+    ))
+
     order = cur.fetchone()
+
     if not order:
         return "Order not found ❌"
-    # Redirect to payment page (you can use a template to confirm payment)
-    return render_template("Payments.html", orders=[order])
 
-# --------------------------------FEEDBACK -------------------------------------#
+    return render_template(
+        "Payments.html",
+        orders=[order]
+    )
+    # ================= FEEDBACK =================
+
 @app.route("/feedback", methods=["GET", "POST"])
 def feedback():
+
     if "user_id" not in session:
-        return redirect("/")
+        return redirect("/login")
 
     user_id = session["user_id"]
-    conn = sqlite3.connect("database.db")
+
+    conn = get_db()
     cur = conn.cursor()
 
-    # ✅ FIXED HERE
-    cur.execute("SELECT DISTINCT product_name FROM orders WHERE user_id=?", (user_id,))
-    products = [p[0] for p in cur.fetchall()]
+    cur.execute("""
+        SELECT DISTINCT product_name
+        FROM orders
+        WHERE user_id=%s
+    """, (user_id,))
+
+    products = [
+        row["product_name"]
+        for row in cur.fetchall()
+    ]
 
     if request.method == "POST":
+
         product = request.form["product"]
         message = request.form["message"]
 
-        cur.execute(
-            "INSERT INTO feedbacks (user_id, product, message) VALUES (?, ?, ?)",
+        cur.execute("""
+            INSERT INTO feedbacks
             (user_id, product, message)
-        )
+            VALUES (%s,%s,%s)
+        """, (
+            user_id,
+            product,
+            message
+        ))
+
         conn.commit()
-        conn.close()
+
         return redirect(url_for("feedback"))
 
-    conn.close()
-    return render_template("Feedbacks.html", products=products)
+    return render_template(
+        "Feedbacks.html",
+        products=products
+    )
 
-# --------------------------------ADMIN/FEEDBACKS-------------------------------------#
+
+# ================= ADMIN FEEDBACKS =================
+
 @app.route("/admin/feedbacks")
 def admin_feedbacks():
-    # Check if admin is logged in
-    if session.get("role") != "admin":
-        return "Access Denied"
 
-    conn = sqlite3.connect("database.db")
+    if session.get("role") != "admin":
+        return "Access Denied", 403
+
+    conn = get_db()
     cur = conn.cursor()
 
-    # Fetch all feedbacks with user name
     cur.execute("""
-        SELECT feedbacks.id, users.name, feedbacks.product, feedbacks.message, feedbacks.created_at
+        SELECT
+            feedbacks.id,
+            users.name,
+            feedbacks.product,
+            feedbacks.message,
+            feedbacks.created_at
         FROM feedbacks
-        JOIN users ON feedbacks.user_id = users.id
+        JOIN users
+            ON feedbacks.user_id = users.id
         ORDER BY feedbacks.id DESC
     """)
+
     feedbacks = cur.fetchall()
-    conn.close()
 
-    return render_template("admin_feedbacks.html", feedbacks=feedbacks)
+    return render_template(
+        "admin_feedbacks.html",
+        feedbacks=feedbacks
+    )
 
 
-# --------------------------------ADMIN-------------------------------------#
+# ================= ADMIN DASHBOARD =================
+
 @app.route("/admin")
 def admin_dashboard():
-    # 1. Session Check (Zaroori hai)
-    if "user_id" not in session or session.get("role") != "admin":
-        return redirect(url_for("login_page"))
-        
-    db = get_db()
-    
-    # 2. Dashboard Stats
-    total_orders = db.execute("SELECT COUNT(*) FROM orders").fetchone()[0] or 0
-    total_revenue = db.execute("SELECT SUM(total) FROM orders").fetchone()[0] or 0
-    total_customers = db.execute("SELECT COUNT(*) FROM users WHERE role='customer'").fetchone()[0] or 0
-    total_products = db.execute("SELECT COUNT(*) FROM products").fetchone()[0] or 0
 
-    # 3. Recent Orders (Added 'mobile', 'location', and 'payment_method' for Modal)
-    # Note: Hum 'user_name' direct orders table se le rahe hain ya join se, dono check karein
-    raw_recent = db.execute("""
-        SELECT o.*, u.name as customer_name, u.mobile, u.role
+    if (
+        "user_id" not in session or
+        session.get("role") != "admin"
+    ):
+        return redirect("/login")
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    # Total Orders
+    cur.execute("SELECT COUNT(*) AS total FROM orders")
+    total_orders = cur.fetchone()["total"] or 0
+
+    # Revenue
+    cur.execute("SELECT SUM(total) AS revenue FROM orders")
+    revenue_row = cur.fetchone()
+    total_revenue = revenue_row["revenue"] or 0
+
+    # Customers
+    cur.execute("""
+        SELECT COUNT(*) AS total
+        FROM users
+        WHERE role='customer'
+    """)
+    total_customers = cur.fetchone()["total"] or 0
+
+    # Products
+    cur.execute("""
+        SELECT COUNT(*) AS total
+        FROM products
+    """)
+    total_products = cur.fetchone()["total"] or 0
+
+    # Recent Orders
+    cur.execute("""
+        SELECT
+            o.*,
+            u.name AS customer_name,
+            u.mobile,
+            u.role
         FROM orders o
-        LEFT JOIN users u ON o.user_id = u.id
-        ORDER BY o.id DESC LIMIT 10
-    """).fetchall()
-    
-    # CRITICAL FIX: Row object ko Dictionary mein badlo
-    recent_orders = [dict(row) for row in raw_recent]
+        LEFT JOIN users u
+            ON o.user_id = u.id
+        ORDER BY o.id DESC
+        LIMIT 10
+    """)
 
-    # 4. Unsettled Orders
-    raw_unsettled = db.execute("""
-        SELECT o.id, o.product_name, o.total, COALESCE(s.name, 'Unknown') as supplier_name
+    recent_orders = cur.fetchall()
+
+    # Unsettled Orders
+    cur.execute("""
+        SELECT
+            o.id,
+            o.product_name,
+            o.total,
+            COALESCE(
+                s.name,
+                'Unknown'
+            ) AS supplier_name
         FROM orders o
-        LEFT JOIN users s ON o.supplier_id = s.id
-        WHERE o.status = 'Delivered' AND (o.payment_settled = 0 OR o.payment_settled IS NULL)
-    """).fetchall()
-    
-    # CRITICAL FIX: Isse bhi Dictionary mein badlo
-    unsettled_orders = [dict(row) for row in raw_unsettled]
+        LEFT JOIN users s
+            ON o.supplier_id = s.id
+        WHERE o.status='Delivered'
+        AND (
+            o.payment_settled=0
+            OR o.payment_settled IS NULL
+        )
+    """)
 
-    return render_template("admin.html", 
-        total_products=total_products, 
-        total_orders=total_orders, 
-        total_customers=total_customers, 
-        total_revenue=total_revenue, 
-        orders=recent_orders,  # Ab ye JSON serializable hai
+    unsettled_orders = cur.fetchall()
+
+    return render_template(
+        "admin.html",
+        total_products=total_products,
+        total_orders=total_orders,
+        total_customers=total_customers,
+        total_revenue=total_revenue,
+        orders=recent_orders,
         unsettled_orders=unsettled_orders,
-        active='dashboard')
-# --- NAYA: Payment Settle karne ka Route ---
+        active="dashboard"
+    )
+
+
+# ================= PAYMENT PAGE =================
+
 @app.route("/payment/<int:order_id>")
 def payment_page(order_id):
+
     if "user_id" not in session:
         return redirect("/login")
-        
-    db = get_db()
-    # Order ki poori detail fetch karein
-    order = db.execute("""
-        SELECT o.*, p.name as product_name 
-        FROM orders o 
-        JOIN products p ON o.product_id = p.id 
-        WHERE o.id = ?
-    """, (order_id,)).fetchone()
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT *
+        FROM orders
+        WHERE id=%s
+    """, (order_id,))
+
+    order = cur.fetchone()
 
     if not order:
-        return "Order Not Found", 404
+        return "Order not found ❌", 404
 
-    # Yahan 'order' variable ko template mein pass karna zaroori hai
-    return render_template("payment.html", order=order)
-# --------------------------------SUPPLIER -------------------------------------#
+    return render_template(
+        "Payments.html",
+        order=order
+    )
+# ================= SUPPLIER DASHBOARD =================
 
-# ... (baaki imports aur app setup) ...
-@app.route('/supplier')
+@app.route("/supplier")
 def supplier_dashboard():
-    if 'user_id' not in session or session.get('role') != 'supplier':
-        return redirect('/login')
 
-    supplier_id = session['user_id']
-    db = get_db()
+    if (
+        "user_id" not in session or
+        session.get("role") != "supplier"
+    ):
+        return redirect("/login")
 
-    orders = db.execute("""
+    supplier_id = session["user_id"]
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute("""
         SELECT
             o.*,
             u.name AS user_name,
             u.mobile AS user_mobile
         FROM orders o
-        LEFT JOIN users u ON o.user_id = u.id
+        LEFT JOIN users u
+            ON o.user_id = u.id
         WHERE
-            o.supplier_id = ?
+            o.supplier_id=%s
             OR (o.supplier_id IS NULL AND o.status='Placed')
-            OR (o.supplier_id = 0 AND o.status='Placed')
+            OR (o.supplier_id=0 AND o.status='Placed')
         ORDER BY o.id DESC
-    """, (supplier_id,)).fetchall()
+    """, (supplier_id,))
 
-    products = db.execute("""
+    orders = cur.fetchall()
+
+    cur.execute("""
         SELECT *
         FROM products
-        WHERE supplier_id = ?
+        WHERE supplier_id=%s
         ORDER BY id DESC
-    """, (supplier_id,)).fetchall()
+    """, (supplier_id,))
+
+    products = cur.fetchall()
 
     return render_template(
-        'supplier.html',
+        "supplier.html",
         orders=orders,
         products=products
     )
-@app.route('/contact')
-def contact_view(): # Naam badal diya taaki conflict na ho
-    # Google Maps ka correct embed URL (No errors)
-    map_url = "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3781.332306353982!2d73.7661595751936!3d18.60411888251214!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bc2b97950949d97%3A0x600f7e6f8094d214!2sPimpri-Chinchwad%2C%20Maharashtra!5e0!3m2!1sen!2sin!4v1711912345678!5m2!1sen!2sin"
-    return render_template('contact.html', map_url=map_url)
+
+
+# ================= CONTACT =================
+
+@app.route("/contact")
+def contact_view():
+
+    map_url = (
+        "https://www.google.com/maps/embed?"
+        "pb=!1m18!1m12!1m3!1d3781.332306353982!"
+        "2d73.7661595751936!3d18.60411888251214"
+    )
+
+    return render_template(
+        "contact.html",
+        map_url=map_url
+    )
+
+
+# ================= SUPPLIER ACTION =================
+
 @app.route("/supplier_action/<int:order_id>", methods=["POST"])
 def supplier_action(order_id):
-    if "user_id" not in session or session.get("role") != "supplier":
+
+    if (
+        "user_id" not in session or
+        session.get("role") != "supplier"
+    ):
         return redirect("/login")
 
     action = request.form.get("action")
-    db = get_db()
 
-    # Order Accept
+    conn = get_db()
+    cur = conn.cursor()
+
     if action == "accept":
-        db.execute("""
-            UPDATE orders
-            SET supplier_id=?,
-                status='Accepted'
-            WHERE id=?
-        """, (session["user_id"], order_id))
 
-        db.commit()
+        cur.execute("""
+            UPDATE orders
+            SET supplier_id=%s,
+                status='Accepted'
+            WHERE id=%s
+        """, (
+            session["user_id"],
+            order_id
+        ))
+
+        conn.commit()
+
         return redirect("/supplier")
 
-    # Out for Delivery
     elif action == "out_for_delivery":
         new_status = "On the Way"
 
-    # Delivered
     elif action == "deliver":
         new_status = "Delivered"
 
-    # Rejected
     elif action == "reject":
         new_status = "Rejected"
 
     else:
         return redirect("/supplier")
 
-    # Status Update
-    db.execute(
-        "UPDATE orders SET status=? WHERE id=?",
-        (new_status, order_id)
-    )
-    db.commit()
+    cur.execute("""
+        UPDATE orders
+        SET status=%s
+        WHERE id=%s
+    """, (
+        new_status,
+        order_id
+    ))
 
-    print(f"DEBUG: Order {order_id} status updated to {new_status}")
+    conn.commit()
+
     return redirect("/supplier")
 
-@app.route('/delete_product/<int:product_id>')
+
+# ================= DELETE PRODUCT =================
+
+@app.route("/delete_product/<int:product_id>")
 def delete_product(product_id):
-    if 'user_id' not in session:
-        return redirect('/login')
 
-    db = get_db()
-
-    db.execute(
-        "DELETE FROM products WHERE product_id=? AND supplier_id=?",
-        (product_id, session['user_id'])
-    )
-
-    db.commit()
-
-    return redirect('/supplier')
-@app.route("/supplier/add_product_page")
-def add_product_page():
-    if "user_id" not in session or session.get("role") != "supplier":
-        return redirect("/login")
-    return render_template("add_product.html")
-
-# 2. Data Save Karne Ke Liye (POST)
-@app.route("/supplier/add_product", methods=["POST"])
-def supplier_add_product():
     if "user_id" not in session:
         return redirect("/login")
 
-    name = request.form.get("name")
-    price = request.form.get("price")
-    stock = request.form.get("stock")
-    category = request.form.get("category")
-    
-    # Image Handling
-    image = request.files.get("image")
-    image_name = "default_plant.png"
-    if image:
-        image_name = secure_filename(image.filename)
-        image.save(os.path.join(app.config['UPLOAD_FOLDER'], image_name))
-
-    db = get_db()
-    db.execute("""
-        INSERT INTO products (name, price, stock, image, category, supplier_id) 
-        VALUES (?, ?, ?, ?, ?, ?)
-    """, (name, price, stock, image_name, category, session['user_id']))
-    db.commit()
-    
-    return redirect("/supplier") # Wapas dashboard par bhej dega
-# --------------------------------ASSIGN_SUPPLIER -------------------------------------#
-@app.route("/update_order/<int:id>/<status>")
-def update_order(id, status):
-    db = get_db()
-    db.execute("UPDATE orders SET status=? WHERE id=?", (status, id))
-    db.commit()
-    return redirect("/supplier")
-
-
-# --------------------------------UPDATE_STATUS -------------------------------------#
-
-@app.route("/update_status/<int:order_id>", methods=["POST"])
-def update_status(order_id):
-    if session.get("role") != "admin":
-        return "Access Denied"
-
-    status = request.form["status"]
-
-    conn = sqlite3.connect("database.db")
+    conn = get_db()
     cur = conn.cursor()
 
-    cur.execute("UPDATE orders SET status=? WHERE id=?", (status, order_id))
+    cur.execute("""
+        DELETE FROM products
+        WHERE product_id=%s
+        AND supplier_id=%s
+    """, (
+        product_id,
+        session["user_id"]
+    ))
+
     conn.commit()
-    conn.close()
 
-    return redirect("/admin/orders")
-# --------------------------------ADMIN CREATE(RUN ONCE)------------------------------#
-@app.route("/create_admin")
-def create_admin_route(): # Naam change kiya taki function conflict na ho
-    db = get_db()
-    # Password ko dhyan se hash karein
-    hashed_pw = bcrypt.generate_password_hash("admin123").decode("utf-8")
-    
-    try:
-        db.execute(
-            "INSERT INTO users (name, email, password, role, mobile) VALUES (?, ?, ?, ?, ?)",
-            ("Admin User", "admin@gmail.com", hashed_pw, "admin", "9999999999")
-        )
-        db.commit()
-        return "✅ Admin Account Created! Email: admin@gmail.com, Pass: admin123"
-    except Exception as e:
-        return f"❌ Error: {str(e)} (Shayad admin pehle se exist karta hai)"
-# --------------------------------SUPPLIER-------------------------------------#
-@app.route("/create_supplier")
-def create_supplier():
-    db = get_db()
-    cur = db.cursor()
+    return redirect("/supplier")
 
-    password = bcrypt.generate_password_hash("supplier123").decode("utf-8")
+@app.route("/admin/delete_product/<int:product_id>", methods=["POST"])
+def admin_delete_product(product_id):
+
+    if (
+        "user_id" not in session or
+        session.get("role") != "admin"
+    ):
+        return redirect("/login")
+
+    conn = get_db()
+    cur = conn.cursor()
 
     try:
         cur.execute(
-            "INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)",
-            ("Supplier", "supplier@gmail.com", password, "supplier")
+            "DELETE FROM products WHERE id=%s",
+            (product_id,)
         )
-        db.commit()
-    except:
-        pass
 
-    db.close()
-    return "Supplier Created"
+        conn.commit()
 
+    except Exception as e:
+        print("Delete Error:", e)
+
+    return redirect("/admin/products")
+# ================= ADD PRODUCT PAGE =================
+
+@app.route("/supplier/add_product_page")
+def add_product_page():
+
+    if (
+        "user_id" not in session or
+        session.get("role") != "supplier"
+    ):
+        return redirect("/login")
+
+    return render_template("add_product.html")
+
+
+# ================= ADD PRODUCT =================
+@app.route("/admin/suppliers")
+def admin_suppliers():
+
+    if session.get("role") != "admin":
+        return redirect("/login")
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT *
+        FROM users
+        WHERE role='supplier'
+        ORDER BY id DESC
+    """)
+
+    suppliers = cur.fetchall()
+
+    return render_template(
+        "admin_suppliers.html",
+        suppliers=suppliers
+    )
+@app.route("/admin/supplier/<int:supplier_id>")
+def supplier_details(supplier_id):
+
+    if session.get("role") != "admin":
+        return redirect("/login")
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    # Supplier Info
+    cur.execute("""
+        SELECT *
+        FROM users
+        WHERE id=%s AND role='supplier'
+    """, (supplier_id,))
+    supplier = cur.fetchone()
+
+    # Products Added By Supplier
+    cur.execute("""
+        SELECT *
+        FROM products
+        WHERE supplier_id=%s
+    """, (supplier_id,))
+    products = cur.fetchall()
+
+    # Orders For Supplier
+    cur.execute("""
+        SELECT *
+        FROM orders
+        WHERE supplier_id=%s
+        ORDER BY created_at DESC
+    """, (supplier_id,))
+    orders = cur.fetchall()
+
+    # Statistics
+    cur.execute("""
+        SELECT
+            COUNT(*) total_orders,
+            COALESCE(SUM(total),0) total_sales
+        FROM orders
+        WHERE supplier_id=%s
+    """, (supplier_id,))
+    stats = cur.fetchone()
+
+    return render_template(
+        "supplier_details.html",
+        supplier=supplier,
+        products=products,
+        orders=orders,
+        stats=stats
+    )
+@app.route("/supplier/add_product", methods=["POST"])
+def supplier_add_product():
+
+    if "user_id" not in session:
+        return redirect("/login")
+
+    print("FORM:", request.form)
+
+    name = request.form.get("product_name")
+    price = request.form.get("price")
+    stock = request.form.get("stock")
+    category = request.form.get("category")
+
+    print("Name =", name)
+    print("Price =", price)
+    print("Stock =", stock)
+    print("Category =", category)
+
+    if not name:
+        return "Product Name Missing", 400
+
+    image = request.files.get("image")
+
+    image_name = "default_plant.png"
+
+    if image and image.filename:
+        image_name = secure_filename(image.filename)
+        image.save(os.path.join(app.config["UPLOAD_FOLDER"], image_name))
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute("""
+        INSERT INTO products
+        (
+            name,
+            price,
+            stock,
+            image,
+            category,
+            supplier_id
+        )
+        VALUES
+        (%s,%s,%s,%s,%s,%s)
+    """,(
+        name,
+        price,
+        stock,
+        image_name,
+        category,
+        session["user_id"]
+    ))
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    return redirect("/supplier")
+
+# ================= UPDATE ORDER =================
+
+@app.route("/update_order/<int:id>/<status>")
+def update_order(id, status):
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute("""
+        UPDATE orders
+        SET status=%s
+        WHERE id=%s
+    """, (
+        status,
+        id
+    ))
+
+    conn.commit()
+
+    return redirect("/supplier")
+
+
+# ================= UPDATE STATUS (ADMIN) =================
+
+@app.route("/update_status/<int:order_id>", methods=["POST"])
+def update_status(order_id):
+
+    if session.get("role") != "admin":
+        return "Access Denied", 403
+
+    status = request.form.get("status")
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute("""
+        UPDATE orders
+        SET status=%s
+        WHERE id=%s
+    """, (
+        status,
+        order_id
+    ))
+
+    conn.commit()
+
+    return redirect("/admin/orders")
+
+
+# ================= CREATE ADMIN =================
+
+@app.route("/create_admin")
+def create_admin_route():
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    hashed_pw = bcrypt.generate_password_hash(
+        "admin123"
+    ).decode("utf-8")
+
+    try:
+
+        cur.execute("""
+            INSERT INTO users(
+                name,
+                email,
+                password,
+                role,
+                mobile
+            )
+            VALUES(
+                %s,%s,%s,%s,%s
+            )
+        """, (
+            "Admin User",
+            "admin@gmail.com",
+            hashed_pw,
+            "admin",
+            "9999999999"
+        ))
+
+        conn.commit()
+
+        return """
+        ✅ Admin Created<br>
+        Email: admin@gmail.com<br>
+        Password: admin123
+        """
+
+    except Exception as e:
+
+        return f"""
+        ❌ Admin already exists
+        <br><br>
+        Error: {str(e)}
+        """
+
+
+# ================= CREATE SUPPLIER =================
+
+@app.route("/create_supplier")
+def create_supplier():
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    password = bcrypt.generate_password_hash(
+        "supplier123"
+    ).decode("utf-8")
+
+    try:
+
+        cur.execute("""
+            INSERT INTO users(
+                name,
+                email,
+                password,
+                role
+            )
+            VALUES(
+                %s,%s,%s,%s
+            )
+        """, (
+            "Supplier",
+            "supplier@gmail.com",
+            password,
+            "supplier"
+        ))
+
+        conn.commit()
+
+        return """
+        ✅ Supplier Created<br>
+        Email: supplier@gmail.com<br>
+        Password: supplier123
+        """
+
+    except Exception:
+        return "Supplier already exists ✅"
 # --------------------------------LOGOUT-------------------------------------#
+# ================= LOGOUT =================
+
 @app.route("/logout")
 def logout():
     session.clear()
     return redirect("/login")
-# --------------------------------VERIFY_ORDER--------------------------------#
+
+
+# ================= VERIFY ORDER =================
+
 @app.route("/verify_order/<mobile>")
 def verify_order(mobile):
+
     message = "Your order is confirmed ✅ Thank you for shopping with us!"
-    
+
     encoded_message = quote(message)
-    whatsapp_url = f"https://wa.me/91{mobile}?text={encoded_message}"
-    
+
+    whatsapp_url = (
+        f"https://wa.me/91{mobile}?text={encoded_message}"
+    )
+
     return redirect(whatsapp_url)
- 
-from urllib.parse import quote
-# --------------------------------VERIFACATOIN MASSAGE-----------------------# 
+
+
+# ================= ADMIN ORDERS =================
 
 @app.route("/admin/orders")
 def admin_orders():
 
-    if "user_id" not in session or session.get("role") != "admin":
-        return redirect("/")
+    if (
+        "user_id" not in session or
+        session.get("role") != "admin"
+    ):
+        return redirect("/login")
 
-    conn = sqlite3.connect("database.db")
+    conn = get_db()
     cur = conn.cursor()
 
-    cur.execute("SELECT * FROM orders ORDER BY id DESC")
+    cur.execute("""
+        SELECT *
+        FROM orders
+        ORDER BY id DESC
+    """)
+
     orders = cur.fetchall()
 
-    conn.close()
+    return render_template(
+        "admin_orders.html",
+        orders=orders
+    )
 
-    return render_template("admin_orders.html", orders=orders)
 
-# Add Product
+# ================= ADMIN ADD PRODUCT =================
+
 @app.route("/admin/add_product", methods=["GET", "POST"])
 def admin_add_product():
-    # SECURITY: Check karein ki user Admin hai ya nahi
-    if "user_id" not in session or session.get("role") != "admin":
-        flash("Unauthorized access! Please login as admin.", "danger")
-        return redirect(url_for("login_page"))
+
+    if (
+        "user_id" not in session or
+        session.get("role") != "admin"
+    ):
+        flash(
+            "Unauthorized access!",
+            "danger"
+        )
+        return redirect("/login")
 
     if request.method == "POST":
-        # Form se data nikalna
+
         name = request.form.get("name")
         price = request.form.get("price")
         stock = request.form.get("stock")
         category = request.form.get("category")
-        
-        # Image handle karna
-        file = request.files.get('image')
-        filename = ""
 
-        if file and file.filename != '':
-            # Secure filename taaki koi galat file upload na kare
-            filename = secure_filename(file.filename)
-            
-            # Folder check karein (agar nahi hai toh bana dega)
-            if not os.path.exists(app.config['UPLOAD_FOLDER']):
-                os.makedirs(app.config['UPLOAD_FOLDER'])
-            
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-        else:
-            filename = "default_plant.png" # Agar image na ho toh backup
+        file = request.files.get("image")
 
-        # Database mein save karna
+        filename = "default_plant.png"
+
+        if file and file.filename:
+
+            filename = secure_filename(
+                file.filename
+            )
+
+            if not os.path.exists(
+                app.config["UPLOAD_FOLDER"]
+            ):
+                os.makedirs(
+                    app.config["UPLOAD_FOLDER"]
+                )
+
+            file.save(
+                os.path.join(
+                    app.config["UPLOAD_FOLDER"],
+                    filename
+                )
+            )
+
         try:
-            db = get_db()
-            db.execute("""
-                INSERT INTO products (name, price, stock, image, category, supplier_id) 
-                VALUES (?, ?, ?, ?, ?, ?)
-            """, (name, price, stock, filename, category.lower(), session['user_id']))
-            db.commit()
-            
-            flash("Product Added Successfully! ✅", "success")
-            return redirect("/admin/products") # Manage products page par bhejo
-            
-        except Exception as e:
-            print(f"Error adding product: {e}")
-            flash("Database Error! ❌", "danger")
-            return redirect(url_for("admin_add_product"))
 
-    # GET request: Sirf form dikhao
-    return render_template("admin_add_product.html", active='add_product')
+            conn = get_db()
+            cur = conn.cursor()
+
+            cur.execute("""
+                INSERT INTO products(
+                    name,
+                    price,
+                    stock,
+                    image,
+                    category,
+                    supplier_id
+                )
+                VALUES(
+                    %s,%s,%s,%s,%s,%s
+                )
+            """, (
+                name,
+                price,
+                stock,
+                filename,
+                category.lower(),
+                session["user_id"]
+            ))
+
+            conn.commit()
+
+            flash(
+                "Product Added Successfully! ✅",
+                "success"
+            )
+
+            return redirect(
+                "/admin/products"
+            )
+
+        except Exception as e:
+
+            print(
+                "Product Add Error:",
+                e
+            )
+
+            flash(
+                "Database Error! ❌",
+                "danger"
+            )
+
+            return redirect(
+                "/admin/add_product"
+            )
+
+    return render_template(
+        "admin_add_product.html",
+        active="add_product"
+    )
+
+
+# ================= MANAGE PRODUCTS =================
+
 @app.route("/admin/products")
 def manage_products():
-    conn = sqlite3.connect("database.db")
+
+    if (
+        "user_id" not in session or
+        session.get("role") != "admin"
+    ):
+        return redirect("/login")
+
+    conn = get_db()
     cur = conn.cursor()
-    cur.execute("SELECT * FROM products")
+
+    cur.execute("""
+        SELECT *
+        FROM products
+        ORDER BY id DESC
+    """)
+
     products = cur.fetchall()
-    conn.close()
 
-    return render_template("admin_products.html", products=products)
+    return render_template(
+        "admin_products.html",
+        products=products
+    )
 
-# Customers
+    # ================= ADMIN CUSTOMERS =================
+
 @app.route("/admin/customers")
 def admin_customers():
 
-    # 🔥 ADD THIS
-    if "user_id" not in session or session.get("role") != "admin":
+    if (
+        "user_id" not in session or
+        session.get("role") != "admin"
+    ):
         return redirect("/login")
 
-    conn = sqlite3.connect("database.db")
+    conn = get_db()
     cur = conn.cursor()
 
-    cur.execute("SELECT id, name, email, mobile FROM users WHERE role='customer'")
+    cur.execute("""
+        SELECT
+            id,
+            name,
+            email,
+            mobile
+        FROM users
+        WHERE role='customer'
+        ORDER BY id DESC
+    """)
+
     customers = cur.fetchall()
 
-    conn.close()
+    return render_template(
+        "admin_customers.html",
+        customers=customers
+    )
 
-    return render_template("admin_customers.html", customers=customers)
-# Reports
-@app.route("/admin/reports")
-def admin_reports():
-    conn = sqlite3.connect("database.db")
+@app.route("/admin/customer/<int:customer_id>")
+def customer_details(customer_id):
+
+    if session.get("role") != "admin":
+        return redirect("/login")
+
+    conn = get_db()
     cur = conn.cursor()
 
-    cur.execute("SELECT SUM(total_price) FROM orders")
-    result = cur.fetchone()[0]
+    # Customer Info
+    cur.execute("""
+        SELECT id, name, email, mobile
+        FROM users
+        WHERE id=%s
+    """, (customer_id,))
+    customer = cur.fetchone()
 
-    revenue = result if result else 0
+    # Customer Orders
+    cur.execute("""
+        SELECT *
+        FROM orders
+        WHERE user_id=%s
+        ORDER BY created_at DESC
+    """, (customer_id,))
+    orders = cur.fetchall()
 
-    conn.close()
+    # Stats
+    cur.execute("""
+        SELECT
+            COUNT(*) as total_orders,
+            COALESCE(SUM(total),0) as total_spent
+        FROM orders
+        WHERE user_id=%s
+    """, (customer_id,))
+    stats = cur.fetchone()
 
-    return render_template("admin_reports.html", revenue=revenue)
+    return render_template(
+        "customer_details.html",
+        customer=customer,
+        orders=orders,
+        stats=stats
+    )
+    # ================= ADMIN REPORTS =================
+
+@app.route("/admin/reports")
+def admin_reports():
+
+    if (
+        "user_id" not in session or
+        session.get("role") != "admin"
+    ):
+        return redirect("/login")
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT SUM(total) AS revenue
+        FROM orders
+    """)
+
+    row = cur.fetchone()
+
+    revenue = (
+        row["revenue"]
+        if row and row["revenue"]
+        else 0
+    )
+
+    return render_template(
+        "admin_reports.html",
+        revenue=revenue
+    )
+
+
+# ================= SUCCESS =================
+
 @app.route("/success")
 def success():
-    return "Payment Successful!"
+    return "Payment Successful! ✅"
 
-from flask import request, session
+
+# ================= UPDATE LOCATION =================
 
 @app.route("/update_location", methods=["POST"])
 def update_location():
+
+    if "user_id" not in session:
+        return "Unauthorized", 401
+
     data = request.get_json()
-    lat = data['lat']
-    lng = data['lng']
 
-    supplier_id = session.get("supplier_id")
+    lat = data.get("lat")
+    lng = data.get("lng")
 
-    conn = sqlite3.connect("database.db")
-    cursor = conn.cursor()
+    supplier_id = session.get("user_id")
 
-    cursor.execute("""
-        UPDATE suppliers 
-        SET latitude=?, longitude=? 
-        WHERE id=?
-    """, (lat, lng, supplier_id))
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute("""
+        UPDATE suppliers
+        SET latitude=%s,
+            longitude=%s
+        WHERE user_id=%s
+    """, (
+        lat,
+        lng,
+        supplier_id
+    ))
 
     conn.commit()
-    conn.close()
 
     return "OK"
 
-# --- YE AKELA FUNCTION RAKHEIN, BAAKI DO DELETE KAR DEIN ---
-from flask import jsonify # Sabse upar check karein ye import hai ya nahi
 
+# ================= PLACE ORDER =================
 @app.route("/place_order", methods=["POST"])
 def place_order():
-    if "user_id" not in session:
-        return jsonify({"message": "Session Expired! Please Login"}), 401
-
-    user_id = session["user_id"]
-    data = request.get_json()
-    
-    if not data:
-        return jsonify({"message": "No data received"}), 400
-
-    pay_method = data.get('method')
-    
     try:
-        db = get_db()
-        # Dhyaan dein: Yahan status 'Placed' hi hona chahiye
-        db.execute("""
-    UPDATE orders
-    SET status='Placed',
-        payment_method=?,
-        supplier_id=NULL
-    WHERE user_id=? AND status='Pending'
-""", (pay_method, user_id))
-        db.commit()
-        
-        return jsonify({"message": "Order Successfully Placed!"}), 200
+        if "user_id" not in session:
+            return jsonify({"success": False, "message": "Login Required"}), 401
+
+        data = request.get_json()
+
+        if not data:
+            return jsonify({"success": False, "message": "No JSON Data"}), 400
+
+        payment_method = data.get("payment_method")
+        user_id = session["user_id"]
+
+        conn = get_db()
+        cur = conn.cursor()
+
+        sql = """
+            UPDATE orders
+            SET payment_method=%s,
+                status='Completed'
+            WHERE user_id=%s
+              AND status='Pending'
+            ORDER BY id DESC
+            LIMIT 1
+        """
+
+        cur.execute(sql, (payment_method, user_id))
+        conn.commit()
+
+        return jsonify({"success": True})
+
     except Exception as e:
-        print(f"❌ Database Error: {e}")
-        return jsonify({"message": "Internal Server Error"}), 500
+        import traceback
+        traceback.print_exc()
+        return jsonify({"success": False, "message": str(e)}), 500
+    # ================= PAYMENTS =================
 
 @app.route("/payments")
 def payments():
-    user_id = session.get("user_id")
-    if not user_id:
+
+    if "user_id" not in session:
         return redirect("/login")
 
-    db = get_db()
-    
-    # 1. Admin ka mobile number nikalna (Taki QR Admin ka bane)
-    admin_data = db.execute("SELECT mobile FROM users WHERE role='admin' LIMIT 1").fetchone()
-    admin_mobile = admin_data['mobile'] if admin_data else "8446170818@nyes"
+    user_id = session["user_id"]
 
-    # 2. Pending aur History orders fetch karna
-    pending_orders = db.execute(
-    "SELECT * FROM orders WHERE user_id=? AND status IN ('Pending','Placed')",
-    (user_id,)
-).fetchall()
-    history_orders = db.execute("SELECT * FROM orders WHERE user_id=? AND status != 'Pending' ORDER BY id DESC", (user_id,)).fetchall()
+    conn = get_db()
+    cur = conn.cursor()
 
-    total_to_pay = sum(order['total'] for order in pending_orders)
+    cur.execute("""
+        SELECT id, total
+        FROM orders
+        WHERE user_id=%s AND status='Pending'
+        ORDER BY id DESC
+        LIMIT 1
+    """, (user_id,))
 
-    return render_template("Payments.html", 
-                           orders=pending_orders, 
-                           history=history_orders, 
-                           total_amount=total_to_pay,
-                           admin_mobile=admin_mobile)
+    order = cur.fetchone()
+
+    if not order:
+        return render_template(
+            "payments.html",
+            order_items=[],
+            total_amount=0,
+            order_id=None
+        )
+
+    order_id = order["id"]
+    total_amount = order["total"]
+
+    # since order_items table does NOT exist
+    items = []
+
+    return render_template(
+        "payments.html",
+        order_items=items,
+        total_amount=total_amount,
+        order_id=order_id
+    )
+    # ================= GET SUPPLIER LOCATION =================
+
 @app.route('/get_supplier_location/<int:order_id>')
 def get_supplier_location(order_id):
-    # Maan lijiye aapka database order status check karta hai
-    # Yahan hum example coordinates de rahe hain (e.g., Pune/Mumbai area)
+
     location_data = {
-        "lat": 18.5204, 
+        "lat": 18.5204,
         "lng": 73.8567,
         "status": "On the Way"
     }
-    return jsonify(location_data)
-@app.route('/payment_history')
-def payment_history():
-    # Database se payments fetch karein (example query)
-    # payments = db.execute("SELECT * FROM payments WHERE customer_id = ?", (user_id,))
-    
-    # Example data: Supplier ki location manually ya DB se aayegi
-    # Google Maps Embed URL format: googleusercontent.com/maps.google.com/0`—suggests2
-    supplier_location = "Mumbai+Nursery+Market" 
-    map_url = f"googleusercontent.com/maps.google.com/0`—suggests3"
 
-    return render_template('payment_history.html', map_url=map_url)
+    return jsonify(location_data)
+
+
+# ================= PAYMENT HISTORY =================
+@app.route("/payment_history")
+def payment_history():
+
+    if "user_id" not in session:
+        return redirect("/login")
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    # Current order items
+    cur.execute("""
+        SELECT product_name, quantity
+        FROM orders
+        WHERE user_id=%s
+        ORDER BY id DESC
+    """, (session["user_id"],))
+    order_items = cur.fetchall()
+
+    # Total amount
+    cur.execute("""
+        SELECT SUM(total) AS total
+        FROM orders
+        WHERE user_id=%s
+    """, (session["user_id"],))
+    row = cur.fetchone()
+    total_amount = row["total"] if row["total"] else 0
+
+    # Order history
+    cur.execute("""
+        SELECT
+            id,
+            product_name,
+            quantity,
+            price,
+            total,
+            status,
+            payment_method
+        FROM orders
+        WHERE user_id=%s
+        ORDER BY id DESC
+    """, (session["user_id"],))
+    orders = cur.fetchall()
+
+    cur.close()
+
+    return render_template(
+        "payments.html",
+        order_items=order_items,
+        total_amount=total_amount,
+        payment_history=orders
+    )
+# ================= UPDATE SUPPLIER LOCATION =================
+
 @app.route("/update_supplier_location", methods=["POST"])
 def update_supplier_location():
-    # Supplier ki ID session se uthao
-    supplier_id = session.get("supplier_id") 
+
+    supplier_id = session.get("user_id")
+
     if not supplier_id:
-        return {"status": "error", "message": "Not logged in as supplier"}, 401
+        return jsonify({
+            "status": "error",
+            "message": "Not logged in"
+        }), 401
 
     data = request.get_json()
-    lat = data.get('latitude')
-    lng = data.get('longitude')
+
+    lat = data.get("latitude")
+    lng = data.get("longitude")
 
     try:
-        db = get_db()
-        # Supplier ki table mein latitude aur longitude update karo
-        db.execute("""
-            UPDATE suppliers 
-            SET latitude = ?, longitude = ? 
-            WHERE id = ?
-        """, (lat, lng, supplier_id))
-        db.commit()
-        return {"status": "success"}, 200
-    except Exception as e:
-        print(f"Location Update Error: {e}")
-        return {"status": "error"}, 500
-    
- 
-@app.route('/admin/inventory')
-def inventory():
-    conn = get_db()
-    products = conn.execute("SELECT * FROM products").fetchall()
-    conn.close()
-    return render_template('inventory.html', products=products)
 
-# Delete Product
+        conn = get_db()
+        cur = conn.cursor()
 
-# Edit Page
-@app.route('/edit_product/<int:id>', methods=['GET', 'POST'])
-def edit_product(id):
-    conn = get_db()
-
-    if request.method == 'POST':
-        name = request.form['name']
-        price = request.form['price']
-        stock = request.form['stock']
-        category = request.form['category']
-
-        conn.execute("""
-            UPDATE products 
-            SET name=?, price=?, stock=?, category=? 
-            WHERE id=?
-        """, (name, price, stock, category, id))
+        cur.execute("""
+            UPDATE suppliers
+            SET latitude=%s,
+                longitude=%s
+            WHERE user_id=%s
+        """, (
+            lat,
+            lng,
+            supplier_id
+        ))
 
         conn.commit()
-        conn.close()
-        return redirect(url_for('inventory'))
 
-    product = conn.execute("SELECT * FROM products WHERE id=?", (id,)).fetchone()
-    conn.close()
-    return render_template('edit_product.html', product=product)
+        return jsonify({
+            "status": "success"
+        })
 
+    except Exception as e:
+
+        print(
+            "Location Update Error:",
+            e
+        )
+
+        return jsonify({
+            "status": "error"
+        }), 500
+
+
+# ================= INVENTORY =================
+
+@app.route("/admin/inventory")
+def inventory():
+
+    if (
+        "user_id" not in session or
+        session.get("role") != "admin"
+    ):
+        return redirect("/login")
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT *
+        FROM products
+        ORDER BY id DESC
+    """)
+
+    products = cur.fetchall()
+
+    return render_template(
+        "inventory.html",
+        products=products
+    )
+
+
+# ================= EDIT PRODUCT =================
+
+@app.route('/edit_product/<int:id>', methods=['GET', 'POST'])
+def edit_product(id):
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    if request.method == "POST":
+
+        name = request.form["name"]
+        price = request.form["price"]
+        stock = request.form["stock"]
+        category = request.form["category"]
+
+        cur.execute("""
+            UPDATE products
+            SET
+                name=%s,
+                price=%s,
+                stock=%s,
+                category=%s
+            WHERE id=%s
+        """, (
+            name,
+            price,
+            stock,
+            category,
+            id
+        ))
+
+        conn.commit()
+
+        return redirect(
+            url_for("inventory")
+        )
+
+    cur.execute("""
+        SELECT *
+        FROM products
+        WHERE id=%s
+    """, (id,))
+
+    product = cur.fetchone()
+
+    return render_template(
+        "edit_product.html",
+        product=product
+    )
+
+
+# ================= MAIN =================
 
 if __name__ == "__main__":
-    init_db() # Direct call kara
-    app.run(debug=True, port=8000)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=False)
