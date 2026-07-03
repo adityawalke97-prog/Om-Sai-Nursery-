@@ -1,4 +1,5 @@
 Flask
-Flask-Bcrypt
 gunicorn
+PyMySQL
+Flask-Bcrypt
 Werkzeug
