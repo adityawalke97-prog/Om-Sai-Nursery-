@@ -34,23 +34,24 @@ bcrypt = Bcrypt(app)
 app.permanent_session_lifetime = timedelta(days=7)
 
 # ================= DATABASE CONFIG =================
-
-DB_HOST = os.getenv("DB_HOST", "localhost")
-DB_USER = os.getenv("DB_USER", "root")
-DB_PASSWORD = os.getenv("DB_PASSWORD", "")
-DB_NAME = os.getenv("DB_NAME", "om_sai_nursery")
-
+DB_HOST = os.getenv("DB_HOST")
+DB_PORT = int(os.getenv("DB_PORT", "4000"))
+DB_USER = os.getenv("DB_USER")
+DB_PASSWORD = os.getenv("DB_PASSWORD")
+DB_NAME = os.getenv("DB_NAME")
 # ================= MYSQL CONNECTION =================
 
 def get_db():
     if "db" not in g:
         g.db = pymysql.connect(
             host=DB_HOST,
+            port=DB_PORT,
             user=DB_USER,
             password=DB_PASSWORD,
             database=DB_NAME,
             cursorclass=pymysql.cursors.DictCursor,
-            autocommit=True
+            autocommit=True,
+            ssl={"ssl": {}}
         )
     return g.db
 
@@ -99,15 +100,15 @@ def check_users():
 # ================= CREATE TABLES =================
 
 def init_db():
-
     conn = pymysql.connect(
-        host=DB_HOST,
-        user=DB_USER,
-        password=DB_PASSWORD,
-        database=DB_NAME,
-        cursorclass=pymysql.cursors.DictCursor
-    )
-
+    host=DB_HOST,
+    port=DB_PORT,
+    user=DB_USER,
+    password=DB_PASSWORD,
+    database=DB_NAME,
+    cursorclass=pymysql.cursors.DictCursor,
+    ssl={"ssl": {}}
+)
     cur = conn.cursor()
 
     
@@ -423,8 +424,8 @@ def search():
 
     query = request.args.get("query", "").strip()
 
-    conn = get_db()
-    cursor = conn.cursor()
+    conn = get_db_connection()
+    cursor = conn.cursor(pymysql.cursors.DictCursor)
 
     if query:
 
@@ -445,6 +446,7 @@ def search():
         results = []
 
     cursor.close()
+    conn.close()
 
     return render_template(
         "search_results.html",
@@ -975,7 +977,7 @@ def remove_order(order_id):
     cur = conn.cursor()
 
     cur.execute("""
-        DELETE FROM orders
+        DELETE FROM products
         WHERE id=%s
         AND user_id=%s
         AND status='Pending'
@@ -987,6 +989,7 @@ def remove_order(order_id):
     conn.commit()
 
     return redirect("/orders")
+
 
 # ================= BUY NOW =================
 
@@ -1350,7 +1353,7 @@ def delete_product(product_id):
 
     cur.execute("""
         DELETE FROM products
-        WHERE id=%s
+        WHERE product_id=%s
         AND supplier_id=%s
     """, (
         product_id,
@@ -2283,7 +2286,11 @@ def edit_product(id):
 
 
 # ================= MAIN =================
-
 if __name__ == "__main__":
+    
+    print("Initializing Database...")
+    init_db()
+with app.app_context():
+    init_db()
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=False)
