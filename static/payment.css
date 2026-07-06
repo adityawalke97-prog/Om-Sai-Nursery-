@@ -104,3 +104,23 @@ select {
     border-radius: 10px;
     margin: 15px 0;
 }
+@media (max-width: 768px) {
+    /* Table ko scrollable banao */
+    .table-container {
+        overflow-x: auto;
+    }
+
+    table {
+        min-width: 500px;
+    }
+
+    /* Modal size fix */
+    .modal-content {
+        width: 95% !important;
+        padding: 15px !important;
+    }
+
+    #map {
+        height: 250px !important;
+    }
+}

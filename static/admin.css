@@ -29,8 +29,7 @@ body {
 .sidebar {
     width: 260px;
     background: var(--sidebar-bg);
-   -webkit-backdrop-filter: blur(10px);
-    backdrop-filter: blur(10px);
+    backdrop-filter: blur(20px);
     border-right: 1px solid var(--glass-border);
     position: fixed;
     height: 100vh;

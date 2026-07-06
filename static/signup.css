@@ -1,33 +1,120 @@
-/* RESET */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
 * {
+    box-sizing: border-box;
     margin: 0;
     padding: 0;
-    box-sizing: border-box;
-    font-family: 'Arial', sans-serif;
 }
 
 body {
-    background: #f6f5f7;
+    background: linear-gradient(135deg, #1d8b44 0%, #0c3b2e 100%);
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: 100vh;
-    padding: 10px;
+    flex-direction: column;
+    font-family: 'Poppins', sans-serif;
+    height: 100vh;
 }
 
+h1 {
+    font-weight: bold;
+    font-size: 2rem;
+    color: #333;
+}
+
+p {
+    font-size: 14px;
+    line-height: 20px;
+    margin: 20px 0 30px;
+}
+
+span {
+    font-size: 12px;
+}
+
+a {
+    color: #333;
+    font-size: 14px;
+    text-decoration: none;
+    margin: 10px 0;
+    transition: 0.3s ease;
+}
+
+a:hover {
+    color: #1d8b44;
+}
+
+/* Buttons */
+button {
+    border-radius: 25px;
+    border: 1px solid #1d8b44;
+    background-color: #1d8b44;
+    color: #FFFFFF;
+    font-size: 12px;
+    font-weight: bold;
+    padding: 12px 45px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: 0.3s;
+    margin-top: 10px;
+}
+
+button:hover {
+    background-color: #146c35;
+}
+
+button:active {
+    transform: scale(0.95);
+}
+
+button.ghost {
+    background-color: transparent;
+    border-color: #fff;
+}
+
+/* Form */
+form {
+    background-color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    padding: 0 40px;
+    height: 100%;
+    text-align: center;
+}
+
+input, select {
+    background-color: #eee;
+    border: none;
+    padding: 12px 15px;
+    margin: 8px 0;
+    width: 100%;
+    border-radius: 8px;
+    outline: none;
+    transition: 0.3s;
+}
+
+input:focus, select:focus {
+    background-color: #fff;
+    box-shadow: 0 0 0 2px rgba(29, 139, 68, 0.2);
+}
+
+/* Container */
 .container {
-    background: #fff;
-    border-radius: 10px;
-    box-shadow: 0 14px 28px rgba(0,0,0,0.25), 
+    background-color: #fff;
+    border-radius: 20px;
+    box-shadow: 0 14px 28px rgba(0,0,0,0.25),
                 0 10px 10px rgba(0,0,0,0.22);
     position: relative;
+    overflow: hidden;
     width: 768px;
     max-width: 100%;
-    min-height: 500px;
-    overflow: hidden;
+    min-height: 520px;
 }
 
-/* FORM CONTAINER */
+/* Form Containers */
 .form-container {
     position: absolute;
     top: 0;
@@ -35,11 +122,14 @@ body {
     transition: all 0.6s ease-in-out;
 }
 
-/* SIGN IN & SIGN UP (Desktop widths) */
 .sign-in-container {
     left: 0;
     width: 50%;
     z-index: 2;
+}
+
+.container.right-panel-active .sign-in-container {
+    transform: translateX(100%);
 }
 
 .sign-up-container {
@@ -49,59 +139,13 @@ body {
     z-index: 1;
 }
 
-/* RIGHT PANEL ACTIVE (Desktop Animation) */
 .container.right-panel-active .sign-up-container {
     transform: translateX(100%);
     opacity: 1;
     z-index: 5;
 }
 
-.container.right-panel-active .sign-in-container {
-    transform: translateX(100%);
-    opacity: 0;
-}
-
-/* FORM STYLING */
-form {
-    background-color: #fff;
-    display: flex;
-    flex-direction: column;
-    padding: 0 40px;
-    height: 100%;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-}
-
-form h1 {
-    font-weight: bold;
-    margin-bottom: 15px;
-}
-
-form input, form select {
-    background-color: #eee;
-    border: none;
-    padding: 12px 15px;
-    margin: 5px 0;
-    width: 100%;
-    border-radius: 5px;
-    font-size: 14px;
-}
-
-form button {
-    border-radius: 20px;
-    border: none;
-    padding: 12px 45px;
-    margin-top: 20px;
-    background-color: #1abc9c;
-    color: #fff;
-    font-size: 14px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: transform 0.3s ease;
-}
-
-/* OVERLAY (Desktop only) */
+/* Overlay */
 .overlay-container {
     position: absolute;
     top: 0;
@@ -113,20 +157,18 @@ form button {
     z-index: 100;
 }
 
+.container.right-panel-active .overlay-container {
+    transform: translateX(-100%);
+}
+
 .overlay {
-    background: linear-gradient(to right,#1abc9c,#16a085);
+    background: linear-gradient(to right, #0c3b2e, #1d8b44);
     color: #fff;
     position: relative;
     left: -100%;
     height: 100%;
     width: 200%;
-    transform: translateX(0);
     transition: transform 0.6s ease-in-out;
-    display: flex;
-}
-
-.container.right-panel-active .overlay-container {
-    transform: translateX(-100%);
 }
 
 .container.right-panel-active .overlay {
@@ -134,123 +176,114 @@ form button {
 }
 
 .overlay-panel {
-    flex: 1;
+    position: absolute;
     display: flex;
-    flex-direction: column;
     justify-content: center;
     align-items: center;
+    flex-direction: column;
     padding: 0 40px;
     text-align: center;
+    height: 100%;
+    width: 50%;
 }
 
-.ghost {
-    background-color: transparent;
-    border: 1px solid #fff;
-    color: #fff;
-    cursor: pointer;
-    border-radius: 20px;
-    padding: 12px 45px;
-    font-weight: bold;
+.overlay-left {
+    transform: translateX(-20%);
 }
 
-/* 📱 MOBILE RESPONSIVE SETTINGS */
-@media (max-width: 480px) {
+.container.right-panel-active .overlay-left {
+    transform: translateX(0);
+}
+
+.overlay-right {
+    right: 0;
+}
+
+/* Social Section */
+.social-container {
+    margin: 20px 0;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* Facebook Icon */
+.social-container .social {
+    border: 1px solid #ddd;
+    border-radius: 50%;
+    height: 40px;
+    width: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: 0.3s;
+}
+
+.social-container .social:hover {
+    background-color: #f1f1f1;
+    border-color: #1d8b44;
+    color: #1d8b44;
+}
+
+/* Google Button */
+.google-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: #fff;
+    color: #444;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    border: 1px solid #ddd;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.google-btn:hover {
+    background: #f7f7f7;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+}
+
+.google-btn i {
+    color: #db4437;
+}
+
+/* Animation */
+@keyframes show {
+    0%, 49.99% {
+        opacity: 0;
+    }
+    50%, 100% {
+        opacity: 1;
+    }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
     .container {
-        width: 95%;
-        min-height: 550px; /* Mobile par form lamba hota hai */
+        width: 100%;
+        min-height: 100vh;
+        border-radius: 0;
     }
 
-    /* Mobile par green overlay hide kar denge */
     .overlay-container {
         display: none;
     }
 
-    /* Form container ko full width karenge */
-    .form-container {
+    .sign-in-container,
+    .sign-up-container {
         width: 100%;
-    }
-
-    /* Jab Signup active nahi hai (Sign In dikhao) */
-    .sign-in-container {
-        width: 100%;
-        opacity: 1;
-        z-index: 5;
-    }
-
-    /* Jab Signup active hai (Toggle switch) */
-    .container.right-panel-active .sign-in-container {
-        opacity: 0;
-        z-index: 1;
-        transform: none;
-    }
-
-    .container.right-panel-active .sign-up-container {
-        width: 100%;
-        opacity: 1;
-        z-index: 5;
-        transform: none;
-    }
-
-    /* Form ke andar padding thodi kam karenge */
-    form {
-        padding: 0 20px;
-    }
-
-    /* Mobile users ke liye switch link dikhana zaruri hai */
-    .mobile-switch {
-        display: block !important;
-        margin-top: 15px;
-        font-size: 14px;
-        color: #16a085;
-        cursor: pointer;
-        text-decoration: underline;
-    }
-}
-
-/* Desktop par ye links hide rahenge */
-.mobile-switch {
-    display: none;
-}
-
-@media (max-width: 480px) {
-    /* Overlay ko hide rakhein */
-    .overlay-container { display: none; }
-
-    /* Form container ko full width aur relative karein */
-    .form-container {
-        width: 100% !important;
-        position: absolute;
-        transition: opacity 0.3s ease;
-    }
-
-    /* Jab Sign In dikhana ho */
-    .sign-in-container {
-        opacity: 1;
-        z-index: 5;
-    }
-
-    /* Jab Sign Up dikhana ho (right-panel-active class lagne par) */
-    .container.right-panel-active .sign-up-container {
+        position: relative;
         transform: none !important;
-        opacity: 1;
-        z-index: 10;
-        left: 0;
+        opacity: 1 !important;
+    }
+
+    .google-btn {
         width: 100%;
-    }
-
-    .container.right-panel-active .sign-in-container {
-        opacity: 0;
-        z-index: 1;
-    }
-
-    /* Mobile link styling */
-    .mobile-only-link {
-        display: block !important;
-        margin-top: 15px;
-        cursor: pointer;
-        font-size: 14px;
+        justify-content: center;
     }
 }
-
-/* Desktop pe hide rakhein */
-.mobile-only-link { display: none; }
