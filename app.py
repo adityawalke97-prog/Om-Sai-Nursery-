@@ -1212,7 +1212,7 @@ def payment_page(order_id):
     if not order:
         return "Order not found ❌", 404
 
-    return render_template(
+    return render_templates(
         "Payments.html",
         order=order
     )
