@@ -2070,7 +2070,7 @@ def payments():
 
     if not order:
         return render_template(
-            "payments.html",
+            "Payments.html",
             order_items=[],
             total_amount=0,
             order_id=None
