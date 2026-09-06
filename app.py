@@ -2083,7 +2083,7 @@ def payments():
     items = []
 
     return render_template(
-        "payments.html",
+        "Payments.html",
         order_items=items,
         total_amount=total_amount,
         order_id=order_id
@@ -2149,7 +2149,7 @@ def payment_history():
     cur.close()
 
     return render_template(
-        "payments.html",
+        "Payments.html",
         order_items=order_items,
         total_amount=total_amount,
         payment_history=orders
