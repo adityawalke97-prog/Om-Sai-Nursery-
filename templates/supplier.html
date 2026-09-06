@@ -1,93 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Supplier Dashboard | Om Sai Nursery</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href=
-    <link href="https://fonts.googleapis.com/css2%sfamily=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --primary: #27ae60;
-            --dark: #1a1a1a;
-            --glass: rgba(255, 255, 255, 0.9);
-            --danger: #ff4757;
-            --warning: #f39c12;
-            --info: #3498db;
-        }
-
-        body { 
-            font-family: 'Poppins', sans-serif; 
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            margin: 0; min-height: 100vh;
-            color: #333;
-        }
-
-        /* Sidebar */
-        .sidebar { 
-            width: 260px; background: var(--dark); color: white; 
-            height: 100vh; position: fixed; padding: 30px 15px;
-            box-shadow: 4px 0 15px rgba(0,0,0,0.1);
-        }
-        .sidebar h2 { color: var(--primary); font-size: 1.5rem; margin-bottom: 40px; text-align: center; }
-        .sidebar a { 
-            display: flex; align-items: center; color: #a0a0a0; 
-            padding: 12px 20px; text-decoration: none; border-radius: 12px;
-            margin-bottom: 10px; transition: 0.3s;
-        }
-        .sidebar a:hover, .sidebar a.active { background: var(--primary); color: white; transform: translateX(10px); }
-        .sidebar a i { margin-right: 15px; width: 20px; }
-
-        /* Main Content */
-        .main { margin-left: 290px; padding: 40px; }
-
-        /* Header */
-        .header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
-        .welcome-text h1 { margin: 0; font-size: 26px; color: #2d3436; }
-        
-        /* Glassmorphism Cards */
-        .glass-card {
-            background: var(--glass);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 20px;
-            padding: 25px;
-            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.08);
-            margin-bottom: 20px;
-        }
-
-        /* Table Design */
-        table { width: 100%; border-collapse: separate; border-spacing: 0 12px; }
-        th { padding: 15px; color: #7f8c8d; font-weight: 500; text-align: left; text-transform: uppercase; font-size: 12px; }
-        td { background: white; padding: 20px; transition: 0.3s; vertical-align: middle; }
-        td:first-child { border-radius: 15px 0 0 15px; }
-        td:last-child { border-radius: 0 15px 15px 0; }
-        tr:hover td { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
-
-        /* Status Badges */
-        .badge { padding: 6px 12px; border-radius: 8px; font-size: 11px; font-weight: 600; display: inline-block; text-transform: uppercase; }
-        .status-pending { background: #fff4e5; color: #ff9800; }
-        .status-accepted { background: #e8f5e9; color: #2e7d32; }
-        .status-delivered { background: #e3f2fd; color: #1565c0; }
-        .status-rejected { background: #ffebee; color: #c62828; }
-
-        /* Action Buttons */
-        .btn-action {
-            border: none; padding: 8px 15px; border-radius: 8px; 
-            cursor: pointer; font-weight: 600; font-size: 12px;
-            transition: 0.2s; display: flex; align-items: center; gap: 5px;
-            text-decoration: none; justify-content: center;
-        }
-        .btn-accept { background: var(--primary); color: white; }
-        .btn-deliver { background: var(--info); color: white; }
-        .btn-reject { background: #eee; color: #666; }
-        .btn-action:hover { opacity: 0.9; transform: scale(1.05); }
-
-        .location-link { color: var(--info); text-decoration: none; font-size: 13px; font-weight: 600; }
-    </style>
-</head>
-<body>
 <body>
 
 <div class="dashboard">
@@ -425,7 +335,7 @@ class="table-search">
 </div>
 
 </div>
-    <!-- ================= DASHBOARD STATS ================= -->
+<!-- ================= DASHBOARD STATS ================= -->
 
 <div class="dashboard-grid">
 
@@ -936,7 +846,7 @@ New customer orders will automatically appear here.
 </div>
 
 </div>
-    <!-- ================= MY PRODUCTS ================= -->
+<!-- ================= MY PRODUCTS ================= -->
 
 <div class="glass-card products-card">
 
@@ -1230,7 +1140,9 @@ tr[i].style.display=category.includes(filter)?"":"none";
 }
 
 </script>
-<!-- ================= ANALYTICS ================= -->
+
+<!-- ================= END PRODUCTS ================= -->
+    <!-- ================= ANALYTICS ================= -->
 
 <div class="analytics-grid">
 
@@ -1632,8 +1544,6 @@ data:[60,20,20]
 });
 
 </script>
-
-    <!-- ================= END PRODUCTS ================= -->
 <!-- ================= LIVE CONTROL PANEL ================= -->
 
 <div class="dashboard-bottom">
@@ -2139,7 +2049,6 @@ location.reload();
 },5000);
 
 </script>
-
 <!-- ================= LOW STOCK ALERT ================= -->
 
 <div class="glass-card">
@@ -2406,6 +2315,7 @@ location.reload();
 },15000);
 
 </script>
+
 <!-- ================= SUPPLIER PROFILE ================= -->
 
 <div class="glass-card">
@@ -2708,7 +2618,6 @@ Analytics
 </div>
 
 </div>
-
 <!-- ================= ANALYTICS SECTION ================= -->
 
 <div class="dashboard-grid">
@@ -2887,7 +2796,7 @@ style="width:{{ rating_percent }}%;">
 </div>
 
 </div>
-    <div class="dashboard-grid">
+<div class="dashboard-grid">
 
 <div class="analytics-card green">
 <div class="icon">
