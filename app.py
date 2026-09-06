@@ -1216,36 +1216,25 @@ def payment_page(order_id):
         "Payments.html",
         order=order
     )
-# ================= SUPPLIER DASHBOARD =================
-
 @app.route("/supplier")
+@login_required
 def supplier_dashboard():
 
-    if (
-        "user_id" not in session or
-        session.get("role") != "supplier"
-    ):
+    if session.get("role") != "supplier":
         return redirect("/login")
 
     supplier_id = session["user_id"]
 
-    conn = get_db()
-    cur = conn.cursor()
+    conn = get_db_connection()
+    cur = conn.cursor(dictionary=True)
 
     cur.execute("""
-        SELECT
-            o.*,
-            u.name AS user_name,
-            u.mobile AS user_mobile
-        FROM orders o
-        LEFT JOIN users u
-            ON o.user_id = u.id
-        WHERE
-            o.supplier_id=%s
-            OR (o.supplier_id IS NULL AND o.status='Placed')
-            OR (o.supplier_id=0 AND o.status='Placed')
-        ORDER BY o.id DESC
-    """, (supplier_id,))
+        SELECT *
+        FROM orders
+        WHERE supplier_id IS NULL
+           OR supplier_id=%s
+        ORDER BY id DESC
+    """,(supplier_id,))
 
     orders = cur.fetchall()
 
@@ -1254,18 +1243,37 @@ def supplier_dashboard():
         FROM products
         WHERE supplier_id=%s
         ORDER BY id DESC
-    """, (supplier_id,))
+    """,(supplier_id,))
 
     products = cur.fetchall()
 
+    cur.execute("""
+        SELECT COUNT(*) total
+        FROM orders
+        WHERE supplier_id=%s
+    """,(supplier_id,))
+    total_orders = cur.fetchone()["total"]
+
+    cur.execute("""
+        SELECT IFNULL(SUM(total),0) revenue
+        FROM orders
+        WHERE supplier_id=%s
+        AND status='Delivered'
+    """,(supplier_id,))
+    total_revenue = cur.fetchone()["revenue"]
+
+    conn.close()
+
     return render_template(
-        "supplier.html",
+        "supplier_dashboard.html",
+        supplier_name=session["username"],
         orders=orders,
-        products=products
+        products=products,
+        total_orders=total_orders,
+        total_revenue=total_revenue,
+        pending_delivery=0,
+        rating=4.9
     )
-
-
-# ================= CONTACT =================
 
 @app.route("/contact")
 def contact_view():
@@ -1285,17 +1293,13 @@ def contact_view():
 # ================= SUPPLIER ACTION =================
 
 @app.route("/supplier_action/<int:order_id>", methods=["POST"])
+@login_required
 def supplier_action(order_id):
 
-    if (
-        "user_id" not in session or
-        session.get("role") != "supplier"
-    ):
-        return redirect("/login")
-
+    supplier_id = session["user_id"]
     action = request.form.get("action")
 
-    conn = get_db()
+    conn = get_db_connection()
     cur = conn.cursor()
 
     if action == "accept":
@@ -1305,40 +1309,40 @@ def supplier_action(order_id):
             SET supplier_id=%s,
                 status='Accepted'
             WHERE id=%s
-        """, (
-            session["user_id"],
-            order_id
-        ))
-
-        conn.commit()
-
-        return redirect("/supplier")
-
-    elif action == "out_for_delivery":
-        new_status = "On the Way"
-
-    elif action == "deliver":
-        new_status = "Delivered"
+            AND supplier_id IS NULL
+        """,(supplier_id,order_id))
 
     elif action == "reject":
-        new_status = "Rejected"
 
-    else:
-        return redirect("/supplier")
+        cur.execute("""
+            UPDATE orders
+            SET status='Rejected'
+            WHERE id=%s
+            AND supplier_id=%s
+        """,(order_id,supplier_id))
 
-    cur.execute("""
-        UPDATE orders
-        SET status=%s
-        WHERE id=%s
-    """, (
-        new_status,
-        order_id
-    ))
+    elif action == "out_for_delivery":
+
+        cur.execute("""
+            UPDATE orders
+            SET status='On the Way'
+            WHERE id=%s
+            AND supplier_id=%s
+        """,(order_id,supplier_id))
+
+    elif action == "deliver":
+
+        cur.execute("""
+            UPDATE orders
+            SET status='Delivered'
+            WHERE id=%s
+            AND supplier_id=%s
+        """,(order_id,supplier_id))
 
     conn.commit()
+    conn.close()
 
     return redirect("/supplier")
-
 
 # ================= DELETE PRODUCT =================
 
