@@ -1,8 +1,16 @@
-{% extends "Home.html" %}
+{% extends "layout.html" %}
+
+{% block title %}Outdoor Plants{% endblock %}
+
+{% block page_title %}
+Outdoor Plants
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='plant.css') }}">
+{% endblock %}
 
 {% block content %}
-
-<link rel="stylesheet" href="{{ url_for('static', filename='plant.css') }}">
 
 <h2>🌳 Outdoor Plants</h2>
 
@@ -43,20 +51,26 @@
             </small>
 
             <div class="progress-bar">
+
                 <div class="progress-fill"
                      style="width: {{ (plant['stock']/50)*100 }}%;
-                     background: {{ 'red' if plant['stock'] < 5 else '#059669' }}">
+                            background: {{ 'red' if plant['stock'] < 5 else '#059669' }};">
                 </div>
+
             </div>
 
         </div>
 
-        <p><b>Stock:</b> {{ plant['stock'] }}</p>
+        <p>
+            <b>Stock:</b> {{ plant['stock'] }}
+        </p>
 
         {% if session.get('role') == 'admin' %}
+
         <div class="supplier-info">
             🏢 Supplier: {{ plant['supplier_name'] }}
         </div>
+
         {% endif %}
 
         <div class="action-area">
@@ -68,7 +82,7 @@
 
             <button onclick='addToCartSafe(
                 {{ plant["id"] }},
-                "{{ plant["name"].replace("\"","\\\"") }}",
+                {{ plant["name"]|tojson }},
                 {{ plant["price"]|float }},
                 {{ plant["supplier_id"] }}
             )'>
@@ -84,8 +98,11 @@
 {% else %}
 
 <div class="no-products">
+
     <h3>🌳 No Outdoor Plants Available</h3>
+
     <p>Currently no outdoor plants are available.</p>
+
 </div>
 
 {% endif %}
@@ -95,12 +112,15 @@
 <br>
 
 <div style="text-align:center;">
+
     <a href="{{ url_for('orders_page') }}" class="btn-cart">
         🛒 View My Cart
     </a>
+
 </div>
 
 <script>
+
 function addToCartSafe(id, name, price, supplier_id) {
 
     let qty = parseInt(document.getElementById("qty_" + id).value) || 1;
@@ -110,21 +130,29 @@ function addToCartSafe(id, name, price, supplier_id) {
     let existing = cart.find(item => item.id === id);
 
     if (existing) {
+
         existing.quantity += qty;
+
     } else {
+
         cart.push({
+
             id: id,
             name: name,
             price: Number(price),
             quantity: qty,
             supplier_id: supplier_id
+
         });
+
     }
 
     localStorage.setItem("cart", JSON.stringify(cart));
 
     alert(name + " added to cart!");
+
 }
+
 </script>
 
 {% endblock %}

@@ -1,196 +1,543 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
     <title>Om Sai Plant Nursery</title>
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='signup.css') }}">
-    
-    <style>
-        /* Real-world Flash Alert Styling (Glassmorphism) */
-        .flash-container {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 9999;
-            width: 90%;
-            max-width: 400px;
-        }
-        .alert {
-            padding: 15px;
-            margin-bottom: 10px;
-            border-radius: 12px;
-            backdrop-filter: blur(10px);
-            background: rgba(255, 255, 255, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            color: white;
-            text-align: center;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-            animation: slideDown 0.5s ease;
-        }
-        .alert-danger { background: rgba(255, 59, 59, 0.5); }
-        .alert-success { background: rgba(40, 167, 69, 0.5); }
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
 
-        @keyframes slideDown {
-            from { transform: translateY(-20px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='signup.css') }}">
 
-        /* Mobile specific Switch Link Styling */
-        .mobile-switch {
-            display: none; /* Desktop par hidden */
-            margin-top: 20px;
-            font-size: 14px;
-            color: #333;
-        }
-        .mobile-switch span {
-            color: #1abc9c;
-            font-weight: bold;
-            cursor: pointer;
-            text-decoration: underline;
-        }
-
-        @media (max-width: 480px) {
-            .mobile-switch {
-                display: block; /* Mobile par dikhega */
-            }
-        }
-    </style>
 </head>
 
 <body>
 
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        <div class="flash-container">
-          {% for category, message in messages %}
-            <div class="alert alert-{{ category }}">{{ message }}</div>
-          {% endfor %}
-        </div>
-      {% endif %}
-    {% endwith %}
+<!-- ================= FLASH MESSAGE ================= -->
 
-    <div class="container" id="container">
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
 
-        <div class="form-container sign-up-container">
-            <form id="signupForm" action="/signup" method="POST">
-                <h1>Create Account</h1>
-                <div class="social-container">
-                    <a href="#" class="social"><i class="fab fa-facebook-f"></i></a>
-                    <a href="#" class="social"><i class="fab fa-google-plus-g"></i></a>
-                </div>
-                <span>Enter details for registration</span>
-                
-                <input type="text" name="name" placeholder="Full Name" required>
-                <input type="email" name="email" placeholder="Email Address" required>
-                <input type="text" name="mobile" placeholder="Mobile (10 Digits)" pattern="[0-9]{10}" maxlength="10" required>
-                <input type="password" name="password" placeholder="Create Password" required>
+<div class="flash-container">
 
-                <select name="role" required>
-                    <option value="" disabled selected>Select Role</option>
-                    <option value="customer">Customer</option>
-                    <option value="supplier">Supplier</option>
-                    <option value="admin">Admin</option>
-                </select>
+{% for category,message in messages %}
 
-                <button type="submit" id="signupBtn">Sign Up</button>
+<div class="alert alert-{{category}}">
+{{message}}
+</div>
 
-                <p class="mobile-switch">Already have an account%s <span onclick="openSignIn()">Login</span></p>
-            </form>
-        </div>
+{% endfor %}
 
-        <div class="form-container sign-in-container">
-            <form action="/login" method="POST">
-                <h2> Welcome to Om Sai Plant NUrsery<h2>
-                    
-                <h1>Sign In</h1>
-                <div class="social-container">
-                    <a href="#" class="social"><i class="fab fa-facebook-f"></i></a>
-                    <a href="#" class="social"><i class="fab fa-google-plus-g"></i></a>
-                </div>
-                <span>Use your registered email</span>
-                
-                <input type="email" name="email" placeholder="Email" required>
-                <input type="password" name="password" placeholder="Password" required>
-                
-                <a href="#">Forgot your password%s</a>
-                <button type="submit">Login</button>
+</div>
 
-                <p class="mobile-switch">Don't have an account%s <span onclick="openSignUp()">Create Account</span></p>
-            </form>
-        </div>
+{% endif %}
+{% endwith %}
 
-        <div class="overlay-container">
-            <div class="overlay">
-                <div class="overlay-panel overlay-left">
-                    <h1>Welcome Back!</h1>
-                    <p>To keep connected with us please login with your personal info</p>
-                    <button class="ghost" id="signIn">Sign In</button>
-                </div>
-                <div class="overlay-panel overlay-right">
-                    <h1>Om Sai Nursery</h1>
-                    <p>Enter your personal details and start journey with us</p>
-                    <button class="ghost" id="signUp">Sign Up</button>
-                </div>
-            </div>
-        </div>
 
-    </div>
+<!-- ================= BACKGROUND ================= -->
 
-    <script>
-        const container = document.getElementById('container');
-        const signUpButton = document.getElementById('signUp');
-        const signInButton = document.getElementById('signIn');
+<div class="bg"></div>
 
-        // Functions to Switch Panels
-        function openSignUp() {
-            container.classList.add("right-panel-active");
-        }
+<div class="container" id="container">
 
-        function openSignIn() {
-            container.classList.remove("right-panel-active");
-        }
+<!-- ===================================================== -->
+<!-- SIGN UP -->
+<!-- ===================================================== -->
 
-        // Desktop Button Listeners
-        signUpButton.addEventListener('click', openSignUp);
-        signInButton.addEventListener('click', openSignIn);
+<div class="form-container sign-up-container">
 
-        // Auto-hide flash messages after 4 seconds
+<form
+id="signupForm"
+action="/signup"
+method="POST">
+
+<h1>Create Account</h1>
+
+<p class="subtitle">
+Join Om Sai Plant Nursery
+</p>
+
+<input
+type="text"
+name="name"
+placeholder="Full Name"
+required>
+
+<input
+type="email"
+name="email"
+placeholder="Email Address"
+required>
+
+<input
+type="text"
+name="mobile"
+maxlength="10"
+pattern="[0-9]{10}"
+placeholder="Mobile Number"
+required>
+
+<div class="password-box">
+
+<input
+type="password"
+name="password"
+id="signupPassword"
+placeholder="Password"
+required>
+
+<i class="fa-solid fa-eye toggle"
+onclick="togglePassword('signupPassword',this)">
+</i>
+
+</div>
+
+<select
+name="role"
+required>
+
+<option value="">
+Select Role
+</option>
+
+<option value="customer">
+Customer
+</option>
+
+<option value="supplier">
+Supplier
+</option>
+
+<option value="admin">
+Admin
+</option>
+
+</select>
+
+<button
+type="submit"
+id="signupBtn">
+
+Create Account
+
+</button>
+
+<div class="mobile-switch">
+
+Already have an account?
+
+<span onclick="openSignIn()">
+
+Login
+
+</span>
+
+</div>
+
+</form>
+
+</div>
+
+
+<!-- ===================================================== -->
+<!-- LOGIN -->
+<!-- ===================================================== -->
+
+<div class="form-container sign-in-container">
+
+<form
+action="/login"
+method="POST">
+
+<h1>Welcome Back</h1>
+
+<p class="subtitle">
+
+Login to continue
+
+</p>
+
+<a
+href="/google_login"
+class="google-btn">
+
+<img
+src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg">
+
+Continue with Google
+
+</a>
+
+<div class="divider">
+
+<span>
+
+OR
+
+</span>
+
+</div>
+
+<input
+type="email"
+name="email"
+placeholder="Email"
+required>
+
+<div class="password-box">
+
+<input
+type="password"
+name="password"
+id="loginPassword"
+placeholder="Password"
+required>
+
+<i
+class="fa-solid fa-eye toggle"
+onclick="togglePassword('loginPassword',this)">
+</i>
+
+</div>
+
+<div class="options">
+
+<label>
+
+<input type="checkbox">
+
+Remember Me
+
+</label>
+
+<a href="#">
+
+Forgot Password?
+
+</a>
+
+</div>
+
+<button>
+
+Login
+
+</button>
+
+<div class="mobile-switch">
+
+Don't have an account?
+
+<span onclick="openSignUp()">
+
+Create Account
+
+</span>
+
+</div>
+
+</form>
+
+</div>
+
+
+<!-- ===================================================== -->
+<!-- OVERLAY -->
+<!-- ===================================================== -->
+
+<div class="overlay-container">
+
+<div class="overlay">
+
+<div class="overlay-panel overlay-left">
+
+<i class="fa-solid fa-seedling icon"></i>
+
+<h1>
+
+Welcome Back
+
+</h1>
+
+<p>
+
+Already have an account?
+
+Login and continue shopping.
+
+</p>
+
+<button
+class="ghost"
+id="signIn">
+
+Sign In
+
+</button>
+
+</div>
+
+
+<div class="overlay-panel overlay-right">
+
+<i class="fa-solid fa-leaf icon"></i>
+
+<h1>
+
+Om Sai Plant Nursery
+
+</h1>
+
+<p>
+
+Healthy Plants,
+Happy Life 🌿
+
+Create your account today.
+
+</p>
+
+<button
+class="ghost"
+id="signUp">
+
+Sign Up
+
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+<script>
+    // ==========================================
+// OM SAI NURSERY
+// Premium Login JS
+// ==========================================
+
+// Panels
+const container = document.getElementById("container");
+const signUpBtn = document.getElementById("signUp");
+const signInBtn = document.getElementById("signIn");
+
+// ==============================
+// Panel Switching
+// ==============================
+
+function openSignUp() {
+    container.classList.add("right-panel-active");
+}
+
+function openSignIn() {
+    container.classList.remove("right-panel-active");
+}
+
+if (signUpBtn) {
+    signUpBtn.addEventListener("click", openSignUp);
+}
+
+if (signInBtn) {
+    signInBtn.addEventListener("click", openSignIn);
+}
+
+// ==============================
+// Password Toggle
+// ==============================
+
+function togglePassword(id, icon) {
+
+    const input = document.getElementById(id);
+
+    if (input.type === "password") {
+
+        input.type = "text";
+
+        icon.classList.remove("fa-eye");
+
+        icon.classList.add("fa-eye-slash");
+
+    } else {
+
+        input.type = "password";
+
+        icon.classList.remove("fa-eye-slash");
+
+        icon.classList.add("fa-eye");
+
+    }
+
+}
+
+// ==============================
+// Auto Hide Flash Messages
+// ==============================
+
+setTimeout(() => {
+
+    document.querySelectorAll(".alert").forEach(alert => {
+
+        alert.style.opacity = "0";
+
+        alert.style.transform = "translateY(-20px)";
+
         setTimeout(() => {
-            const alerts = document.querySelectorAll('.alert');
-            alerts.forEach(alert => {
-                alert.style.display = 'none';
-            });
-        }, 4000);
 
-        // AJAX Signup logic
-        document.getElementById("signupForm").addEventListener("submit", function(e) {
+            alert.remove();
+
+        }, 500);
+
+    });
+
+}, 4000);
+
+// ==============================
+// Loading Button
+// ==============================
+
+document.querySelectorAll("form").forEach(form => {
+
+    form.addEventListener("submit", function () {
+
+        const btn = form.querySelector("button");
+
+        if (btn) {
+
+            btn.disabled = true;
+
+            btn.dataset.old = btn.innerHTML;
+
+            btn.innerHTML =
+                '<i class="fa-solid fa-spinner fa-spin"></i> Please Wait...';
+
+        }
+
+    });
+
+});
+
+// ==============================
+// Mobile Auto Switch
+// ==============================
+
+if (window.innerWidth < 768) {
+
+    container.classList.remove("right-panel-active");
+
+}
+
+// ==============================
+// Theme Remember
+// ==============================
+
+const theme = localStorage.getItem("theme");
+
+if (theme === "dark") {
+
+    document.body.classList.add("dark");
+
+}
+
+// ==============================
+// Toggle Theme
+// ==============================
+
+function toggleTheme() {
+
+    document.body.classList.toggle("dark");
+
+    if (document.body.classList.contains("dark")) {
+
+        localStorage.setItem("theme", "dark");
+
+    } else {
+
+        localStorage.setItem("theme", "light");
+
+    }
+
+}
+
+// ==============================
+// Form Validation
+// ==============================
+
+const signupForm = document.getElementById("signupForm");
+
+if (signupForm) {
+
+    signupForm.addEventListener("submit", function (e) {
+
+        const mobile =
+            signupForm.querySelector("input[name='mobile']").value.trim();
+
+        if (!/^[0-9]{10}$/.test(mobile)) {
+
+            alert("Enter a valid 10-digit mobile number.");
+
             e.preventDefault();
-            const formData = new FormData(this);
 
-            fetch("/signup", {
-                method: "POST",
-                body: formData
-            })
-            .then(res => res.text())
-            .then(data => {
-                if (data.includes("Successful")) {
-                    alert("Registration Successful! Redirecting to Login...");
-                    openSignIn(); // Switch to login panel
-                    this.reset();
-                } else {
-                    alert(data);
-                }
-            })
-            .catch(err => {
-                alert("Signup Failed! Please try again.");
-                console.log(err);
-            });
-        });
-    </script>
+            return;
+
+        }
+
+        const password =
+            signupForm.querySelector("input[name='password']").value;
+
+        if (password.length < 6) {
+
+            alert("Password should be at least 6 characters.");
+
+            e.preventDefault();
+
+            return;
+
+        }
+
+    });
+
+}
+
+// ==============================
+// Smooth Fade In
+// ==============================
+
+window.addEventListener("load", () => {
+
+    document.body.style.opacity = "1";
+
+});
+
+// ==============================
+// Prevent Double Submit
+// ==============================
+
+document.querySelectorAll("button").forEach(btn => {
+
+    btn.addEventListener("click", () => {
+
+        btn.style.pointerEvents = "none";
+
+        setTimeout(() => {
+
+            btn.style.pointerEvents = "auto";
+
+        }, 2500);
+
+    });
+
+});
+</script>
+<script src="{{ url_for('static',filename='signup.js') }}"></script>
 
 </body>
+
 </html>

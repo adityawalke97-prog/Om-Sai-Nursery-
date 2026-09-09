@@ -5,6 +5,8 @@ from flask import (
     Flask, flash, render_template, request,
     redirect, session, url_for, jsonify, g
 )
+from authlib.integrations.flask_client import OAuth
+
 from flask_login import (
     LoginManager,
     login_user,
@@ -46,6 +48,18 @@ DB_PORT = int(os.getenv("DB_PORT", "4000"))
 DB_USER = os.getenv("DB_USER")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
 DB_NAME = os.getenv("DB_NAME")
+
+oauth = OAuth(app)
+
+google = oauth.register(
+    name="google",
+    client_id=os.getenv("GOOGLE_CLIENT_ID"),
+    client_secret=os.getenv("GOOGLE_CLIENT_SECRET"),
+    server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
+    client_kwargs={
+        "scope":"openid email profile"
+    }
+)
 # ================= MYSQL CONNECTION =================
 
 def get_db():
@@ -272,7 +286,66 @@ def before_request():
         print("✅ Running first-time setup...")
         _got_first_request = True
 
+@app.route("/google_login")
+def google_login():
+    redirect_uri = "https://om-sai-nursery-2rpi.onrender.com/google_callback"
+    return google.authorize_redirect(redirect_uri)
 
+@app.route("/google_callback")
+def google_callback():
+
+    token = google.authorize_access_token()
+
+    user = token["userinfo"]
+
+    email = user["email"]
+    name = user["name"]
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute(
+        "SELECT * FROM users WHERE email=%s",
+        (email,)
+    )
+
+    existing = cur.fetchone()
+
+    if not existing:
+
+        cur.execute("""
+        INSERT INTO users
+        (name,email,password,role,mobile)
+        VALUES(%s,%s,%s,%s,%s)
+        """,
+        (
+            name,
+            email,
+            "",
+            "customer",
+            ""
+        ))
+
+        conn.commit()
+
+        cur.execute(
+            "SELECT * FROM users WHERE email=%s",
+            (email,)
+        )
+
+        existing = cur.fetchone()
+
+    session["user_id"] = existing["id"]
+    session["username"] = existing["name"]
+    session["role"] = existing["role"]
+
+    if existing["role"] == "admin":
+        return redirect("/admin")
+
+    elif existing["role"] == "supplier":
+        return redirect("/supplier")
+
+    return redirect("/home")
 # ================= ROOT ROUTE =================
 
 @app.route("/")
@@ -431,7 +504,7 @@ def search():
 
     query = request.args.get("query", "").strip()
 
-    conn = get_db_connection()
+    conn = get_db()
     cursor = conn.cursor(pymysql.cursors.DictCursor)
 
     if query:
@@ -1219,7 +1292,7 @@ def payment_page(order_id):
     if not order:
         return "Order not found ❌", 404
 
-    return render_templates(
+    return render_template(
         "Payments.html",
         order=order
     )
@@ -1232,7 +1305,7 @@ def supplier_dashboard():
 
     supplier_id = session["user_id"]
 
-    conn = get_db_connection()
+    conn = get_db()
     cur = conn.cursor(dictionary=True)
 
     cur.execute("""
@@ -1306,7 +1379,7 @@ def supplier_action(order_id):
     supplier_id = session["user_id"]
     action = request.form.get("action")
 
-    conn = get_db_connection()
+    conn = get_db()
     cur = conn.cursor()
 
     if action == "accept":
