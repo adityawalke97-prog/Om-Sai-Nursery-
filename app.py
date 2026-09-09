@@ -1297,8 +1297,10 @@ def payment_page(order_id):
         order=order
     )
 @app.route("/supplier")
-@login_required
 def supplier_dashboard():
+
+    if "user_id" not in session:
+        return redirect("/login")
 
     if session.get("role") != "supplier":
         return redirect("/login")
@@ -1306,7 +1308,7 @@ def supplier_dashboard():
     supplier_id = session["user_id"]
 
     conn = get_db()
-    cur = conn.cursor(dictionary=True)
+    cur = conn.cursor()
 
     cur.execute("""
         SELECT *
@@ -1314,8 +1316,7 @@ def supplier_dashboard():
         WHERE supplier_id IS NULL
            OR supplier_id=%s
         ORDER BY id DESC
-    """,(supplier_id,))
-
+    """, (supplier_id,))
     orders = cur.fetchall()
 
     cur.execute("""
@@ -1323,23 +1324,22 @@ def supplier_dashboard():
         FROM products
         WHERE supplier_id=%s
         ORDER BY id DESC
-    """,(supplier_id,))
-
+    """, (supplier_id,))
     products = cur.fetchall()
 
     cur.execute("""
-        SELECT COUNT(*) total
+        SELECT COUNT(*) AS total
         FROM orders
         WHERE supplier_id=%s
-    """,(supplier_id,))
+    """, (supplier_id,))
     total_orders = cur.fetchone()["total"]
 
     cur.execute("""
-        SELECT IFNULL(SUM(total),0) revenue
+        SELECT IFNULL(SUM(total),0) AS revenue
         FROM orders
         WHERE supplier_id=%s
         AND status='Delivered'
-    """,(supplier_id,))
+    """, (supplier_id,))
     total_revenue = cur.fetchone()["revenue"]
 
     conn.close()
@@ -1354,7 +1354,6 @@ def supplier_dashboard():
         pending_delivery=0,
         rating=4.9
     )
-
 @app.route("/contact")
 def contact_view():
 
